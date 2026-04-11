@@ -1,0 +1,14 @@
+{
+  "name": "qmd",
+  "private": true,
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@tobilu/qmd": "^2.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/bun": "latest"
+  }
+}
