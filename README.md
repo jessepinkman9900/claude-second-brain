@@ -5,6 +5,7 @@
 
 [![npm](https://img.shields.io/npm/v/claude-second-brain)](https://www.npmjs.com/package/claude-second-brain) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+
 The fastest way to start your personal knowledge base powered by Obsidian, Claude Code, qmd, and GitHub.
 
 
