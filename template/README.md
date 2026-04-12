@@ -1,4 +1,4 @@
-# obsidian-agent-wiki
+# claude-second-brain
 
 **Your notes don't compound. This wiki does.**
 
@@ -65,7 +65,7 @@ All pages cross-link with Obsidian `[[wikilinks]]`. Contradictions are flagged w
 ## Directory layout
 
 ```
-obsidian-agent-wiki/
+claude-second-brain/
 ├── CLAUDE.md              ← The schema. Claude reads this every session.
 ├── sources/               ← Your raw inputs. Claude never modifies these.
 │   ├── articles/          ← Web articles saved as markdown

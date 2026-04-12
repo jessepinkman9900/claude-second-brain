@@ -28,7 +28,7 @@ jobs:
       - name: Scaffold via npx
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          npx -y "obsidian-agent-wiki-${VERSION}.tgz" test-vault
+          npx -y "claude-second-brain-${VERSION}.tgz" test-vault
 
       - name: Verify scaffold
         run: |
@@ -80,4 +80,4 @@ jobs:
         run: |
           rm -rf test-vault
           VERSION=$(node -p "require('./package.json').version")
-          rm -f "obsidian-agent-wiki-${VERSION}.tgz"
+          rm -f "claude-second-brain-${VERSION}.tgz"

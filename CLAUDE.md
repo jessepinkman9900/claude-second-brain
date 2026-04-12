@@ -16,7 +16,7 @@ Claude is responsible for: summarizing, cross-referencing, filing, and maintaini
 ## Directory Layout
 
 ```
-obsidian-agent-wiki/
+claude-second-brain/
 ├── CLAUDE.md              ← This file. The schema.
 ├── sources/               ← Raw source material. IMMUTABLE — Claude never modifies these.
 │   ├── articles/          ← Web articles saved as markdown

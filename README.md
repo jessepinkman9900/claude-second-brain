@@ -1,15 +1,16 @@
 
-# :classical_building: obsidian-agent-wiki
+# :classical_building: claude-second-brain
 
 **Your notes don't compound. This wiki does.**
 
-[![npm](https://img.shields.io/npm/v/obsidian-agent-wiki)](https://www.npmjs.com/package/obsidian-agent-wiki) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![npm](https://img.shields.io/npm/v/claude-second-brain)](https://www.npmjs.com/package/claude-second-brain) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/jessepinkman9900/claude-second-brain)
+
 
 The fastest way to start your personal knowledge base powered by Obsidian, Claude Code, qmd, and GitHub.
 
 
 ```
-npx obsidian-agent-wiki
+npx claude-second-brain
 ```
 
 One command gives you a fully wired knowledge system:
@@ -54,7 +55,7 @@ Everything is pre-configured. You bring the sources.
 **Step 1 — Scaffold**
 
 ```bash
-npx obsidian-agent-wiki
+npx claude-second-brain
 ```
 
 Creates your vault (the folder itself is the Obsidian vault), installs `mise` + `bun`, and runs `git init` with an initial commit.
