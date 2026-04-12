@@ -1,4 +1,4 @@
-name: Create Release
+name: Release and Publish
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   release:
-    name: Create GitHub Release
+    name: Create GitHub Release and Publish to npm
     runs-on: ubuntu-latest
 
     steps:
@@ -37,6 +37,13 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Set up Node.js with npm registry auth
+        if: steps.check.outputs.exists == 'false'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
       - name: Create tag and release
         if: steps.check.outputs.exists == 'false'
         env:
@@ -46,3 +53,9 @@ jobs:
             --title "v${{ steps.version.outputs.version }}" \
             --generate-notes \
             --latest
+
+      - name: Publish to npm
+        if: steps.check.outputs.exists == 'false'
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
