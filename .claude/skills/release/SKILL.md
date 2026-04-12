@@ -159,8 +159,7 @@ After the PR is created, tell the user:
 > **PR opened:** [url]
 >
 > **Pipeline after merge:**
-> 1. `create-release.yml` creates tag `vX.Y.Z` and a GitHub Release
-> 2. `publish-npm.yml` publishes `obsidian-agent-wiki@X.Y.Z` to npm
+> 1. `release-publish.yml` creates tag `vX.Y.Z`, a GitHub Release, and publishes `obsidian-agent-wiki@X.Y.Z` to npm
 >
 > **To verify after merge:** https://www.npmjs.com/package/obsidian-agent-wiki
 

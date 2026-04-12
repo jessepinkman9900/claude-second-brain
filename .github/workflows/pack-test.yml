@@ -1,0 +1,83 @@
+name: Pack Test
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  pack-test:
+    name: Pack and scaffold test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Pack
+        run: npm pack
+
+      - name: Scaffold via npx
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          npx -y "obsidian-agent-wiki-${VERSION}.tgz" test-vault
+
+      - name: Verify scaffold
+        run: |
+          set -e
+          fail=0
+
+          check() {
+            local label="$1"
+            local path="$2"
+            if [ -e "$path" ]; then
+              echo "PASS: $label"
+            else
+              echo "FAIL: $label — $path not found"
+              fail=1
+            fi
+          }
+
+          check ".gitignore (not .gitignore.template)"     test-vault/.gitignore
+          check "wiki/index.md"                            test-vault/wiki/index.md
+          check "wiki/log.md"                              test-vault/wiki/log.md
+          check "wiki/overview.md"                         test-vault/wiki/overview.md
+          check "wiki/sources/"                            test-vault/wiki/sources
+          check "wiki/qa/"                                 test-vault/wiki/qa
+          check "sources/articles/"                        test-vault/sources/articles
+          check "sources/pdfs/"                            test-vault/sources/pdfs
+          check "sources/personal/"                        test-vault/sources/personal
+          check ".claude/skills/setup"                     test-vault/.claude/skills/setup
+          check ".claude/skills/ingest"                    test-vault/.claude/skills/ingest
+          check ".claude/skills/query"                     test-vault/.claude/skills/query
+          check ".claude/skills/lint"                      test-vault/.claude/skills/lint
+          check ".claude/skills/qmd-cli"                   test-vault/.claude/skills/qmd-cli
+          check "scripts/qmd/setup.ts"                     test-vault/scripts/qmd/setup.ts
+          check "scripts/qmd/reindex.ts"                   test-vault/scripts/qmd/reindex.ts
+          check "scripts/qmd/package.json"                 test-vault/scripts/qmd/package.json
+          check "CLAUDE.md"                                test-vault/CLAUDE.md
+          check "mise.toml"                                test-vault/mise.toml
+
+          if [ "$fail" -ne 0 ]; then
+            echo ""
+            echo "One or more checks failed."
+            exit 1
+          fi
+
+          echo ""
+          echo "All checks passed."
+
+      - name: Clean up
+        if: always()
+        run: |
+          rm -rf test-vault
+          VERSION=$(node -p "require('./package.json').version")
+          rm -f "obsidian-agent-wiki-${VERSION}.tgz"
