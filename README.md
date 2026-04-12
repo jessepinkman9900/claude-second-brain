@@ -3,7 +3,7 @@
 
 **Your notes don't compound. This wiki does.**
 
-[![npm](https://img.shields.io/npm/v/obsidian-agent-wiki)](https://www.npmjs.com/package/obsidian-agent-wiki) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![npm](https://img.shields.io/npm/v/obsidian-agent-wiki)](https://www.npmjs.com/package/obsidian-agent-wiki) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 The fastest way to start your personal knowledge base powered by Obsidian, Claude Code, qmd, and GitHub.
 
