@@ -1,10 +1,10 @@
 {
-  "name": "obsidian-agent-wiki",
-  "version": "0.2.3",
+  "name": "claude-second-brain",
+  "version": "0.3.0",
   "description": "Scaffold an LLM-maintained Obsidian knowledge wiki",
   "type": "module",
   "bin": {
-    "obsidian-agent-wiki": "./bin/create.js"
+    "claude-second-brain": "./bin/create.js"
   },
   "files": [
     "bin/",
@@ -17,6 +17,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jessepinkman9900/obsidian-agent-wiki"
+    "url": "https://github.com/jessepinkman9900/claude-second-brain"
   }
 }

@@ -1,12 +1,12 @@
 ---
 name: release
-description: "Prepare and open a release PR for the obsidian-agent-wiki npm package. Analyzes changes vs main, suggests a semver version bump, updates package.json, commits, pushes, and opens a PR. Trigger phrases: /release, prepare a release, bump the version, publish a new version, open a release PR."
+description: "Prepare and open a release PR for the claude-second-brain npm package. Analyzes changes vs main, suggests a semver version bump, updates package.json, commits, pushes, and opens a PR. Trigger phrases: /release, prepare a release, bump the version, publish a new version, open a release PR."
 argument-hint: "Optional: patch | minor | major | exact version (e.g. 0.2.0). Leave blank for auto-suggestion."
 ---
 
 # /release
 
-Prepares and opens a release PR for the `obsidian-agent-wiki` npm package. Does **not** publish to npm directly — publishing happens automatically via GitHub Actions after the PR is merged.
+Prepares and opens a release PR for the `claude-second-brain` npm package. Does **not** publish to npm directly — publishing happens automatically via GitHub Actions after the PR is merged.
 
 ## When to use
 
@@ -101,11 +101,11 @@ cat package.json | grep '"version"'
 
 ### Step 5 — Update pack-test skill
 
-The `pack-test` skill hardcodes the tarball filename (e.g., `obsidian-agent-wiki-0.1.0.tgz`). Update every occurrence of the old version string in `.claude/skills/pack-test/SKILL.md` to the new version using the Edit tool with `replace_all: true`.
+The `pack-test` skill hardcodes the tarball filename (e.g., `claude-second-brain-0.1.0.tgz`). Update every occurrence of the old version string in `.claude/skills/pack-test/SKILL.md` to the new version using the Edit tool with `replace_all: true`.
 
 Verify:
 ```bash
-grep "obsidian-agent-wiki-" .claude/skills/pack-test/SKILL.md
+grep "claude-second-brain-" .claude/skills/pack-test/SKILL.md
 ```
 
 ### Step 6 — Commit the version bump
@@ -140,7 +140,7 @@ gh pr create \
 ### What happens after merge
 
 1. GitHub Action creates tag `vX.Y.Z` and a GitHub Release with auto-generated notes
-2. GitHub Action publishes `obsidian-agent-wiki@X.Y.Z` to npm automatically
+2. GitHub Action publishes `claude-second-brain@X.Y.Z` to npm automatically
 
 ### Checklist
 
@@ -159,9 +159,9 @@ After the PR is created, tell the user:
 > **PR opened:** [url]
 >
 > **Pipeline after merge:**
-> 1. `release-publish.yml` creates tag `vX.Y.Z`, a GitHub Release, and publishes `obsidian-agent-wiki@X.Y.Z` to npm
+> 1. `release-publish.yml` creates tag `vX.Y.Z`, a GitHub Release, and publishes `claude-second-brain@X.Y.Z` to npm
 >
-> **To verify after merge:** https://www.npmjs.com/package/obsidian-agent-wiki
+> **To verify after merge:** https://www.npmjs.com/package/claude-second-brain
 
 ## What can go wrong
 
