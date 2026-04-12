@@ -7,7 +7,6 @@
 
 The fastest way to start your personal knowledge base powered by Obsidian, Claude Code, qmd, and GitHub.
 
-You've been reading papers, articles, and books for years. Drop a source in, run `/ingest`, and Claude reads it — extracts what matters, cross-links it to everything you already know, and files it. Ask a question six months later and get cited answers, not a list of files to re-read.
 
 ```
 npx obsidian-agent-wiki
@@ -18,6 +17,8 @@ One command gives you a fully wired knowledge system:
 - [qmd](https://github.com/tobi/qmd) powers local semantic search
 - [Obsidian](https://obsidian.md) renders it beautifully with the [obsidian-git](https://github.com/Vinzent03/obsidian-git) community plugin pre-configured for seamless sync
 - GitHub is the source of truth — version history, anywhere access, and a backup you control
+
+You've been reading papers, articles, and books for years. Drop a source in, run `/ingest`, and Claude reads it — extracts what matters, cross-links it to everything you already know, and files it. Ask a question six months later and get cited answers, not a list of files to re-read.
 
 > **Inspired by [Andrej Karpathy's approach to LLM-powered knowledge management](https://x.com/karpathy/status/2040470801506541998?s=20)** — share an "idea file" with an LLM agent and let it build and maintain your knowledge base.
 
