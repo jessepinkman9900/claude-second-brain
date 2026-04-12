@@ -1,0 +1,17 @@
+{
+  "name": "obsidian-agent-wiki",
+  "version": "0.1.0",
+  "description": "Scaffold an LLM-maintained Obsidian knowledge wiki",
+  "type": "module",
+  "bin": {
+    "obsidian-agent-wiki": "./bin/create.js"
+  },
+  "files": [
+    "bin/",
+    "template/"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "MIT"
+}
