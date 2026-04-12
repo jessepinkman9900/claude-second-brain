@@ -1,5 +1,5 @@
 
-# obsidian-agent-wiki
+# :classical_building: obsidian-agent-wiki
 
 **Your notes don't compound. This wiki does.**
 
