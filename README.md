@@ -1,8 +1,11 @@
-[![npm](https://img.shields.io/npm/v/obsidian-agent-wiki)](https://www.npmjs.com/package/obsidian-agent-wiki) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # obsidian-agent-wiki
 
 **Your notes don't compound. This wiki does.**
+
+[![npm](https://img.shields.io/npm/v/obsidian-agent-wiki)](https://www.npmjs.com/package/obsidian-agent-wiki) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+The fastest way to start a personal knowledge base powered by Obsidian, Claude Code, qmd, and GitHub.
 
 You've been reading papers, articles, and books for years. Drop a source in, run `/ingest`, and Claude reads it — extracts what matters, cross-links it to everything you already know, and files it. Ask a question six months later and get cited answers, not a list of files to re-read.
 
@@ -10,23 +13,23 @@ You've been reading papers, articles, and books for years. Drop a source in, run
 npx obsidian-agent-wiki
 ```
 
+One command gives you a fully wired knowledge system:
+- [Claude](https://claude.ai/) ingests your sources and maintains a cross-linked wiki
+- [qmd](https://github.com/tobi/qmd) powers local semantic search
+- [Obsidian](https://obsidian.md) renders it beautifully with the [obsidian-git](https://github.com/Vinzent03/obsidian-git) community plugin pre-configured for seamless sync
+- GitHub is the source of truth — version history, anywhere access, and a backup you control
+
+> **Inspired by [Andrej Karpathy's approach to LLM-powered knowledge management](https://x.com/karpathy/status/2040470801506541998?s=20)** — share an "idea file" with an LLM agent and let it build and maintain your knowledge base.
+
 ![Obsidian graph view of a running wiki](image.png)
 
 ---
 
-## The problem with notes
-
-You have hundreds of markdown files. When you need to recall something, you're back to grep, re-reading, or starting from scratch. Notes are a write-only medium.
-
-The fix isn't better search. It's a wiki that gets smarter as you add to it — where Claude actively integrates new knowledge rather than just storing it.
-
----
 
 ## How this is different
 
 This is not a RAG system. It's not a chatbot over your notes. It's an actively maintained, cross-linked wiki — five structured page types, YAML frontmatter, and a set of Claude Code skills that run the whole thing.
 
-> **Inspired by [Andrej Karpathy's approach to LLM-powered knowledge management](https://x.com/karpathy/status/2040470801506541998?s=20)** — share an "idea file" with an LLM agent and let it build and maintain your knowledge base.
 
 The schema (`CLAUDE.md`) is that idea file. Claude reads it every session.
 
@@ -98,7 +101,7 @@ The wiki ships with three slash commands that cover the full workflow. No manual
 Claude Code's GitHub integration lets you open the repo and work from anywhere — ingest a source, run a query, or update a page from your phone.
 
 **Read anywhere — Obsidian desktop and mobile**
-Open the repo as an Obsidian vault. The Git plugin is pre-configured and syncs automatically. For iOS: put the repo folder inside iCloud Drive — Obsidian Mobile picks it up natively with no extra setup. Graph view, backlinks, offline reading — all working.
+Open the repo as an Obsidian vault. The bundled `.obsidian` folder pre-configures the [obsidian-git](https://github.com/Vinzent03/obsidian-git) community plugin — no setup required, just enable it. Your wiki syncs automatically on every commit. For iOS: put the repo folder inside iCloud Drive — Obsidian Mobile picks it up natively with no extra setup. Graph view, backlinks, offline reading — all working.
 
 **Browse anywhere — GitHub**
 It's a plain GitHub repo. View and edit files directly in the browser at any time.
