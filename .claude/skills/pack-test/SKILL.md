@@ -18,15 +18,15 @@ Run each command in order. Stop and report if any step fails.
 npm pack
 ```
 
-Produces `obsidian-agent-wiki-0.1.0.tgz` in the repo root. Verify the tarball appears before continuing.
+Produces `obsidian-agent-wiki-<version>.tgz` in the repo root, where `<version>` comes from `package.json`. Verify the tarball appears before continuing.
 
 **Step 2 — Scaffold via npx**
 
 ```bash
-cd /tmp && npx /Users/srinivaskota/work/obsidian-agent-wiki/obsidian-agent-wiki-0.1.0.tgz test-vault
+npx -y obsidian-agent-wiki-$(node -p "require('./package.json').version").tgz test-vault
 ```
 
-Use `npx`, not `bunx` — bunx cannot resolve local tarball paths (it prepends `@` and treats them as scoped package names). Pass `test-vault` as the target dir argument to skip the interactive prompt.
+Use `npx` with the `file:` prefix — without it, npx tries to execute the tarball as a shell script and fails with "Permission denied". Pass `test-vault` as the target dir argument to skip the interactive prompt. The vault is created in the repo root and cleaned up in Step 4.
 
 **Step 3 — Verify checklist**
 
@@ -34,22 +34,22 @@ Run each of the following and confirm the expected output:
 
 ```bash
 # Root structure
-ls -la /tmp/test-vault/
+ls -la test-vault/
 
 # .gitignore must exist (not .gitignore.template — npm strips .gitignore from packages)
-cat /tmp/test-vault/.gitignore
+cat test-vault/.gitignore
 
 # Wiki stubs
-ls /tmp/test-vault/wiki/
+ls test-vault/wiki/
 
 # Sources dirs
-ls /tmp/test-vault/sources/
+ls test-vault/sources/
 
 # Claude Code skills (expect: setup, ingest, query, lint, qmd-cli)
-ls /tmp/test-vault/.claude/skills/
+ls test-vault/.claude/skills/
 
 # qmd scripts
-ls /tmp/test-vault/scripts/qmd/
+ls test-vault/scripts/qmd/
 ```
 
 Report results against this checklist:
@@ -67,13 +67,13 @@ Report results against this checklist:
 **Step 4 — Clean up**
 
 ```bash
-rm -rf /tmp/test-vault
-rm /Users/srinivaskota/work/obsidian-agent-wiki/obsidian-agent-wiki-0.1.0.tgz
+rm -rf test-vault
+rm obsidian-agent-wiki-$(node -p "require('./package.json').version").tgz
 ```
 
 ## What failure means
 
-- **`.gitignore.template` present instead of `.gitignore`** — npm stripped `.gitignore` from the tarball but the rename in `bin/create.ts` didn't fire; check the `try/catch` rename block
+- **`.gitignore.template` present instead of `.gitignore`** — npm stripped `.gitignore` from the tarball but the rename in `bin/create.js` didn't fire; check the `try/catch` rename block
 - **Missing skill dirs** — template copy failed or `.claude/` hidden dir wasn't included; check `npm pack --dry-run` output
-- **`npx` fails to run the bin** — shebang or `bin` field in `package.json` is wrong; check `#!/usr/bin/env bun` on line 1 of `bin/create.ts`
+- **`npx` fails to run the bin** — shebang or `bin` field in `package.json` is wrong; check `#!/usr/bin/env node` on line 1 of `bin/create.js`
 - **Note:** `bunx` cannot run local tarballs — use `npx` for this test. After publishing, `bunx obsidian-agent-wiki` from the registry works fine.

@@ -1,25 +1,30 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 import { cp, rename, access } from "fs/promises"
-import { join } from "path"
+import { join, dirname } from "path"
+import { fileURLToPath } from "url"
+import { spawnSync } from "child_process"
+import { createInterface } from "readline/promises"
 
-const TEMPLATE = join(import.meta.dir, "../template")
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const TEMPLATE = join(__dirname, "../template")
 
-async function run(cmd: string[], cwd?: string): Promise<boolean> {
-  const proc = Bun.spawn(cmd, { cwd, stdout: "inherit", stderr: "inherit" })
-  return (await proc.exited) === 0
+function run(cmd, cwd) {
+  const result = spawnSync(cmd[0], cmd.slice(1), { cwd, stdio: "inherit" })
+  return result.status === 0
 }
 
-async function commandExists(cmd: string): Promise<boolean> {
-  const proc = Bun.spawn(["which", cmd], { stdout: "pipe", stderr: "pipe" })
-  return (await proc.exited) === 0
+function commandExists(cmd) {
+  const result = spawnSync("which", [cmd], { stdio: "pipe" })
+  return result.status === 0
 }
 
 async function main() {
-  // Accept dir name as CLI arg or prompt interactively
   let targetName = process.argv[2]
 
   if (!targetName) {
-    const answer = prompt("Where to create your wiki? (my-wiki) ›") ?? ""
+    const rl = createInterface({ input: process.stdin, output: process.stdout })
+    const answer = await rl.question("Where to create your wiki? (my-wiki) › ")
+    rl.close()
     targetName = answer.trim() || "my-wiki"
   }
 
@@ -51,9 +56,9 @@ async function main() {
   console.log(`✓ Created ${targetName}/`)
 
   // 2. Install mise if not present
-  if (!(await commandExists("mise"))) {
+  if (!commandExists("mise")) {
     console.log("\nInstalling mise...")
-    const ok = await run(["npm", "install", "-g", "@jdxcode/mise"])
+    const ok = run(["npm", "install", "-g", "@jdxcode/mise"])
     if (ok) {
       console.log("✓ Installed mise")
     } else {
@@ -63,7 +68,7 @@ async function main() {
 
   // 3. Run mise install inside the new vault to install bun
   console.log("\nInstalling bun via mise...")
-  const miseOk = await run(["mise", "install"], targetDir)
+  const miseOk = run(["mise", "install"], targetDir)
   if (miseOk) {
     console.log("✓ Installed bun")
   } else {
@@ -72,10 +77,10 @@ async function main() {
 
   // 4. Git init
   console.log("\nInitializing git repo...")
-  const gitOk = await run(["git", "init"], targetDir)
+  const gitOk = run(["git", "init"], targetDir)
   if (gitOk) {
-    await run(["git", "add", "."], targetDir)
-    await run(["git", "commit", "-m", "initial commit"], targetDir)
+    run(["git", "add", "."], targetDir)
+    run(["git", "commit", "-m", "initial commit"], targetDir)
     console.log("✓ Git repo initialized")
   } else {
     console.error("  git init failed — run it manually inside your vault")
