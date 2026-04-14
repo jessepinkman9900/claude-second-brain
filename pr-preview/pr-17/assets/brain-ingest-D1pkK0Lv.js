@@ -1,0 +1,12 @@
+import{u as t,j as e}from"./index-C0YtSaFG.js";const l={title:"/brain-ingest",description:"undefined"};function i(s){const n={a:"a",code:"code",div:"div",h1:"h1",header:"header",li:"li",ol:"ol",p:"p",strong:"strong",...t(),...s.components};return e.jsxs(e.Fragment,{children:[e.jsx(n.header,{children:e.jsxs(n.h1,{id:"brain-ingest",children:["/brain-ingest",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#brain-ingest",children:e.jsx(n.div,{"data-autolink-icon":!0})})]})}),`
+`,e.jsx(n.p,{children:"Ingest a new source into the wiki."}),`
+`,e.jsxs(n.p,{children:["Drop a file into ",e.jsx(n.code,{children:"raw-sources/articles/"}),", ",e.jsx(n.code,{children:"raw-sources/pdfs/"}),", or ",e.jsx(n.code,{children:"raw-sources/personal/"}),", then run ",e.jsx(n.code,{children:"/brain-ingest"}),". Claude will:"]}),`
+`,e.jsxs(n.ol,{children:[`
+`,e.jsxs(n.li,{children:[e.jsx(n.strong,{children:"Read"})," the source in full."]}),`
+`,e.jsxs(n.li,{children:[e.jsx(n.strong,{children:"Summarize"})," it in 3–5 bullets and ask you what matters most."]}),`
+`,e.jsxs(n.li,{children:[e.jsx(n.strong,{children:"Create"})," a ",e.jsx(n.code,{children:"wiki/sources/[slug].md"})," page with abstract, key claims, notable quotes, and your synthesis note."]}),`
+`,e.jsxs(n.li,{children:[e.jsx(n.strong,{children:"Update"})," or create topic/entity pages that the source touches, integrating it as prose (not copy-paste) with source attribution."]}),`
+`,e.jsxs(n.li,{children:[e.jsx(n.strong,{children:"Flag contradictions"})," with ",e.jsx(n.code,{children:"[!WARNING]"})," callouts on any page where the new source disagrees with existing claims."]}),`
+`,e.jsxs(n.li,{children:[e.jsx(n.strong,{children:"Log"})," the ingest in ",e.jsx(n.code,{children:"wiki/log.md"}),"."]}),`
+`]}),`
+`,e.jsxs(n.p,{children:["Scope: global skill, installed at ",e.jsx(n.code,{children:"~/.claude/skills/brain-ingest/SKILL.md"}),". Source: ",e.jsx(n.a,{href:"https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-ingest/SKILL.md",children:"template/.claude/skills/brain-ingest/SKILL.md"}),"."]})]})}function o(s={}){const{wrapper:n}={...t(),...s.components};return n?e.jsx(n,{...s,children:e.jsx(i,{...s})}):i(s)}export{o as default,l as frontmatter};
