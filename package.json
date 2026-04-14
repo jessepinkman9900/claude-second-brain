@@ -1,6 +1,6 @@
 {
   "name": "claude-second-brain",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "Scaffold an LLM-maintained Obsidian knowledge wiki",
   "type": "module",
   "bin": {
