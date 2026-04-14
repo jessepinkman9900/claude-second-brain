@@ -4,13 +4,21 @@ import { readdirSync } from "fs"
 import { join, dirname } from "path"
 import { fileURLToPath } from "url"
 import { spawnSync } from "child_process"
-import { createInterface } from "readline/promises"
 import { homedir } from "os"
+import * as p from "@clack/prompts"
+import pc from "picocolors"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const TEMPLATE = join(__dirname, "../template")
 
+// Non-interactive commands — output piped (won't corrupt spinner)
 function run(cmd, cwd) {
+  const result = spawnSync(cmd[0], cmd.slice(1), { cwd, stdio: "pipe" })
+  return result.status === 0
+}
+
+// Interactive commands (e.g. gh auth login) — must inherit stdio; call outside spinner
+function runInteractive(cmd, cwd) {
   const result = spawnSync(cmd[0], cmd.slice(1), { cwd, stdio: "inherit" })
   return result.status === 0
 }
@@ -65,32 +73,22 @@ async function installGlobalSkills(qmdPath) {
 
     await mkdir(destDir, { recursive: true })
     await writeFile(join(destDir, "SKILL.md"), content, "utf8")
-    console.log(`  ✓ ~/.claude/skills/${skillName}/SKILL.md`)
   }
 }
 
-// Wraps rl.question() so that if readline closes (e.g. piped stdin reaches EOF
-// before the question is answered), the promise resolves with '' rather than
-// hanging forever — which would leave no active handles and cause Node to exit.
-function ask(rl, prompt) {
-  return new Promise((resolve) => {
-    const onClose = () => resolve("")
-    rl.once("close", onClose)
-    rl.question(prompt).then(answer => {
-      rl.removeListener("close", onClose)
-      resolve(answer)
-    }).catch(() => resolve(""))
-  })
-}
-
 async function main() {
-  const rl = createInterface({ input: process.stdin, output: process.stdout })
+  p.intro(`${pc.bgCyan(pc.black(" claude-second-brain "))} v0.3.0`)
 
   // 1. Folder name
   let targetName = process.argv[2]
   if (!targetName) {
-    const answer = await ask(rl, "Where to create your brain? (my-brain) › ")
-    targetName = answer.trim() || "my-brain"
+    const answer = await p.text({
+      message: "Where to create your brain?",
+      placeholder: "my-brain",
+      defaultValue: "my-brain",
+    })
+    if (p.isCancel(answer)) { p.cancel("Setup cancelled."); process.exit(0) }
+    targetName = answer
   }
 
   // 2. qmd path
@@ -98,37 +96,47 @@ async function main() {
     process.env.XDG_CACHE_HOME || join(homedir(), ".cache"),
     "qmd", "index.sqlite"
   )
-  const qmdAnswer = await ask(rl, `Where to store the qmd index? (${defaultQmdPath}) › `)
-  const qmdPath = qmdAnswer.trim() || defaultQmdPath
+  const qmdPath = await p.text({
+    message: "Where to store the qmd index?",
+    placeholder: defaultQmdPath,
+    defaultValue: defaultQmdPath,
+  })
+  if (p.isCancel(qmdPath)) { p.cancel("Setup cancelled."); process.exit(0) }
 
   // 3. GitHub repo
-  const ghAnswer = await ask(rl, "Create a GitHub repo for your brain? (y/N) › ")
-  const createGhRepo = ghAnswer.trim().toLowerCase() === "y"
+  const createGhRepo = await p.confirm({
+    message: "Create a private GitHub repo?",
+    initialValue: false,
+  })
+  if (p.isCancel(createGhRepo)) { p.cancel("Setup cancelled."); process.exit(0) }
 
   let ghRepoName = null
   if (createGhRepo) {
-    const ghNameAnswer = await ask(rl, `GitHub repo name? (${targetName}) [will be created as private] › `)
-    ghRepoName = ghNameAnswer.trim() || targetName
+    const answer = await p.text({
+      message: "GitHub repo name?",
+      placeholder: targetName,
+      defaultValue: targetName,
+    })
+    if (p.isCancel(answer)) { p.cancel("Setup cancelled."); process.exit(0) }
+    ghRepoName = answer
   }
-
-  rl.close()
 
   const targetDir = join(process.cwd(), targetName)
 
   // Fail fast if target already exists
   try {
     await access(targetDir)
-    console.error(`\nError: "${targetName}" already exists. Choose a different name or delete it first.`)
+    p.cancel(`"${targetName}" already exists. Choose a different name or delete it first.`)
     process.exit(1)
   } catch {
     // Directory doesn't exist — good to go
   }
 
-  // 3. Scaffold
-  console.log(`\nCreating ${targetName}...`)
-  await cp(TEMPLATE, targetDir, { recursive: true })
+  const spin = p.spinner()
 
-  // npm strips .gitignore from published packages — rename the template copy back
+  // Scaffold
+  spin.start("Scaffolding project")
+  await cp(TEMPLATE, targetDir, { recursive: true })
   try {
     await rename(
       join(targetDir, ".gitignore.template"),
@@ -137,90 +145,87 @@ async function main() {
   } catch {
     // .gitignore.template not present (e.g. running locally where npm didn't strip it)
   }
+  spin.stop(`${targetName}/ created`)
 
-  console.log(`✓ Created ${targetName}/`)
-
-  // 4. Patch vault files with chosen qmd path
+  // Patch vault files with chosen qmd path
+  spin.start("Configuring qmd index path")
   await patchVault(targetDir, qmdPath, targetName)
-  console.log(`✓ Configured qmd path: ${qmdPath}`)
+  spin.stop(`qmd index → ${pc.dim(qmdPath)}`)
 
-  // 5. Install mise if not present
+  // Install mise if not present
   if (!commandExists("mise")) {
-    console.log("\nInstalling mise...")
+    spin.start("Installing mise")
     const ok = run(["npm", "install", "-g", "@jdxcode/mise"])
-    if (ok) {
-      console.log("✓ Installed mise")
-    } else {
-      console.error("  Failed to install mise — install manually: npm install -g @jdxcode/mise")
-    }
+    if (ok) spin.stop("mise installed")
+    else spin.stop("Failed to install mise — run: npm install -g @jdxcode/mise", 1)
   }
 
-  // 6. Run mise install inside the new vault to install bun
-  console.log("\nInstalling bun via mise...")
+  // Run mise install inside the new vault to install bun
+  spin.start("Installing bun via mise")
+  run(["mise", "trust"], targetDir)
   const miseOk = run(["mise", "install"], targetDir)
-  if (miseOk) {
-    console.log("✓ Installed bun")
-  } else {
-    console.error("  mise install failed — run it manually inside your vault")
-  }
+  if (miseOk) spin.stop("bun installed")
+  else spin.stop("mise install failed — run it manually inside your vault", 1)
 
-  // 7. Git init
-  console.log("\nInitializing git repo...")
+  // Git init
+  spin.start("Initializing git repo")
   const gitOk = run(["git", "init"], targetDir)
   if (gitOk) {
     run(["git", "add", "."], targetDir)
     run(["git", "commit", "-m", "initial commit"], targetDir)
-    console.log("✓ Git repo initialized")
+    spin.stop("git repo initialized")
   } else {
-    console.error("  git init failed — run it manually inside your vault")
+    spin.stop("git init failed — run it manually inside your vault", 1)
   }
 
-  // 8. GitHub repo (optional)
+  // GitHub repo (optional)
   if (createGhRepo) {
     if (!commandExists("gh")) {
-      console.error("\n  gh CLI not found — install it from https://cli.github.com, then run:")
-      console.error(`  gh repo create ${ghRepoName} --private --source=. --remote=origin --push`)
+      p.log.warn(`gh CLI not found — install from https://cli.github.com, then run:\n  gh repo create ${ghRepoName} --private --source=. --remote=origin --push`)
     } else {
-      console.log("\nSetting up GitHub repo...")
-
       const authCheck = spawnSync("gh", ["auth", "status"], { stdio: "pipe" })
       let loggedIn = authCheck.status === 0
 
       if (!loggedIn) {
-        console.log("  Not logged in to GitHub. Starting login...")
-        loggedIn = run(["gh", "auth", "login"], targetDir)
+        p.log.info("Not logged in to GitHub. Starting login...")
+        loggedIn = runInteractive(["gh", "auth", "login"], targetDir)
       }
 
       if (loggedIn) {
+        spin.start(`Creating GitHub repo ${pc.dim(ghRepoName)}`)
         const ghOk = run(
           ["gh", "repo", "create", ghRepoName, "--private", "--source=.", "--remote=origin", "--push"],
           targetDir
         )
         if (ghOk) {
-          console.log(`✓ GitHub repo created and pushed: ${ghRepoName}`)
+          spin.stop(`GitHub repo created (private): ${pc.cyan(ghRepoName)}`)
         } else {
-          console.error("  gh repo create failed — run manually:")
-          console.error(`  gh repo create ${ghRepoName} --private --source=. --remote=origin --push`)
+          spin.stop(`gh repo create failed — run: gh repo create ${ghRepoName} --private --source=. --remote=origin --push`, 1)
         }
       }
     }
   }
 
-  // 9. Install global skills
-  console.log("\nInstalling global skills...")
+  // Install global skills
+  spin.start("Installing global Claude skills")
   await installGlobalSkills(qmdPath)
+  spin.stop("Global skills installed")
 
-  console.log(`\n✓ Done! Your brain is ready.\n`)
-  console.log("Next steps:")
-  console.log(`  cd ${targetName}`)
-  console.log("  claude                      # open Claude Code, then run /setup")
-  if (!createGhRepo) {
-    console.log("  git remote add origin <url> # connect to GitHub for sync + Obsidian Mobile")
-    console.log("  git push -u origin main")
-  }
+  // Next steps
+  const nextSteps = [
+    `${pc.cyan(`cd ${targetName}`)}`,
+    `${pc.cyan("claude")}          open Claude Code, then run ${pc.bold("/setup")}`,
+    ...(!createGhRepo ? [
+      `${pc.cyan("git remote add origin <url>")}  connect to GitHub for sync`,
+      `${pc.cyan("git push -u origin main")}`,
+    ] : []),
+  ].join("\n")
+
+  p.note(nextSteps, "Next steps")
+  p.outro("Happy knowledge building!")
 }
 
 main().catch(err => {
-  console.error(err.message)
+  p.cancel(err.message)
   process.exit(1)
 })
