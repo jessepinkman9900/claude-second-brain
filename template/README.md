@@ -32,9 +32,9 @@ Registers the qmd collections and generates local vector embeddings. First run d
 
 ## Your Claude Code skills
 
-**`/ingest`** — Add a file to `sources/articles/`, `sources/pdfs/`, or `sources/personal/`, then run `/ingest`. Claude summarizes the source, asks what aspects matter most, updates related wiki pages, flags contradictions, and logs everything.
+**`/brain-ingest`** — Add a file to `sources/articles/`, `sources/pdfs/`, or `sources/personal/`, then run `/brain-ingest`. Claude summarizes the source, asks what aspects matter most, updates related wiki pages, flags contradictions, and logs everything.
 
-**`/query`** — Ask anything: `what do I know about [topic]?` Claude searches the wiki semantically and returns a cited answer. If it synthesizes multiple pages in a useful way, it offers to file it as a permanent `wiki/qa/` entry.
+**`/brain-search`** — Ask anything: `what do I know about [topic]?` Claude searches the wiki semantically and returns a cited answer. If it synthesizes multiple pages in a useful way, it offers to file it as a permanent `wiki/qa/` entry.
 
 **`/lint`** — Health-check the wiki. Finds orphan pages, broken links, unresolved contradictions, and data gaps. Reports findings and fixes what it can.
 
@@ -78,6 +78,56 @@ claude-second-brain/
 │   ├── sources/           ← One summary per ingested source
 │   └── qa/                ← Filed Q&A answers
 └── scripts/qmd/           ← Semantic search setup and re-indexing
+```
+
+---
+
+## Installing and updating skills
+
+Skills are slash commands Claude Code loads from `.claude/skills/[name]/SKILL.md` in this vault. The wiki ships with `/brain-ingest`, `/brain-search`, `/lint`, `/setup`, and `/qmd-cli` pre-installed.
+
+Additional skills can be installed from any GitHub repo using [vercel-labs/skills](https://github.com/vercel-labs/skills) — a CLI that works across Claude Code, Cursor, Codex, and 40+ other agents.
+
+### Discover skills
+
+```bash
+npx skills find                                     # interactive catalog search
+npx skills add vercel-labs/agent-skills --list      # browse a specific repo
+```
+
+### Install a skill
+
+```bash
+# Install from a repo (prompts to pick skills + agents)
+npx skills add vercel-labs/agent-skills
+
+# Install a specific skill to Claude Code
+npx skills add vercel-labs/agent-skills --skill frontend-design -a claude-code
+```
+
+### Update skills
+
+```bash
+npx skills update          # update all installed skills
+npx skills update my-skill # update a specific skill
+```
+
+### Update built-in wiki skills
+
+Pull the latest `/brain-ingest`, `/brain-search`, `/lint`, `/setup`, and `/qmd-cli` from the upstream template:
+
+```bash
+# Install or update all 5 wiki skills
+npx skills add https://github.com/jessepinkman9900/claude-second-brain/tree/main/template/.claude/skills -a claude-code -y
+
+# Or update a specific skill
+npx skills add https://github.com/jessepinkman9900/claude-second-brain/tree/main/template/.claude/skills --skill brain-ingest -a claude-code -y
+```
+
+Once installed via `npx skills`, future updates are a single command:
+
+```bash
+npx skills update -a claude-code
 ```
 
 ---
