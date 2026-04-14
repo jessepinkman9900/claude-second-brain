@@ -51,6 +51,9 @@ Summary of one ingested source. Slug is kebab-case derived from the title. One p
 ### `qa` — `wiki/qa/[slug].md`
 A filed answer to a notable query. Created when an answer synthesizes multiple pages in a way worth preserving.
 
+### `admin` — `wiki/index.md`, `wiki/log.md`
+Special system/administrative pages. Not synthesis content. There are exactly two: `index.md` (master index) and `log.md` (activity log).
+
 ---
 
 ## Frontmatter Format
@@ -59,7 +62,7 @@ All wiki pages use this YAML frontmatter:
 
 ```yaml
 ---
-type: overview | topic | entity | source-summary | qa
+type: overview | topic | entity | source-summary | qa | admin
 tags: [tag1, tag2]
 sources: ["[[wiki/sources/source-slug]]"]
 related: ["[[wiki/related-page]]"]
@@ -67,7 +70,7 @@ updated: YYYY-MM-DD
 ---
 ```
 
-- `type`: Required. One of the five page types above.
+- `type`: Required. One of the six page types above.
 - `tags`: Optional. Lowercase, hyphenated. Topics for the Obsidian tag pane.
 - `sources`: Links to the `wiki/sources/` pages that informed this page.
 - `related`: Links to other wiki pages directly relevant to this one.
@@ -108,7 +111,7 @@ Run this workflow whenever the user adds a new source. Do not skip steps.
 - Add the new source to the Sources section with a one-line description and link.
 
 **Step 5 — Identify affected wiki pages**
-- Run `bunx @tobilu/qmd query -c wiki "<source topic and key claims>"` to surface related existing wiki pages.
+- Run `INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd query -c wiki "<source topic and key claims>"` to surface related existing wiki pages.
 - Also Glob `wiki/*.md` and `wiki/sources/*.md` to ensure completeness.
 - List all pages to create or update.
 
@@ -139,7 +142,7 @@ Run this workflow whenever the user adds a new source. Do not skip steps.
 Run this workflow when the user asks a question against the wiki.
 
 **Step 1 — Search the wiki**
-- Run `bunx @tobilu/qmd query -c wiki "<question>"` to surface semantically relevant pages.
+- Run `INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd query -c wiki "<question>"` to surface semantically relevant pages.
 - Read `wiki/index.md` to confirm coverage and catch any pages qmd didn't surface.
 - Read the 2-5 most relevant pages fully.
 

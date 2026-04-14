@@ -1,5 +1,5 @@
 ---
-type: overview
+type: admin
 tags: []
 updated: 2026-01-01
 ---

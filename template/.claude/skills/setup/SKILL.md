@@ -1,6 +1,6 @@
 ---
 name: setup
-description: "Initialize this obsidian-agent-memory vault. Registers qmd collections and generates vector embeddings. Use when: setting up for the first time, re-registering collections, or re-indexing after a bulk ingest session. Trigger phrases: /setup, setup vault, initialize collections, reindex, register qmd."
+description: "Initialize this claude-second-brain vault. Registers qmd collections and generates vector embeddings. Use when: setting up for the first time, re-registering collections, or re-indexing after a bulk ingest session. Trigger phrases: /setup, setup vault, initialize collections, reindex, register qmd."
 argument-hint: "Optional: 'reindex' to skip registration and only re-index files"
 ---
 
@@ -24,7 +24,7 @@ Run:
 bun scripts/qmd/setup.ts
 ```
 
-Registers the four qmd collections (`wiki`, `raw-sources`, `human`, `daily-notes`) and their path-level context descriptions. Idempotent — safe to re-run.
+Registers the two core qmd collections (`wiki`, `raw-sources`) and their path-level context descriptions. Idempotent — safe to re-run.
 
 **Step 2 — Index files and generate embeddings**
 
@@ -49,7 +49,7 @@ Do **not** re-run after every single file edit — batch it after a session.
 Run these three commands to confirm everything is working:
 
 ```bash
-# List registered collections (expect: wiki, raw-sources, human, daily-notes)
+# List registered collections (expect: wiki, raw-sources)
 INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd collection list
 
 # List registered contexts
@@ -59,7 +59,7 @@ INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd context list
 INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd status
 ```
 
-All four collections should appear in `collection list`. `status` should show non-zero document and embedding counts — if embeddings are 0, re-run step 2.
+Both collections should appear in `collection list`. `status` should show non-zero document and embedding counts — if embeddings are 0, re-run step 2.
 
 ## Notes
 - `bun` is managed via `mise` — ensure `mise install` has been run before setup
