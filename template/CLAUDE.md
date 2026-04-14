@@ -209,15 +209,15 @@ N issues found, N fixed. [Brief summary of notable findings.]
 ## Search Tool
 
 This vault uses **qmd** (`bunx @tobilu/qmd`) for local semantic and full-text search.
-Collections and contexts are registered via `bun scripts/qmd/setup.ts` and stored in `qmd.sqlite` at the vault root (gitignored).
+Collections and contexts are registered via `bun scripts/qmd/setup.ts` and stored at `__QMD_PATH__` (gitignored).
 
 Key commands:
 
 | Command | Use |
 |---------|-----|
-| `INDEX_PATH=qmd.sqlite bunx @tobilu/qmd query -c wiki "<question>"` | Hybrid search — best for topic discovery |
-| `INDEX_PATH=qmd.sqlite bunx @tobilu/qmd search -c wiki "<terms>"` | Fast keyword search (BM25, no LLM) |
-| `INDEX_PATH=qmd.sqlite bunx @tobilu/qmd vsearch -c wiki "<question>"` | Pure vector/semantic search |
+| `INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd query -c wiki "<question>"` | Hybrid search — best for topic discovery |
+| `INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd search -c wiki "<terms>"` | Fast keyword search (BM25, no LLM) |
+| `INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd vsearch -c wiki "<question>"` | Pure vector/semantic search |
 
 Add `--json` for structured output. Omit `-c wiki` to search all collections (wiki, raw-sources, human, daily-notes).
 

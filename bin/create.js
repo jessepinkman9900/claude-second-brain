@@ -46,8 +46,7 @@ async function patchVault(targetDir, qmdPath, brainName) {
   await Promise.all(filesToPatch.map(async file => {
     try {
       let content = await readFile(file, "utf8")
-      content = content.replaceAll('"__QMD_PATH__"', `"${qmdPath}"`)
-      content = content.replaceAll("INDEX_PATH=qmd.sqlite", `INDEX_PATH=${qmdPath}`)
+      content = content.replaceAll("__QMD_PATH__", qmdPath)
       await writeFile(file, content, "utf8")
     } catch { /* file may not exist */ }
   }))
@@ -68,7 +67,7 @@ async function installGlobalSkills(qmdPath) {
     const destDir = join(globalSkillsDir, skillName)
 
     let content = await readFile(srcFile, "utf8")
-    content = content.replaceAll("INDEX_PATH=qmd.sqlite", `INDEX_PATH=${qmdPath}`)
+    content = content.replaceAll("__QMD_PATH__", qmdPath)
 
     await mkdir(destDir, { recursive: true })
     await writeFile(join(destDir, "SKILL.md"), content, "utf8")
