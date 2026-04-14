@@ -178,45 +178,6 @@ my-brain/
 
 Skills are slash commands Claude Code loads from `.claude/skills/[name]/SKILL.md`. `/brain-ingest` and `/brain-search` are installed globally to `~/.claude/skills/` during setup so they work in any Claude Code session. `/lint`, `/setup`, and `/qmd-cli` are installed into the vault itself.
 
-Additional skills can be installed from any GitHub repo using [vercel-labs/skills](https://github.com/vercel-labs/skills) — a CLI that works across Claude Code, Cursor, Codex, and 40+ other agents.
-
-### Discover skills
-
-```bash
-# Browse the community catalog interactively
-npx skills find
-
-# List all skills in a specific repo without installing
-npx skills add vercel-labs/agent-skills --list
-```
-
-Or search the full directory at [skills.sh](https://skills.sh).
-
-### Install skills
-
-```bash
-# Install from a GitHub repo (prompts to pick skills + agents)
-npx skills add vercel-labs/agent-skills
-
-# Install a specific skill to Claude Code, project-scoped
-npx skills add vercel-labs/agent-skills --skill frontend-design -a claude-code
-
-# Install globally (available in all projects)
-npx skills add vercel-labs/agent-skills --skill frontend-design -a claude-code -g
-```
-
-Skills are available immediately in any new Claude Code session — no restart required.
-
-### Update skills
-
-```bash
-# Update all installed skills
-npx skills update
-
-# Update a specific skill
-npx skills update frontend-design
-```
-
 ### Update the built-in wiki skills
 
 The wiki's own skills (`/brain-ingest`, `/brain-search`, `/lint`, `/setup`, `/qmd-cli`) are scaffolded at creation time. To pull in improvements, use `npx skills` pointing to the template skills directory in this repo:
