@@ -4,10 +4,10 @@
  * First run downloads ~2GB of GGUF models — expected, one-time.
  *
  * Run from vault root:
- *   bun scripts/qmd/reindex.ts
+ *   pnpm qmd:reindex
  *
  * Suitable as a cronjob:
- *   0 * * * * cd /home/user/my-brain && bun scripts/qmd/reindex.ts
+ *   0 * * * * cd /home/user/my-brain && pnpm qmd:reindex
  */
 
 import { createStore } from "@tobilu/qmd"

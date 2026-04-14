@@ -17,8 +17,9 @@
     "image.png"
   ],
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.0.0"
   },
+  "packageManager": "pnpm@10.8.0",
   "dependencies": {
     "@clack/prompts": "^1.2.0",
     "picocolors": "^1.1.1"

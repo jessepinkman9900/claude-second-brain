@@ -11,7 +11,7 @@ Runs the 4-step query workflow defined in CLAUDE.md. Answers come with inline `[
 ## Workflow
 
 **Step 1 — Search the wiki**
-- Run hybrid search: `INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd query -c wiki "<question>"`
+- Run hybrid search: `INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd query -c wiki "<question>"`
 - Read `wiki/index.md` to confirm coverage and catch any pages qmd didn't surface
 - Read the 2–5 most relevant pages in full before synthesizing
 
