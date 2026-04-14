@@ -107,7 +107,7 @@ async function main() {
 
   let ghRepoName = null
   if (createGhRepo) {
-    const ghNameAnswer = await ask(rl, `GitHub repo name? (${targetName}) › `)
+    const ghNameAnswer = await ask(rl, `GitHub repo name? (${targetName}) [will be created as private] › `)
     ghRepoName = ghNameAnswer.trim() || targetName
   }
 

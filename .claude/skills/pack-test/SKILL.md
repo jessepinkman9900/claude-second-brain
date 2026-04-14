@@ -88,6 +88,7 @@ rm -rf test-vault
 rm claude-second-brain-$(node -p "require('./package.json').version").tgz
 rm -rf ~/.claude/skills/brain-ingest
 rm -rf ~/.claude/skills/brain-search
+gh repo delete test-vault --yes
 ```
 
 > **Note:** If you had pre-existing `brain-ingest` / `brain-search` global skills from a real vault, they were overwritten by this test. Re-run `/setup` inside your real vault to restore them.

@@ -99,3 +99,6 @@ jobs:
           rm -rf test-vault
           VERSION=$(node -p "require('./package.json').version")
           rm -f "claude-second-brain-${VERSION}.tgz"
+          gh repo delete test-vault --yes 2>/dev/null || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
