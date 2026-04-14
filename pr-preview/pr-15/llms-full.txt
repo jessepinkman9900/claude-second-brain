@@ -1,0 +1,439 @@
+# claude-second-brain
+
+> The fastest way to start your personal knowledge base powered by Obsidian, Claude Code, qmd, and GitHub.
+
+## Getting Started
+
+### Requirements
+
+* [mise](https://mise.jdx.dev/) — auto-installed by the CLI if missing
+* [Claude Code](https://claude.ai/code) — the CLI that runs the wiki
+* [Obsidian](https://obsidian.md/) — optional but recommended
+
+### Step 1 — Scaffold
+
+```bash
+npx claude-second-brain
+```
+
+The CLI will ask:
+
+* **Folder name** — where to create your vault (default: `my-brain`)
+* **qmd index path** — where to store the local search index (default: `~/.cache/qmd/index.sqlite`)
+* **GitHub repo** — optionally create a private repo and push automatically (requires `gh` CLI)
+
+Then scaffolds the vault, installs `mise` + `node` + `pnpm`, runs `pnpm install`, and `git init`.
+
+### Step 2 — Initialize inside Claude Code
+
+```bash
+cd my-brain && claude
+```
+
+Then run:
+
+```
+/setup
+```
+
+Registers the qmd collections and generates local vector embeddings. First run downloads \~2GB of GGUF models — once.
+
+### Step 3 — Open in Obsidian (and push to GitHub if not done)
+
+**If you created a GitHub repo during setup**, it's already pushed — skip straight to opening in Obsidian.
+
+**If you skipped GitHub during setup**, connect it now:
+
+```bash
+git remote add origin https://github.com/you/my-brain.git
+git push -u origin main
+```
+
+Open `my-brain/` as a vault in Obsidian — the folder is already a valid Obsidian vault. The Git plugin is pre-configured — enable it and sync is automatic.
+
+### Access from anywhere
+
+**Edit anywhere — Claude Code on desktop or mobile.** Claude Code's GitHub integration lets you open the repo and work from anywhere — ingest a source, run a query, or update a page from your phone.
+
+**Read anywhere — Obsidian desktop and mobile.** Open the repo as an Obsidian vault. The bundled `.obsidian` folder pre-configures [obsidian-git](https://github.com/Vinzent03/obsidian-git) — no setup required. Your wiki syncs automatically on every commit. For iOS: put the repo folder inside iCloud Drive — Obsidian Mobile picks it up natively.
+
+**Browse anywhere — GitHub.** It's a plain GitHub repo. View and edit files directly in the browser at any time.
+
+
+## Ship log
+
+A running record of every released version of `claude-second-brain` on npm. Newest releases first. For auto-generated notes and tags, see the [GitHub releases](https://github.com/jessepinkman9900/claude-second-brain/releases) page.
+
+### v0.5.1 — 2026-04-14
+
+* Maintenance release (version bump only).
+
+### v0.5.0 — 2026-04-14
+
+**Docs:**
+
+* Added a vocs-powered documentation site, deployed to GitHub Pages.
+* Aligned the `package.json` description with the README tagline.
+
+### v0.4.2 — 2026-04-14
+
+**Features:**
+
+* Added the `/brain-refresh` and `/brain-rebuild` skills for re-embedding and redesigning the qmd index.
+
+**Refactors:**
+
+* Unified every qmd path reference behind the `__QMD_PATH__` placeholder and parallelized file patching during scaffold.
+* CLI version is now read from `package.json` instead of being hardcoded.
+
+**Fixes:**
+
+* Resolved a batch of code smells and factual inconsistencies across the codebase.
+* `patchVault` now surfaces non-`ENOENT` errors instead of swallowing them.
+* Fixed a failing CI job.
+
+**Docs:**
+
+* Added a unified mermaid architecture diagram to both READMEs.
+* Removed generic skills-marketplace boilerplate.
+
+### v0.4.1 — 2026-04-14
+
+**Refactor:**
+
+* Renamed the `sources/` directory to `raw-sources/` to eliminate the naming collision with `wiki/sources/`.
+
+### v0.4.0 — 2026-04-14
+
+**Features:**
+
+* Renamed the core skills to `brain-ingest` and `brain-search`, and wired qmd path setup into scaffolding.
+* Added a GitHub repo creation prompt during `npx claude-second-brain` (with a private-repo notice and a fallback that removes the repo on failure).
+* The generated README title now matches the brain folder name.
+* Polished the CLI UX with `@clack/prompts` and now runs `mise trust` before installing dependencies.
+
+**Docs:**
+
+* Updated READMEs to reflect the new CLI prompts and skill renames.
+
+**Chore:**
+
+* Removed template skills from `.claude/skills`.
+* Changed the license badge color.
+
+### v0.3.0 — 2026-04-12
+
+* Squashed release PR ([#7](https://github.com/jessepinkman9900/claude-second-brain/pull/7)) bundling CLI refinements and template adjustments that followed the `feat/npx` series.
+
+### v0.2.3 — 2026-04-11
+
+**Features:**
+
+* Shipped the missing `.obsidian/` folder inside the template so scaffolded vaults open directly in Obsidian.
+
+**Docs:**
+
+* Added the MIT License file.
+
+### v0.2.2 — 2026-04-11
+
+**Docs:**
+
+* Added a GitHub URL to the package metadata.
+* Added the project image to the package so the npm card renders correctly.
+
+### v0.2.1 — 2026-04-11
+
+**Chore:**
+
+* Merged the release and publish steps into a single `release-publish.yml` workflow.
+* Hardened the CI pipeline.
+
+### v0.2.0 — 2026-04-11
+
+* First public release to npm.
+* Introduced the template scaffold and the `npx claude-second-brain` flow.
+* Added the initial README, the release workflow, and the `/pack-test` skill.
+
+
+## Skills
+
+The wiki ships with a set of Claude Code slash commands that cover the full workflow. No manual prompting, no copy-pasting.
+
+### Daily workflow
+
+* [**`/brain-ingest`**](/skills/brain-ingest) — Drop a file into `raw-sources/`. Claude summarizes the source, creates a `wiki/sources/` page, updates related topic pages, and flags contradictions.
+* [**`/brain-search`**](/skills/brain-search) — Ask anything. Claude runs hybrid search, reads the most relevant pages, and writes an answer with inline `[[wiki/page]]` citations.
+* [**`/lint`**](/skills/lint) — Health-check the wiki. Surfaces orphan pages, broken links, unresolved contradictions, and data gaps.
+
+### Maintenance
+
+* [**`/brain-refresh`**](/skills/brain-refresh) — Re-scan the vault and regenerate vector embeddings for new or changed files.
+* [**`/brain-rebuild`**](/skills/brain-rebuild) — **Destructive.** Redesigns the qmd schema, drops the old index, and rebuilds from scratch. Use only when the current structure no longer fits how you search.
+
+### Setup
+
+* [**`/setup`**](/skills/setup) — First-time initialization. Registers the qmd collections and generates local vector embeddings. Run once after scaffolding.
+
+### Install or update skills
+
+`/brain-ingest`, `/brain-search`, and `/brain-refresh` install globally to `~/.claude/skills/` during setup so they work in any Claude Code session. `/brain-rebuild`, `/lint`, `/setup`, and `/qmd-cli` live inside the vault at `.claude/skills/`.
+
+To pull in improvements from the latest template:
+
+```bash
+# Install or update all 7 wiki skills
+npx skills add https://github.com/jessepinkman9900/claude-second-brain/tree/main/template/.claude/skills -a claude-code -y
+
+# Or update a specific skill
+npx skills add https://github.com/jessepinkman9900/claude-second-brain/tree/main/template/.claude/skills --skill brain-ingest -a claude-code -y
+```
+
+Once installed via `npx skills`, future updates are a single command:
+
+```bash
+npx skills update -a claude-code
+```
+
+
+## /brain-ingest
+
+Ingest a new source into the wiki.
+
+Drop a file into `raw-sources/articles/`, `raw-sources/pdfs/`, or `raw-sources/personal/`, then run `/brain-ingest`. Claude will:
+
+1. **Read** the source in full.
+2. **Summarize** it in 3–5 bullets and ask you what matters most.
+3. **Create** a `wiki/sources/[slug].md` page with abstract, key claims, notable quotes, and your synthesis note.
+4. **Update** or create topic/entity pages that the source touches, integrating it as prose (not copy-paste) with source attribution.
+5. **Flag contradictions** with `[!WARNING]` callouts on any page where the new source disagrees with existing claims.
+6. **Log** the ingest in `wiki/log.md`.
+
+Scope: global skill, installed at `~/.claude/skills/brain-ingest/SKILL.md`. Source: [template/.claude/skills/brain-ingest/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-ingest/SKILL.md).
+
+
+## /brain-rebuild
+
+**Destructive.** Redesign the qmd schema from scratch.
+
+Use only when the current collection/context structure no longer fits how you search — for example, when the wiki has grown into new domains that deserve their own collections.
+
+What it does:
+
+1. Analyzes the current wiki.
+2. Proposes new collections and contexts.
+3. **Waits for your approval** before any destructive action.
+4. Patches `scripts/qmd/setup.ts`, drops the old index, and rebuilds embeddings from scratch.
+
+Scope: vault-local, installed at `.claude/skills/brain-rebuild/SKILL.md`. Source: [template/.claude/skills/brain-rebuild/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-rebuild/SKILL.md).
+
+
+## /brain-refresh
+
+Refresh the qmd index.
+
+Re-scans all collections for new or changed files and regenerates vector embeddings. Run after a bulk ingest session or manual edits to the wiki.
+
+Pass `force` to re-embed every chunk — useful after changing the embedding model.
+
+Scope: global skill, installed at `~/.claude/skills/brain-refresh/SKILL.md`. Source: [template/.claude/skills/brain-refresh/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-refresh/SKILL.md).
+
+
+## /brain-search
+
+Query the wiki to answer a question.
+
+Runs hybrid search (vector + BM25) across the entire wiki, reads the 2–5 most relevant pages, and synthesizes an answer with inline `[[wiki/page]]` citations. Flags gaps where the wiki has no coverage.
+
+If the answer pulls together multiple pages in a novel way, it offers to file it as a permanent `wiki/qa/[slug].md` entry — so the synthesis compounds next time.
+
+Scope: global skill, installed at `~/.claude/skills/brain-search/SKILL.md`. Source: [template/.claude/skills/brain-search/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-search/SKILL.md).
+
+
+## /lint
+
+Health-check the wiki.
+
+Reports on:
+
+* **Orphan pages** — wiki pages with no inbound `[[links]]`.
+* **Unresolved contradictions** — pages with `[!WARNING] Contradiction` callouts that haven't been resolved.
+* **Stale claims** — claims superseded by newer sources.
+* **Missing pages** — concepts/entities referenced by `[[links]]` that lack their own page.
+* **Broken links** — wikilinks pointing to files that don't exist.
+* **Data gaps** — important topics that lack source coverage; suggests specific sources to investigate.
+
+Applies fixes where safe and flags everything else for your review. Appends a summary to `wiki/log.md`.
+
+Scope: vault-local, installed at `.claude/skills/lint/SKILL.md`. Source: [template/.claude/skills/lint/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/lint/SKILL.md).
+
+
+## /setup
+
+First-time initialization. Run this once, right after scaffolding the vault.
+
+What it does:
+
+1. Registers the qmd collections and contexts (`wiki`, `raw-sources`, `human`, `daily-notes`).
+2. Generates local vector embeddings for every markdown file.
+3. Writes the index to the path you chose during scaffolding (default `~/.cache/qmd/index.sqlite`).
+
+The first run downloads \~2 GB of GGUF embedding models — this happens once, then is cached across vaults.
+
+Scope: vault-local, installed at `.claude/skills/setup/SKILL.md`. Source: [template/.claude/skills/setup/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/setup/SKILL.md).
+
+
+## How it works
+
+Sources flow in on the left, Claude synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and GitHub makes the whole vault editable from Obsidian and Claude Code on any device.
+
+```mermaid
+flowchart TB
+  subgraph Sources["raw-sources/ — raw, immutable"]
+    direction LR
+    S1[articles/]
+    S2[pdfs/]
+    S3[personal/]
+  end
+
+  subgraph Skills["Claude Code skills"]
+    direction LR
+    I["/brain-ingest"]
+    Q["/brain-search"]
+    R["/brain-refresh"]
+  end
+
+  subgraph Wiki["wiki/ — cross-linked synthesis"]
+    direction LR
+    W1[overview.md]
+    W2[topic / entity pages]
+    W3[sources/]
+    W4[qa/]
+  end
+
+  QMD[("qmd.sqlite<br/>vector + BM25<br/>hybrid index")]
+
+  subgraph Remote["GitHub — source of truth"]
+    GH[private repo]
+  end
+
+  subgraph Read["Read / edit anywhere"]
+    direction LR
+    OB["Obsidian<br/>graph · backlinks · mobile"]
+    CC["Claude Code<br/>desktop + mobile"]
+  end
+
+  User((you))
+
+  Sources -->|read| I
+  I -->|write pages, cross-link,<br/>flag contradictions| Wiki
+  R -.->|chunk + embed<br/>changed files| QMD
+  Wiki -.->|indexed by| QMD
+  User -->|ask a question| Q
+  Q -->|hybrid search| QMD
+  QMD -->|top-k pages| Q
+  Q -->|cited answer| User
+  Wiki <-->|"obsidian-git<br/>auto commit / pull"| GH
+  GH --> OB
+  GH --> CC
+```
+
+### The ingest loop, zoomed in
+
+```
+┌─────────────────────┐        ┌─────────────────────┐        ┌─────────────────────┐
+│   Drop in a source  │        │ /brain-ingest       │        │     Wiki grows      │
+│                     │        │                     │        │                     │
+│  · article          │──────▶ │  reads + extracts   │──────▶ │  · cross-linked     │
+│  · PDF              │        │  key knowledge      │        │  · contradictions   │
+│  · personal note    │        │                     │        │    flagged          │
+│                     │        │                     │        │  · syntheses        │
+└─────────────────────┘        └─────────────────────┘        └─────────────────────┘
+```
+
+Query it anytime with `/brain-search`. Get answers with inline `[[wiki/page]]` citations, not a list of files.
+
+### Directory layout
+
+```
+my-brain/
+├── CLAUDE.md              ← The schema. Claude reads this every session.
+├── raw-sources/           ← Your raw inputs. Claude never modifies these.
+│   ├── articles/
+│   ├── pdfs/
+│   └── personal/
+├── wiki/                  ← Claude owns this entirely.
+│   ├── index.md
+│   ├── log.md
+│   ├── overview.md
+│   ├── sources/
+│   └── qa/
+└── scripts/qmd/           ← Semantic search setup and re-indexing
+```
+
+
+## Wiki schema
+
+The authoritative schema lives in [CLAUDE.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/CLAUDE.md) — Claude reads it at the start of every session. This page is a readable summary.
+
+### Page types
+
+| Type             | File                     | Purpose                             |
+| ---------------- | ------------------------ | ----------------------------------- |
+| `overview`       | `wiki/overview.md`       | Evolving high-level synthesis       |
+| `topic`          | `wiki/[concept].md`      | A concept, domain, or idea          |
+| `entity`         | `wiki/[name].md`         | A person, tool, company, or project |
+| `source-summary` | `wiki/sources/[slug].md` | One page per ingested source        |
+| `qa`             | `wiki/qa/[slug].md`      | Filed answers to notable queries    |
+
+Plus two admin pages: `wiki/index.md` (master index) and `wiki/log.md` (running activity log).
+
+### Frontmatter
+
+Every wiki page has YAML frontmatter:
+
+```yaml
+---
+type: overview | topic | entity | source-summary | qa | admin
+tags: [tag1, tag2]
+sources: ["[[wiki/sources/source-slug]]"]
+related: ["[[wiki/related-page]]"]
+updated: YYYY-MM-DD
+---
+```
+
+### Naming conventions
+
+* **File names** — kebab-case, all lowercase. `machine-learning-ops.md`, not `MachineLearningOps.md`.
+* **Links** — always Obsidian `[[wikilinks]]` for internal cross-references. Full paths from vault root: `[[wiki/distributed-systems]]`.
+* **Sections** — `##` for top-level, `###` for subsections.
+* **Contradictions** — flagged with a `> [!WARNING] Contradiction` callout. Both claims and their sources are stated.
+* **Uncertainty** — claims the model isn't sure about are marked with `[?]` inline.
+
+### Directory layout
+
+```
+my-brain/
+├── CLAUDE.md              ← The schema
+├── raw-sources/           ← Immutable raw inputs
+│   ├── articles/
+│   ├── pdfs/
+│   └── personal/
+└── wiki/                  ← Claude-owned knowledge base
+    ├── index.md
+    ├── log.md
+    ├── overview.md
+    ├── sources/
+    └── qa/
+```
+
+### Hard rules
+
+1. Nothing in `raw-sources/` is ever modified — they are immutable raw inputs.
+2. Only `wiki/` is owned by Claude; the rest of the vault is untouched.
+3. `wiki/log.md` is append-only, never overwritten.
+4. One source summary per ingested source in `wiki/sources/` — never merged.
+5. Every wiki page has frontmatter with at least `type` and `updated`.
+6. Cross-link aggressively — if a topic has (or should have) a page, link it with `[[wiki/page]]`.
+7. Pages are **synthesis**, not transcription.
+
