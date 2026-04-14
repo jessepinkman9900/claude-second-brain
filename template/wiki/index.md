@@ -8,7 +8,7 @@ updated: 2026-01-01
 
 ## Sources Ingested
 
-_No sources ingested yet. Run `/ingest` to add your first source._
+_No sources ingested yet. Run `/brain-ingest` to add your first source._
 
 ## Topic Pages
 
