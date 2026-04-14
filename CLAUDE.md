@@ -240,7 +240,7 @@ Whenever you **add, remove, or rename a skill** under `template/.claude/skills/`
 
 1. **`README.md`** (root) — the "Claude Code skills included" section and the "Installing and updating skills" block. Bump the skill count ("N wiki skills") in the install commands.
 2. **`template/README.md`** — the "Your Claude Code skills" section and the "Installing and updating skills" block. Bump the skill count.
-3. **`bin/create.js`** — the `installGlobalSkills()` array (lines ~65) if the skill should be installed globally (`~/.claude/skills/`). `brain-ingest`, `brain-search`, `brain-refresh` are global today; `brain-rebuild`, `lint`, `setup`, `qmd-cli` are vault-local.
+3. **`bin/create.js`** — the skill-name array inside `installGlobalSkills()` if the skill should be installed globally (`~/.claude/skills/`). `brain-ingest`, `brain-search`, `brain-refresh` are global today; `brain-rebuild`, `lint`, `setup`, `qmd-cli` are vault-local.
 4. **`.github/workflows/pack-test.yml`** — add a `check` line for the new vault-local skill directory, and if the skill is global, add a `check` line for `$HOME/.claude/skills/<name>/SKILL.md` plus a `grep_check` for `INDEX_PATH=/`.
 5. **`.claude/skills/pack-test/SKILL.md`** — update the expected-skills comment, the `ls` and `grep` commands in Step 3, the checklist table (including the "N subdirs" count), and the cleanup / overwrite-warning note in Step 4.
 
