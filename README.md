@@ -19,7 +19,7 @@ One command gives you a fully wired knowledge system:
 - The scaffolded folder **is your Obsidian vault** — open it directly in [Obsidian](https://obsidian.md), with [obsidian-git](https://github.com/Vinzent03/obsidian-git) pre-configured for seamless sync
 - GitHub is the source of truth — version history, anywhere access, and a backup you control
 
-You've been reading papers, articles, and books for years. Drop a source in, run `/ingest`, and Claude reads it — extracts what matters, cross-links it to everything you already know, and files it. Ask a question six months later and get cited answers, not a list of files to re-read.
+You've been reading papers, articles, and books for years. Drop a source in, run `/brain-ingest`, and Claude reads it — extracts what matters, cross-links it to everything you already know, and files it. Ask a question six months later and get cited answers, not a list of files to re-read.
 
 > **Inspired by [Andrej Karpathy's approach to LLM-powered knowledge management](https://x.com/karpathy/status/2040470801506541998?s=20)** — share an "idea file" with an LLM agent and let it build and maintain your knowledge base.
 
@@ -63,7 +63,7 @@ Creates your vault (the folder itself is the Obsidian vault), installs `mise` + 
 **Step 2 — Initialize inside Claude Code**
 
 ```bash
-cd my-wiki && claude
+cd my-brain && claude
 ```
 
 Then run:
@@ -77,21 +77,21 @@ Registers the qmd collections and generates local vector embeddings. First run d
 **Step 3 — Push to GitHub and open in Obsidian**
 
 ```bash
-git remote add origin https://github.com/you/my-wiki.git
+git remote add origin https://github.com/you/my-brain.git
 git push -u origin main
 ```
 
-Open `my-wiki/` as a vault in Obsidian — the folder is already a valid Obsidian vault. The Git plugin is pre-configured — enable it and sync is automatic.
+Open `my-brain/` as a vault in Obsidian — the folder is already a valid Obsidian vault. The Git plugin is pre-configured — enable it and sync is automatic.
 
 ---
 
 ## Claude Code skills included
 
-The wiki ships with three slash commands that cover the full workflow. No manual prompting, no copy-pasting.
+The wiki ships with two global slash commands that cover the full workflow. No manual prompting, no copy-pasting.
 
-**`/ingest`** — Drop a file into `sources/articles/`, `sources/pdfs/`, or `sources/personal/`. Run `/ingest`. Claude summarizes the source, asks what matters most to you, creates a `wiki/sources/` page, updates or creates related topic pages, flags any contradictions with existing knowledge, and logs everything.
+**`/brain-ingest`** — Drop a file into `sources/articles/`, `sources/pdfs/`, or `sources/personal/`. Run `/brain-ingest`. Claude summarizes the source, asks what matters most to you, creates a `wiki/sources/` page, updates or creates related topic pages, flags any contradictions with existing knowledge, and logs everything.
 
-**`/query`** — Ask anything about what you know. Claude runs hybrid semantic search across the wiki, reads the most relevant pages, and writes an answer with inline `[[wiki/page]]` citations. If the answer synthesizes multiple pages in a novel way, it offers to file it as a permanent `wiki/qa/` entry.
+**`/brain-search`** — Ask anything about what you know. Claude runs hybrid semantic search across the wiki, reads the most relevant pages, and writes an answer with inline `[[wiki/page]]` citations. If the answer synthesizes multiple pages in a novel way, it offers to file it as a permanent `wiki/qa/` entry.
 
 **`/lint`** — Health-check the wiki. Surfaces orphan pages, broken links, unresolved contradictions, and data gaps. Reports findings and applies fixes where possible.
 
@@ -114,7 +114,7 @@ It's a plain GitHub repo. View and edit files directly in the browser at any tim
 
 ```
 ┌─────────────────────┐        ┌─────────────────────┐        ┌─────────────────────┐
-│   Drop in a source  │        │  /ingest in Claude  │        │     Wiki grows      │
+│   Drop in a source  │        │ /brain-ingest       │        │     Wiki grows      │
 │                     │        │        Code         │        │                     │
 │  · article          │──────▶ │                     │──────▶ │  · cross-linked     │
 │  · PDF              │        │  reads + extracts   │        │    pages            │
@@ -125,7 +125,7 @@ It's a plain GitHub repo. View and edit files directly in the browser at any tim
                                                               └─────────────────────┘
 ```
 
-Query it anytime with `/query`. Get answers with inline `[[wiki/page]]` citations, not a list of files.
+Query it anytime with `/brain-search`. Get answers with inline `[[wiki/page]]` citations, not a list of files.
 
 ---
 
@@ -148,7 +148,7 @@ All pages cross-link with Obsidian `[[wikilinks]]`. Contradictions are flagged w
 ## Directory layout
 
 ```
-my-wiki/
+my-brain/
 ├── CLAUDE.md              ← The schema. Claude reads this every session.
 ├── sources/               ← Your raw inputs. Claude never modifies these.
 │   ├── articles/
@@ -161,6 +161,69 @@ my-wiki/
 │   ├── sources/
 │   └── qa/
 └── scripts/qmd/           ← Semantic search setup and re-indexing
+```
+
+---
+
+## Installing and updating skills
+
+Skills are slash commands Claude Code loads from `.claude/skills/[name]/SKILL.md`. `/brain-ingest` and `/brain-search` are installed globally to `~/.claude/skills/` during setup so they work in any Claude Code session. `/lint`, `/setup`, and `/qmd-cli` are installed into the vault itself.
+
+Additional skills can be installed from any GitHub repo using [vercel-labs/skills](https://github.com/vercel-labs/skills) — a CLI that works across Claude Code, Cursor, Codex, and 40+ other agents.
+
+### Discover skills
+
+```bash
+# Browse the community catalog interactively
+npx skills find
+
+# List all skills in a specific repo without installing
+npx skills add vercel-labs/agent-skills --list
+```
+
+Or search the full directory at [skills.sh](https://skills.sh).
+
+### Install skills
+
+```bash
+# Install from a GitHub repo (prompts to pick skills + agents)
+npx skills add vercel-labs/agent-skills
+
+# Install a specific skill to Claude Code, project-scoped
+npx skills add vercel-labs/agent-skills --skill frontend-design -a claude-code
+
+# Install globally (available in all projects)
+npx skills add vercel-labs/agent-skills --skill frontend-design -a claude-code -g
+```
+
+Skills are available immediately in any new Claude Code session — no restart required.
+
+### Update skills
+
+```bash
+# Update all installed skills
+npx skills update
+
+# Update a specific skill
+npx skills update frontend-design
+```
+
+### Update the built-in wiki skills
+
+The wiki's own skills (`/brain-ingest`, `/brain-search`, `/lint`, `/setup`, `/qmd-cli`) are scaffolded at creation time. To pull in improvements, use `npx skills` pointing to the template skills directory in this repo:
+
+```bash
+# Install or update all 5 wiki skills from the latest template
+npx skills add https://github.com/jessepinkman9900/claude-second-brain/tree/main/template/.claude/skills -a claude-code -y
+
+# Or update a specific skill
+npx skills add https://github.com/jessepinkman9900/claude-second-brain/tree/main/template/.claude/skills --skill brain-ingest -a claude-code -y
+```
+
+Once installed via `npx skills`, future updates are a single command:
+
+```bash
+npx skills update -a claude-code
 ```
 
 ---

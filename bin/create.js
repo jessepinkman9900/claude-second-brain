@@ -1,9 +1,11 @@
 #!/usr/bin/env node
-import { cp, rename, access } from "fs/promises"
+import { cp, rename, access, readFile, writeFile, mkdir } from "fs/promises"
+import { readdirSync } from "fs"
 import { join, dirname } from "path"
 import { fileURLToPath } from "url"
 import { spawnSync } from "child_process"
 import { createInterface } from "readline/promises"
+import { homedir } from "os"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const TEMPLATE = join(__dirname, "../template")
@@ -18,15 +20,66 @@ function commandExists(cmd) {
   return result.status === 0
 }
 
-async function main() {
-  let targetName = process.argv[2]
+async function patchVault(targetDir, qmdPath) {
+  const filesToPatch = [
+    join(targetDir, "scripts/qmd/setup.ts"),
+    join(targetDir, "scripts/qmd/reindex.ts"),
+    join(targetDir, "CLAUDE.md"),
+  ]
 
-  if (!targetName) {
-    const rl = createInterface({ input: process.stdin, output: process.stdout })
-    const answer = await rl.question("Where to create your wiki? (my-wiki) › ")
-    rl.close()
-    targetName = answer.trim() || "my-wiki"
+  // Add all skill SKILL.md files
+  const skillsDir = join(targetDir, ".claude/skills")
+  try {
+    for (const skill of readdirSync(skillsDir)) {
+      filesToPatch.push(join(skillsDir, skill, "SKILL.md"))
+    }
+  } catch { /* no skills dir */ }
+
+  for (const file of filesToPatch) {
+    try {
+      let content = await readFile(file, "utf8")
+      content = content.replaceAll('const DB = join(VAULT, "qmd.sqlite")', `const DB = "${qmdPath}"`)
+      content = content.replaceAll("INDEX_PATH=qmd.sqlite", `INDEX_PATH=${qmdPath}`)
+      await writeFile(file, content, "utf8")
+    } catch { /* file may not exist */ }
   }
+}
+
+async function installGlobalSkills(qmdPath) {
+  const globalSkillsDir = join(homedir(), ".claude", "skills")
+
+  for (const skillName of ["brain-ingest", "brain-search"]) {
+    const srcFile = join(TEMPLATE, ".claude/skills", skillName, "SKILL.md")
+    const destDir = join(globalSkillsDir, skillName)
+
+    let content = await readFile(srcFile, "utf8")
+    content = content.replaceAll("INDEX_PATH=qmd.sqlite", `INDEX_PATH=${qmdPath}`)
+
+    await mkdir(destDir, { recursive: true })
+    await writeFile(join(destDir, "SKILL.md"), content, "utf8")
+    console.log(`  ✓ ~/.claude/skills/${skillName}/SKILL.md`)
+  }
+}
+
+async function main() {
+  const rl = createInterface({ input: process.stdin, output: process.stdout })
+
+  // 1. Folder name
+  let targetName = process.argv[2]
+  if (!targetName) {
+    const answer = await rl.question("Where to create your brain? (my-brain) › ")
+    targetName = answer.trim() || "my-brain"
+  }
+
+  // 2. qmd path
+  const defaultQmdPath = join(
+    process.env.XDG_CACHE_HOME || join(homedir(), ".cache"),
+    "qmd", "index.sqlite"
+  )
+  const qmdAnswer = await rl.question(`Where to store the qmd index? (${defaultQmdPath}) › `)
+  const qmdPath = qmdAnswer.trim() || defaultQmdPath
+
+  rl.close()
 
   const targetDir = join(process.cwd(), targetName)
 
@@ -39,7 +92,7 @@ async function main() {
     // Directory doesn't exist — good to go
   }
 
-  // 1. Scaffold
+  // 3. Scaffold
   console.log(`\nCreating ${targetName}...`)
   await cp(TEMPLATE, targetDir, { recursive: true })
 
@@ -55,7 +108,11 @@ async function main() {
 
   console.log(`✓ Created ${targetName}/`)
 
-  // 2. Install mise if not present
+  // 4. Patch vault files with chosen qmd path
+  await patchVault(targetDir, qmdPath)
+  console.log(`✓ Configured qmd path: ${qmdPath}`)
+
+  // 5. Install mise if not present
   if (!commandExists("mise")) {
     console.log("\nInstalling mise...")
     const ok = run(["npm", "install", "-g", "@jdxcode/mise"])
@@ -66,7 +123,7 @@ async function main() {
     }
   }
 
-  // 3. Run mise install inside the new vault to install bun
+  // 6. Run mise install inside the new vault to install bun
   console.log("\nInstalling bun via mise...")
   const miseOk = run(["mise", "install"], targetDir)
   if (miseOk) {
@@ -75,7 +132,7 @@ async function main() {
     console.error("  mise install failed — run it manually inside your vault")
   }
 
-  // 4. Git init
+  // 7. Git init
   console.log("\nInitializing git repo...")
   const gitOk = run(["git", "init"], targetDir)
   if (gitOk) {
@@ -86,7 +143,11 @@ async function main() {
     console.error("  git init failed — run it manually inside your vault")
   }
 
-  console.log(`\n✓ Done! Your wiki is ready.\n`)
+  // 8. Install global skills
+  console.log("\nInstalling global skills...")
+  await installGlobalSkills(qmdPath)
+
+  console.log(`\n✓ Done! Your brain is ready.\n`)
   console.log("Next steps:")
   console.log(`  cd ${targetName}`)
   console.log("  claude                      # open Claude Code, then run /setup")

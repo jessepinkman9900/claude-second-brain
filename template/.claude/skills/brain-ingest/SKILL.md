@@ -1,10 +1,10 @@
 ---
-name: ingest
-description: "Ingest a new source into the wiki. Reads the source, summarizes it, creates a wiki/sources/ page, updates affected topic and entity pages, flags contradictions, and logs the activity. Trigger phrases: /ingest, ingest [file or URL], add this source, read and file this, process this article/paper/note."
+name: brain-ingest
+description: "Ingest a new source into the wiki. Reads the source, summarizes it, creates a wiki/sources/ page, updates affected topic and entity pages, flags contradictions, and logs the activity. Trigger phrases: /brain-ingest, ingest [file or URL], add this source, read and file this, process this article/paper/note."
 argument-hint: "File path (e.g. sources/articles/my-article.md), URL, or leave blank if source is pasted in chat"
 ---
 
-# Ingest
+# Brain Ingest
 
 Runs the full 9-step ingest workflow defined in CLAUDE.md. Do not skip steps.
 

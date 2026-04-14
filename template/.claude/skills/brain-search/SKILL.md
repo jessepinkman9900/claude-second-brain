@@ -1,10 +1,10 @@
 ---
-name: query
-description: "Query the wiki to answer a question. Searches semantically, synthesizes an answer with inline citations, and optionally files the answer as a permanent Q&A page. Trigger phrases: /query, what do I know about, search the wiki, find everything about, what does the wiki say about."
+name: brain-search
+description: "Query the wiki to answer a question. Searches semantically, synthesizes an answer with inline citations, and optionally files the answer as a permanent Q&A page. Trigger phrases: /brain-search, what do I know about, search the wiki, find everything about, what does the wiki say about."
 argument-hint: "The question or topic to query (e.g. 'what do I know about transformer architecture?')"
 ---
 
-# Query
+# Brain Search
 
 Runs the 4-step query workflow defined in CLAUDE.md. Answers come with inline `[[wiki/page]]` citations — not a list of files.
 
