@@ -1,0 +1,16 @@
+# claude-second-brain
+
+> The fastest way to start your personal knowledge base powered by Obsidian, Claude Code, qmd, and GitHub.
+
+## Docs
+
+- [Getting Started](/claude-second-brain/getting-started): [mise](https://mise.jdx.dev/) — auto-installed by the CLI if missing
+- [Skills](/claude-second-brain/skills): The wiki ships with a set of Claude Code slash commands that cover the full workflow. No manual prompting, no copy-pasting.
+- [/brain-ingest](/claude-second-brain/skills/brain-ingest): Ingest a new source into the wiki.
+- [/brain-rebuild](/claude-second-brain/skills/brain-rebuild): **Destructive.** Redesign the qmd schema from scratch.
+- [/brain-refresh](/claude-second-brain/skills/brain-refresh): Refresh the qmd index.
+- [/brain-search](/claude-second-brain/skills/brain-search): Query the wiki to answer a question.
+- [/lint](/claude-second-brain/skills/lint): Health-check the wiki.
+- [/setup](/claude-second-brain/skills/setup): First-time initialization. Run this once, right after scaffolding the vault.
+- [How it works](/claude-second-brain/concepts/how-it-works): Sources flow in on the left, Claude synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and GitHub makes the whole vault editable from Obsidian and Claude Code on any device.
+- [Wiki schema](/claude-second-brain/concepts/schema): The authoritative schema lives in [CLAUDE.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/CLAUDE.md) — Claude reads it at the start of every session. This page is a readable summary.
