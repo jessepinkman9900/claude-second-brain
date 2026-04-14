@@ -13,7 +13,7 @@ import { createStore } from "@tobilu/qmd"
 import { join } from "path"
 
 const VAULT = join(import.meta.dir, "../..")
-const DB = join(VAULT, "qmd.sqlite")
+const DB = "__QMD_PATH__"
 
 const store = await createStore({ dbPath: DB })
 
