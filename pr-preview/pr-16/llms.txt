@@ -1,0 +1,33 @@
+# claude-second-brain
+
+> The fastest way to start your personal knowledge base powered by Obsidian, Claude Code, qmd, and GitHub. One command scaffolds a fully wired wiki where Claude ingests sources, maintains cross-linked pages, and answers questions with inline citations.
+
+claude-second-brain is an npm package (`npx claude-second-brain`) that scaffolds a personal knowledge management system. It is not a RAG system or a chatbot over your notes — it is an actively maintained, cross-linked wiki with five structured page types, YAML frontmatter, and a set of Claude Code slash-command skills that run the full ingest → search → lint workflow automatically.
+
+The schema file (`CLAUDE.md`) is the core operating instruction: Claude reads it at the start of every session and follows it to summarize sources, update topic and entity pages, flag contradictions, and file cited Q&A answers.
+
+## Getting Started
+
+- [Introduction](https://jessepinkman9900.github.io/claude-second-brain/): What claude-second-brain is and how it differs from RAG and chatbot approaches
+- [Getting Started](https://jessepinkman9900.github.io/claude-second-brain/getting-started): Three-step setup — scaffold the vault, run /setup inside Claude Code, open in Obsidian
+
+## Concepts
+
+- [How it works](https://jessepinkman9900.github.io/claude-second-brain/concepts/how-it-works): Data flow from raw sources through Claude ingest to the cross-linked wiki and local hybrid search index
+- [Wiki schema](https://jessepinkman9900.github.io/claude-second-brain/concepts/schema): Five page types (overview, topic, entity, source-summary, qa), YAML frontmatter format, naming conventions, and the seven hard rules Claude follows
+
+## Skills
+
+- [Skills overview](https://jessepinkman9900.github.io/claude-second-brain/skills): All Claude Code slash commands and their roles in the workflow
+- [/brain-ingest](https://jessepinkman9900.github.io/claude-second-brain/skills/brain-ingest): Ingest a source — summarize, create a wiki/sources/ page, update related topic pages, flag contradictions, log activity
+- [/brain-search](https://jessepinkman9900.github.io/claude-second-brain/skills/brain-search): Ask anything — runs hybrid semantic search (vector + BM25), reads relevant pages, returns a cited answer; optionally files it as a qa/ page
+- [/brain-refresh](https://jessepinkman9900.github.io/claude-second-brain/skills/brain-refresh): Re-scan the vault and regenerate vector embeddings for new or changed files; pass `force` to re-embed everything
+- [/brain-rebuild](https://jessepinkman9900.github.io/claude-second-brain/skills/brain-rebuild): Destructive — redesigns the qmd schema, drops the old index, and rebuilds embeddings from scratch
+- [/lint](https://jessepinkman9900.github.io/claude-second-brain/skills/lint): Health-check the wiki for orphan pages, broken links, unresolved contradictions, stale claims, and data gaps
+- [/setup](https://jessepinkman9900.github.io/claude-second-brain/skills/setup): First-time initialization — register qmd collections and generate local vector embeddings
+
+## Optional
+
+- [Ship log](https://jessepinkman9900.github.io/claude-second-brain/ship-log): Release history and changelog
+- [GitHub repository](https://github.com/jessepinkman9900/claude-second-brain): Source code, CLAUDE.md schema, template vault, and skill definitions
+- [npm package](https://www.npmjs.com/package/claude-second-brain): Install via `npx claude-second-brain`
