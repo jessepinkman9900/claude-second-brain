@@ -15,6 +15,10 @@ out
 dist
 *.tgz
 
+# Vocs build output and cache
+docs/dist
+.vocs
+
 # code coverage
 coverage
 *.lcov

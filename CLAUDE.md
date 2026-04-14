@@ -246,4 +246,6 @@ Whenever you **add, remove, or rename a skill** under `template/.claude/skills/`
 
 Whenever you **change a qmd collection name, context path, or CLI invocation** in `scripts/qmd/setup.ts` or in skill workflows, you MUST also update every `-c <collection>` reference in `template/CLAUDE.md`, all `SKILL.md` files under `template/.claude/skills/`, and both READMEs.
 
+Whenever you **add, remove, or rename a skill, or change the wiki schema, page types, or frontmatter format**, you MUST also update the corresponding page under `docs/pages/` — skill pages at `docs/pages/skills/`, schema summary at `docs/pages/concepts/schema.mdx`, and the sidebar in `vocs.config.ts` if page paths change. The docs site is built from `docs/` and deployed to GitHub Pages on merge to `main`.
+
 Use `__QMD_PATH__` as the placeholder in any template file that references the qmd index path — `bin/create.js::patchVault()` substitutes it at scaffold time.
