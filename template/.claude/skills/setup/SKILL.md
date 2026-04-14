@@ -50,13 +50,13 @@ Run these three commands to confirm everything is working:
 
 ```bash
 # List registered collections (expect: wiki, raw-sources, human, daily-notes)
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd collection list
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd collection list
 
 # List registered contexts
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd context list
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd context list
 
 # Show index status and embedding counts
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd status
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd status
 ```
 
 All four collections should appear in `collection list`. `status` should show non-zero document and embedding counts — if embeddings are 0, re-run step 2.

@@ -10,10 +10,10 @@ Local semantic document index with hybrid search (BM25 + vector), collection man
 
 ## Vault DB
 
-This vault keeps its index at `qmd.sqlite` in the vault root (gitignored). All CLI commands **must** prefix with `INDEX_PATH=qmd.sqlite` (relative path works when running from the vault root, which is always the case here):
+This vault keeps its index at `__QMD_PATH__`. All CLI commands **must** prefix with `INDEX_PATH=__QMD_PATH__`:
 
 ```bash
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd query -c wiki "..."
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd query -c wiki "..."
 ```
 
 The scripts `bun scripts/qmd/setup.ts` and `bun scripts/qmd/reindex.ts` write to this same file. The CLI must match.
@@ -24,40 +24,40 @@ The scripts `bun scripts/qmd/setup.ts` and `bun scripts/qmd/reindex.ts` write to
 
 ```bash
 # Create/index a collection
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd collection add <path> --name <name> --mask <glob-pattern>
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd collection add <path> --name <name> --mask <glob-pattern>
 # e.g.:
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd collection add wiki --name wiki --mask "**/*.md"
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd collection add wiki --name wiki --mask "**/*.md"
 
 # List all collections with details
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd collection list
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd collection list
 
 # Remove a collection
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd collection remove <name>
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd collection remove <name>
 
 # Rename a collection
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd collection rename <old-name> <new-name>
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd collection rename <old-name> <new-name>
 ```
 
 ## Listing Files
 
 ```bash
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd ls
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd ls [collection[/path]]
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd ls
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd ls [collection[/path]]
 ```
 
 ## Context
 
 ```bash
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd context add [path] "description text"
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd context list
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd context rm <path>
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd context add [path] "description text"
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd context list
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd context rm <path>
 ```
 
 ## Retrieving Documents
 
 ```bash
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd get <file>[:line] [-l N] [--from N]
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd multi-get <pattern> [-l N] [--max-bytes N]
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd get <file>[:line] [-l N] [--from N]
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd multi-get <pattern> [-l N] [--max-bytes N]
 ```
 
 **Multi-get format flags:** `--json`, `--csv`, `--md`, `--xml`, `--files`
@@ -66,16 +66,16 @@ INDEX_PATH=qmd.sqlite bunx @tobilu/qmd multi-get <pattern> [-l N] [--max-bytes N
 
 ```bash
 # Show index status and collections
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd status
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd status
 
 # Re-index all collections
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd update [--pull]
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd update [--pull]
 
 # Create vector embeddings (900 tokens/chunk, 15% overlap)
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd embed [-f]
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd embed [-f]
 
 # Remove cache and orphaned data, vacuum DB
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd cleanup
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd cleanup
 ```
 
 > After bulk ingest sessions, run `update` then `embed` to keep the index fresh.
@@ -108,28 +108,28 @@ INDEX_PATH=qmd.sqlite bunx @tobilu/qmd cleanup
 
 ```bash
 # Hybrid search across all collections
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd query "distributed systems consensus"
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd query "distributed systems consensus"
 
 # Search only the wiki collection, JSON output
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd query -c wiki "transformer architecture" --json
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd query -c wiki "transformer architecture" --json
 
 # Keyword-only search, top 10, markdown output
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd search -c wiki "kafka" -n 10 --md
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd search -c wiki "kafka" -n 10 --md
 
 # Vector search with full documents
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd vsearch "attention mechanism" --full
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd vsearch "attention mechanism" --full
 
 # Filter by score threshold
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd query "machine learning" --all --min-score 0.7
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd query "machine learning" --all --min-score 0.7
 ```
 
 ## MCP Server
 
 ```bash
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd mcp
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd mcp --http [--port N]
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd mcp --http --daemon
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd mcp stop
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd mcp
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd mcp --http [--port N]
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd mcp --http --daemon
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd mcp stop
 ```
 
 ## Global Options
@@ -151,18 +151,18 @@ bun scripts/qmd/reindex.ts
 
 ### After a bulk ingest session
 ```bash
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd update
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd embed
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd update
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd embed
 ```
 
 ### Research workflow
 ```bash
 # Discover relevant pages
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd query -c wiki "<topic>"
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd query -c wiki "<topic>"
 
 # Get a specific file
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd get wiki/distributed-systems.md
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd get wiki/distributed-systems.md
 
 # Get multiple related files
-INDEX_PATH=qmd.sqlite bunx @tobilu/qmd multi-get "wiki/kafka.md,wiki/distributed-systems.md" --md
+INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd multi-get "wiki/kafka.md,wiki/distributed-systems.md" --md
 ```
