@@ -42,8 +42,8 @@ cat test-vault/.gitignore
 # Wiki stubs
 ls test-vault/wiki/
 
-# Sources dirs
-ls test-vault/sources/
+# Raw sources dirs
+ls test-vault/raw-sources/
 
 # Claude Code skills (expect: brain-ingest, brain-search, brain-refresh, brain-rebuild, lint, qmd-cli, setup)
 ls test-vault/.claude/skills/
@@ -74,7 +74,7 @@ Report results against this checklist:
 | `.gitignore` | Present (not `.gitignore.template`) | |
 | `wiki/index.md`, `log.md`, `overview.md` | All present | |
 | `wiki/sources/` and `wiki/qa/` | Present | |
-| `sources/articles/`, `pdfs/`, `personal/` | Present | |
+| `raw-sources/articles/`, `pdfs/`, `personal/` | Present | |
 | `.claude/skills/` — 7 subdirs | brain-ingest, brain-search, brain-refresh, brain-rebuild, lint, qmd-cli, setup | |
 | `scripts/qmd/setup.ts`, `reindex.ts`, `package.json` | All present | |
 | `CLAUDE.md`, `mise.toml` | Present | |

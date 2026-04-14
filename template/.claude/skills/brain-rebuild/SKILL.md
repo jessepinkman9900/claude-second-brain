@@ -12,7 +12,7 @@ Redesigns the qmd schema based on what the wiki actually contains today, then re
 
 - The wiki has grown and the current single `wiki` collection no longer matches how the user searches
 - The user wants finer-grained contexts (e.g. distinct context descriptions per sub-folder)
-- After significant reorganization of `wiki/` or `sources/` folder structure
+- After significant reorganization of `wiki/` or `raw-sources/` folder structure
 - Never as a routine refresh — for that, use `/brain-refresh`
 
 ## Procedure
@@ -32,7 +32,7 @@ All commands run from the vault root.
 
 ### Step 2 — Analyze the wiki
 
-- Glob `wiki/**/*.md` and `sources/**/*.md`
+- Glob `wiki/**/*.md` and `raw-sources/**/*.md`
 - Read enough pages (especially `wiki/index.md` and `wiki/overview.md`) to understand actual topic clusters, page-type distribution, and folder structure
 - Identify natural groupings: by domain (e.g. ml, distributed-systems, finance), by page type (topics vs entities vs qa), by source provenance, etc.
 
@@ -116,4 +116,4 @@ Confirm the new collections appear, contexts match the plan, and document/embedd
 - Never apply schema changes without explicit user approval at Step 4
 - Never delete a collection without first showing the user what will be dropped
 - Always update `CLAUDE.md` and skill files in lockstep with collection renames — stale `-c <name>` references will silently break `/brain-search`
-- Do not touch `wiki/`, `sources/`, or any user content — this skill changes the index schema, not the data
+- Do not touch `wiki/`, `raw-sources/`, or any user content — this skill changes the index schema, not the data

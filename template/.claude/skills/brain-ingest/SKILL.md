@@ -1,7 +1,7 @@
 ---
 name: brain-ingest
 description: "Ingest a new source into the wiki. Reads the source, summarizes it, creates a wiki/sources/ page, updates affected topic and entity pages, flags contradictions, and logs the activity. Trigger phrases: /brain-ingest, ingest [file or URL], add this source, read and file this, process this article/paper/note."
-argument-hint: "File path (e.g. sources/articles/my-article.md), URL, or leave blank if source is pasted in chat"
+argument-hint: "File path (e.g. raw-sources/articles/my-article.md), URL, or leave blank if source is pasted in chat"
 ---
 
 # Brain Ingest
@@ -10,7 +10,7 @@ Runs the full 9-step ingest workflow defined in CLAUDE.md. Do not skip steps.
 
 ## Inputs
 
-- **File path** — a file in `sources/articles/`, `sources/pdfs/`, or `sources/personal/`
+- **File path** — a file in `raw-sources/articles/`, `raw-sources/pdfs/`, or `raw-sources/personal/`
 - **URL** — fetch and read the full content directly
 - **Pasted text** — treat whatever the user has shared as the source
 
@@ -63,6 +63,6 @@ Runs the full 9-step ingest workflow defined in CLAUDE.md. Do not skip steps.
 
 ## Hard Rules
 
-- Never modify anything in `sources/` — immutable raw inputs
+- Never modify anything in `raw-sources/` — immutable raw inputs
 - Every wiki page must have frontmatter with at least `type` and `updated`
 - One source summary page per source — never merge two sources into one
