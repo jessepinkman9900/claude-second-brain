@@ -7,7 +7,7 @@
  *   bun scripts/qmd/reindex.ts
  *
  * Suitable as a cronjob:
- *   0 * * * * cd /home/user/obsidian-agent-memory && bun scripts/qmd/reindex.ts
+ *   0 * * * * cd /home/user/my-brain && bun scripts/qmd/reindex.ts
  */
 
 import { createStore } from "@tobilu/qmd"

@@ -99,25 +99,16 @@ Verify:
 cat package.json | grep '"version"'
 ```
 
-### Step 5 — Update pack-test skill
-
-The `pack-test` skill hardcodes the tarball filename (e.g., `claude-second-brain-0.1.0.tgz`). Update every occurrence of the old version string in `.claude/skills/pack-test/SKILL.md` to the new version using the Edit tool with `replace_all: true`.
-
-Verify:
-```bash
-grep "claude-second-brain-" .claude/skills/pack-test/SKILL.md
-```
-
-### Step 6 — Commit the version bump
+### Step 5 — Commit the version bump
 
 ```bash
-git add package.json .claude/skills/pack-test/SKILL.md
+git add package.json
 git commit -m "chore: bump version to X.Y.Z"
 ```
 
 Replace `X.Y.Z` with the confirmed new version.
 
-### Step 7 — Push and open PR
+### Step 6 — Push and open PR
 
 Push the current branch:
 
@@ -146,13 +137,12 @@ gh pr create \
 
 - [ ] Changelog accurately reflects all changes
 - [ ] `package.json` version is correct
-- [ ] Pack-test skill tarball filename updated
 EOF
 )" \
   --base main
 ```
 
-### Step 8 — Report to user
+### Step 7 — Report to user
 
 After the PR is created, tell the user:
 

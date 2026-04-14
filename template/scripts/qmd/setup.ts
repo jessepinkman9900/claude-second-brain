@@ -33,8 +33,6 @@ async function ensureCollection(name: string, relPath: string, pattern: string) 
 console.log("Collections:")
 await ensureCollection("wiki",        "wiki",        "**/*.md")
 await ensureCollection("raw-sources", "sources",     "**/*.md")
-await ensureCollection("human",       "human",       "**/*.md")
-await ensureCollection("daily-notes", "daily-notes", "**/*.md")
 
 // --- Global context ---
 console.log("\nContexts:")
@@ -54,14 +52,5 @@ await store.addContext("raw-sources", "",          "Raw source material — immu
 await store.addContext("raw-sources", "/articles", "Web articles saved as markdown")
 await store.addContext("raw-sources", "/pdfs",     "PDF files or their extracted text")
 await store.addContext("raw-sources", "/personal", "Personal notes flagged for wiki ingestion")
-
-// human/
-await store.addContext("human", "",             "User's personal notes — not Claude-maintained; covers work, social life, investing, hobbies, and more")
-await store.addContext("human", "/ideas",       "Brainstorming and exploratory ideas")
-await store.addContext("human", "/job-hunt",    "Job search notes and preparation")
-await store.addContext("human", "/misc",        "Miscellaneous personal notes")
-
-// daily-notes/
-await store.addContext("daily-notes", "", "User's daily and weekly journal entries, dated by year and week number")
 
 console.log("\nSetup complete. Run: bun scripts/qmd/reindex.ts")
