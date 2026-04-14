@@ -18,6 +18,10 @@ export default defineConfig({
       icon: 'github',
       link: 'https://github.com/jessepinkman9900/claude-second-brain',
     },
+    {
+      icon: 'x',
+      link: 'https://x.com/jessepinkman9900',
+    }
   ],
   topNav: [
     { text: 'Getting Started', link: '/getting-started' },
@@ -37,19 +41,19 @@ export default defineConfig({
       text: 'Concepts',
       items: [
         { text: 'How it works', link: '/concepts/how-it-works' },
-        { text: 'Wiki schema', link: '/concepts/schema' },
+        { text: 'Wiki Folder Structure', link: '/concepts/schema' },
       ],
     },
     {
       text: 'Skills',
       items: [
         { text: 'Overview', link: '/skills' },
-        { text: 'brain-ingest', link: '/skills/brain-ingest' },
-        { text: 'brain-search', link: '/skills/brain-search' },
-        { text: 'brain-refresh', link: '/skills/brain-refresh' },
-        { text: 'brain-rebuild', link: '/skills/brain-rebuild' },
-        { text: 'lint', link: '/skills/lint' },
-        { text: 'setup', link: '/skills/setup' },
+        { text: '/brain-ingest', link: '/skills/brain-ingest' },
+        { text: '/brain-search', link: '/skills/brain-search' },
+        { text: '/brain-refresh', link: '/skills/brain-refresh' },
+        { text: '/brain-rebuild', link: '/skills/brain-rebuild' },
+        { text: '/lint', link: '/skills/lint' },
+        { text: '/setup', link: '/skills/setup' },
       ],
     },
     { text: 'Ship log', link: '/ship-log' },
