@@ -77,7 +77,7 @@ async function installGlobalSkills(qmdPath) {
 }
 
 async function main() {
-  p.intro(`${pc.bgCyan(pc.black(" claude-second-brain "))} v0.3.0`)
+  p.intro(`${pc.bgCyan(pc.black(" claude-second-brain "))} v0.4.0`)
 
   // 1. Folder name
   let targetName = process.argv[2]
