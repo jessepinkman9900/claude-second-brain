@@ -58,7 +58,7 @@ Edit `scripts/qmd/setup.ts` to reflect the new schema:
 
 - Update the `ensureCollection` calls (add, remove, or rename)
 - Update `setGlobalContext` and the `addContext` calls
-- Keep the `__QMD_PATH__` / `DB` line untouched — it was already substituted at install time
+- Leave the `DB` constant alone — its value was substituted at scaffold time and must not change
 - Keep the script idempotent
 
 ### Step 6 — Update related references

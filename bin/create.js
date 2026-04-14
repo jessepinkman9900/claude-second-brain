@@ -41,14 +41,18 @@ async function patchVault(targetDir, qmdPath, brainName) {
     for (const skill of readdirSync(skillsDir)) {
       filesToPatch.push(join(skillsDir, skill, "SKILL.md"))
     }
-  } catch { /* no skills dir */ }
+  } catch (err) {
+    if (err.code !== "ENOENT") throw err
+  }
 
   await Promise.all(filesToPatch.map(async file => {
     try {
       let content = await readFile(file, "utf8")
       content = content.replaceAll("__QMD_PATH__", qmdPath)
       await writeFile(file, content, "utf8")
-    } catch { /* file may not exist */ }
+    } catch (err) {
+      if (err.code !== "ENOENT") throw err
+    }
   }))
 
   const readmePath = join(targetDir, "README.md")
@@ -56,7 +60,9 @@ async function patchVault(targetDir, qmdPath, brainName) {
     let readme = await readFile(readmePath, "utf8")
     readme = readme.replaceAll("__BRAIN_NAME__", brainName)
     await writeFile(readmePath, readme, "utf8")
-  } catch { /* README may not exist */ }
+  } catch (err) {
+    if (err.code !== "ENOENT") throw err
+  }
 }
 
 async function installGlobalSkills(qmdPath) {
