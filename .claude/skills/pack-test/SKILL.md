@@ -23,10 +23,10 @@ Produces `claude-second-brain-<version>.tgz` in the repo root, where `<version>`
 **Step 2 — Scaffold via npx**
 
 ```bash
-echo "" | npx -y claude-second-brain-$(node -p "require('./package.json').version").tgz test-vault
+printf '\n\n' | npx -y claude-second-brain-$(node -p "require('./package.json').version").tgz test-vault
 ```
 
-Use `npx` with the `file:` prefix — without it, npx tries to execute the tarball as a shell script and fails with "Permission denied". Pass `test-vault` as the target dir argument to skip the interactive folder name prompt. Pipe `echo ""` to accept the default qmd path (`~/.cache/qmd/index.sqlite`) without interactive input. The vault is created in the repo root and cleaned up in Step 4.
+Use `npx` with the `file:` prefix — without it, npx tries to execute the tarball as a shell script and fails with "Permission denied". Pass `test-vault` as the target dir argument to skip the interactive folder name prompt. Pipe `printf '\n\n'` to accept defaults for both the qmd path prompt and the GitHub repo prompt (`y/N` → defaults to `N`, skipping GitHub setup). The vault is created in the repo root and cleaned up in Step 4.
 
 **Step 3 — Verify checklist**
 

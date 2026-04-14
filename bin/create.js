@@ -61,13 +61,27 @@ async function installGlobalSkills(qmdPath) {
   }
 }
 
+// Wraps rl.question() so that if readline closes (e.g. piped stdin reaches EOF
+// before the question is answered), the promise resolves with '' rather than
+// hanging forever — which would leave no active handles and cause Node to exit.
+function ask(rl, prompt) {
+  return new Promise((resolve) => {
+    const onClose = () => resolve("")
+    rl.once("close", onClose)
+    rl.question(prompt).then(answer => {
+      rl.removeListener("close", onClose)
+      resolve(answer)
+    }).catch(() => resolve(""))
+  })
+}
+
 async function main() {
   const rl = createInterface({ input: process.stdin, output: process.stdout })
 
   // 1. Folder name
   let targetName = process.argv[2]
   if (!targetName) {
-    const answer = await rl.question("Where to create your brain? (my-brain) › ")
+    const answer = await ask(rl, "Where to create your brain? (my-brain) › ")
     targetName = answer.trim() || "my-brain"
   }
 
@@ -76,8 +90,18 @@ async function main() {
     process.env.XDG_CACHE_HOME || join(homedir(), ".cache"),
     "qmd", "index.sqlite"
   )
-  const qmdAnswer = await rl.question(`Where to store the qmd index? (${defaultQmdPath}) › `)
+  const qmdAnswer = await ask(rl, `Where to store the qmd index? (${defaultQmdPath}) › `)
   const qmdPath = qmdAnswer.trim() || defaultQmdPath
+
+  // 3. GitHub repo
+  const ghAnswer = await ask(rl, "Create a GitHub repo for your brain? (y/N) › ")
+  const createGhRepo = ghAnswer.trim().toLowerCase() === "y"
+
+  let ghRepoName = null
+  if (createGhRepo) {
+    const ghNameAnswer = await ask(rl, `GitHub repo name? (${targetName}) › `)
+    ghRepoName = ghNameAnswer.trim() || targetName
+  }
 
   rl.close()
 
@@ -143,7 +167,38 @@ async function main() {
     console.error("  git init failed — run it manually inside your vault")
   }
 
-  // 8. Install global skills
+  // 8. GitHub repo (optional)
+  if (createGhRepo) {
+    if (!commandExists("gh")) {
+      console.error("\n  gh CLI not found — install it from https://cli.github.com, then run:")
+      console.error(`  gh repo create ${ghRepoName} --private --source=. --remote=origin --push`)
+    } else {
+      console.log("\nSetting up GitHub repo...")
+
+      const authCheck = spawnSync("gh", ["auth", "status"], { stdio: "pipe" })
+      let loggedIn = authCheck.status === 0
+
+      if (!loggedIn) {
+        console.log("  Not logged in to GitHub. Starting login...")
+        loggedIn = run(["gh", "auth", "login"], targetDir)
+      }
+
+      if (loggedIn) {
+        const ghOk = run(
+          ["gh", "repo", "create", ghRepoName, "--private", "--source=.", "--remote=origin", "--push"],
+          targetDir
+        )
+        if (ghOk) {
+          console.log(`✓ GitHub repo created and pushed: ${ghRepoName}`)
+        } else {
+          console.error("  gh repo create failed — run manually:")
+          console.error(`  gh repo create ${ghRepoName} --private --source=. --remote=origin --push`)
+        }
+      }
+    }
+  }
+
+  // 9. Install global skills
   console.log("\nInstalling global skills...")
   await installGlobalSkills(qmdPath)
 
@@ -151,8 +206,10 @@ async function main() {
   console.log("Next steps:")
   console.log(`  cd ${targetName}`)
   console.log("  claude                      # open Claude Code, then run /setup")
-  console.log("  git remote add origin <url> # connect to GitHub for sync + Obsidian Mobile")
-  console.log("  git push -u origin main")
+  if (!createGhRepo) {
+    console.log("  git remote add origin <url> # connect to GitHub for sync + Obsidian Mobile")
+    console.log("  git push -u origin main")
+  }
 }
 
 main().catch(err => {

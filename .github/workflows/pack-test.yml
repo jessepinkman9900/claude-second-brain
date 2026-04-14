@@ -56,8 +56,8 @@ jobs:
           check "sources/pdfs/"                            test-vault/sources/pdfs
           check "sources/personal/"                        test-vault/sources/personal
           check ".claude/skills/setup"                     test-vault/.claude/skills/setup
-          check ".claude/skills/ingest"                    test-vault/.claude/skills/ingest
-          check ".claude/skills/query"                     test-vault/.claude/skills/query
+          check ".claude/skills/brain-ingest"              test-vault/.claude/skills/brain-ingest
+          check ".claude/skills/brain-search"              test-vault/.claude/skills/brain-search
           check ".claude/skills/lint"                      test-vault/.claude/skills/lint
           check ".claude/skills/qmd-cli"                   test-vault/.claude/skills/qmd-cli
           check "scripts/qmd/setup.ts"                     test-vault/scripts/qmd/setup.ts
@@ -65,6 +65,24 @@ jobs:
           check "scripts/qmd/package.json"                 test-vault/scripts/qmd/package.json
           check "CLAUDE.md"                                test-vault/CLAUDE.md
           check "mise.toml"                                test-vault/mise.toml
+          check "~/.claude/skills/brain-ingest/SKILL.md"  "$HOME/.claude/skills/brain-ingest/SKILL.md"
+          check "~/.claude/skills/brain-search/SKILL.md"  "$HOME/.claude/skills/brain-search/SKILL.md"
+
+          grep_check() {
+            local label="$1"
+            local pattern="$2"
+            local file="$3"
+            if grep -q "$pattern" "$file" 2>/dev/null; then
+              echo "PASS: $label"
+            else
+              echo "FAIL: $label — pattern '$pattern' not found in $file"
+              fail=1
+            fi
+          }
+
+          grep_check "CLAUDE.md INDEX_PATH is absolute"          "INDEX_PATH=/"          test-vault/CLAUDE.md
+          grep_check "setup.ts DB is hardcoded absolute path"    'const DB = "/'         test-vault/scripts/qmd/setup.ts
+          grep_check "global brain-ingest INDEX_PATH is absolute" "INDEX_PATH=/"         "$HOME/.claude/skills/brain-ingest/SKILL.md"
 
           if [ "$fail" -ne 0 ]; then
             echo ""
