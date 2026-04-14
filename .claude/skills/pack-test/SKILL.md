@@ -6,7 +6,7 @@ argument-hint: "No arguments needed"
 
 # Pack Test
 
-Tests the npm package as it behaves when published. Uses `npx` to run from the local tarball — `bunx` doesn't support local tarball paths (it tries to resolve them as scoped package names). After publishing, `bunx claude-second-brain` from the registry works fine. Runs all steps, reports a checklist, then cleans up.
+Tests the npm package as it behaves when published. Uses `npx` to run from the local tarball — `pnpm dlx` doesn't support local tarball paths (it tries to resolve them as scoped package names). After publishing, `pnpm dlx claude-second-brain` from the registry works fine. Runs all steps, reports a checklist, then cleans up.
 
 ## Steps
 
@@ -26,7 +26,7 @@ Produces `claude-second-brain-<version>.tgz` in the repo root, where `<version>`
 npx -y claude-second-brain-$(node -p "require('./package.json').version").tgz test-vault
 ```
 
-Use `npx` to run from the local tarball — `bunx` doesn't support local tarball paths. Pass `test-vault` as the target dir argument to skip the interactive folder name prompt. When stdin is not a TTY (non-interactive), the CLI automatically uses defaults for the qmd path (`~/.cache/qmd/index.sqlite`) and skips the GitHub repo prompt. No `printf` pipe needed. The vault is created in the repo root and cleaned up in Step 4.
+Use `npx` to run from the local tarball — `pnpm dlx` doesn't support local tarball paths. Pass `test-vault` as the target dir argument to skip the interactive folder name prompt. When stdin is not a TTY (non-interactive), the CLI automatically uses defaults for the qmd path (`~/.cache/qmd/index.sqlite`) and skips the GitHub repo prompt. No `printf` pipe needed. The vault is created in the repo root and cleaned up in Step 4.
 
 **Step 3 — Verify checklist**
 
@@ -76,7 +76,8 @@ Report results against this checklist:
 | `wiki/sources/` and `wiki/qa/` | Present | |
 | `raw-sources/articles/`, `pdfs/`, `personal/` | Present | |
 | `.claude/skills/` — 7 subdirs | brain-ingest, brain-search, brain-refresh, brain-rebuild, lint, qmd-cli, setup | |
-| `scripts/qmd/setup.ts`, `reindex.ts`, `package.json` | All present | |
+| `scripts/qmd/setup.ts`, `reindex.ts` | All present | |
+| `package.json` (vault root) | Present with `pnpm` packageManager | |
 | `CLAUDE.md`, `mise.toml` | Present | |
 | `CLAUDE.md` INDEX_PATH | Absolute path (not `qmd.sqlite`) | |
 | `scripts/qmd/setup.ts` DB const | Hardcoded absolute path (not `join(VAULT, ...)`) | |
@@ -105,4 +106,4 @@ gh repo delete test-vault --yes
 - **`qmd.sqlite` still in CLAUDE.md or skill files** — `patchVault()` didn't run (CLI exited early, often due to a non-TTY prompt hanging) or the replaceAll target string didn't match; check the `isInteractive` guard in `bin/create.js` and the patch target strings
 - **Global skills not installed** — `installGlobalSkills()` failed; check that `~/.claude/skills/` is writable and template skill dirs are named `brain-ingest`/`brain-search`
 - **`join(VAULT, ...)` still in setup.ts** — the DB line patch didn't match; verify the exact string `const DB = join(VAULT, "qmd.sqlite")` exists in the template
-- **Note:** `bunx` cannot run local tarballs — use `npx` for this test. After publishing, `bunx claude-second-brain` from the registry works fine.
+- **Note:** `pnpm dlx` cannot run local tarballs — use `npx` for this test. After publishing, `pnpm dlx claude-second-brain` from the registry works fine.

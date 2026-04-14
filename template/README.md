@@ -13,10 +13,13 @@ Inspired by [Andrej Karpathy's approach to LLM-powered knowledge management](htt
 ## Quick start
 
 ```bash
-# 1. Install tools
+# 1. Install tools (node + pnpm via mise)
 mise install
 
-# 2. Open Claude Code
+# 2. Install dependencies
+pnpm install
+
+# 3. Open Claude Code
 claude
 ```
 
@@ -185,7 +188,7 @@ After a bulk ingest session, re-index to keep search current:
 /brain-refresh
 ```
 
-This wraps `bun scripts/qmd/reindex.ts` — you can also run that command directly if you're not inside Claude Code. Pass `force` to `/brain-refresh` to re-embed every chunk (e.g. after changing the embedding model).
+This wraps `pnpm qmd:reindex` — you can also run that command directly if you're not inside Claude Code. Pass `force` to `/brain-refresh` to re-embed every chunk (e.g. after changing the embedding model).
 
 ---
 

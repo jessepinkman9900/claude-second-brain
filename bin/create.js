@@ -173,12 +173,18 @@ async function main() {
     else spin.stop("Failed to install mise — run: npm install -g @jdxcode/mise", 1)
   }
 
-  // Run mise install inside the new vault to install bun
-  spin.start("Installing bun via mise")
+  // Run mise install inside the new vault to install node + pnpm
+  spin.start("Installing node + pnpm via mise")
   run(["mise", "trust"], targetDir)
   const miseOk = run(["mise", "install"], targetDir)
-  if (miseOk) spin.stop("bun installed")
+  if (miseOk) spin.stop("node + pnpm installed")
   else spin.stop("mise install failed — run it manually inside your vault", 1)
+
+  // Install vault dependencies via pnpm
+  spin.start("Installing vault dependencies")
+  const pnpmOk = run(["mise", "exec", "--", "pnpm", "install"], targetDir)
+  if (pnpmOk) spin.stop("dependencies installed")
+  else spin.stop("pnpm install failed — run it manually inside your vault", 1)
 
   // Git init
   spin.start("Initializing git repo")

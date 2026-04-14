@@ -1,0 +1,33 @@
+{
+  "name": "claude-second-brain-vault",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "qmd:setup": "tsx scripts/qmd/setup.ts",
+    "qmd:reindex": "tsx scripts/qmd/reindex.ts"
+  },
+  "dependencies": {
+    "@tobilu/qmd": "^2.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "packageManager": "pnpm@10.8.0",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild",
+      "node-llama-cpp",
+      "tree-sitter-go",
+      "tree-sitter-javascript",
+      "tree-sitter-python",
+      "tree-sitter-rust",
+      "tree-sitter-typescript"
+    ]
+  }
+}

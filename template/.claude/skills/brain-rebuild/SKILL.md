@@ -25,9 +25,9 @@ All commands run from the vault root.
 - Read `CLAUDE.md` to understand the documented schema and any references to collection names
 - List current state from qmd:
   ```bash
-  INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd collection list
-  INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd context list
-  INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd status
+  INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd collection list
+  INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd context list
+  INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd status
   ```
 
 ### Step 2 — Analyze the wiki
@@ -74,20 +74,20 @@ If collection names changed:
 For each existing collection that no longer fits the new schema:
 
 ```bash
-INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd collection remove <old-name>
+INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd collection remove <old-name>
 ```
 
 For each obsolete context:
 
 ```bash
-INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd context rm <path>
+INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd context rm <path>
 ```
 
 ### Step 8 — Register the new schema
 
 Run:
 ```bash
-bun scripts/qmd/setup.ts
+pnpm qmd:setup
 ```
 
 This is idempotent — collections that already exist (e.g. ones you kept) are skipped; new ones are added; contexts are upserted.
@@ -96,7 +96,7 @@ This is idempotent — collections that already exist (e.g. ones you kept) are s
 
 Run:
 ```bash
-bun scripts/qmd/reindex.ts
+pnpm qmd:reindex
 ```
 
 This indexes all files under the new collections and generates fresh embeddings.
@@ -104,9 +104,9 @@ This indexes all files under the new collections and generates fresh embeddings.
 ### Step 10 — Verify and report
 
 ```bash
-INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd collection list
-INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd context list
-INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd status
+INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd collection list
+INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd context list
+INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd status
 ```
 
 Confirm the new collections appear, contexts match the plan, and document/embedding counts are non-zero. Report a summary of what changed (collections added/removed/renamed, contexts updated, files re-indexed, references updated in CLAUDE.md and skills).

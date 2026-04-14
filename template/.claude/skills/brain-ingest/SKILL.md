@@ -35,7 +35,7 @@ Runs the full 9-step ingest workflow defined in CLAUDE.md. Do not skip steps.
 - Add the new source to the Sources Ingested section: one-line description + `[[wiki/sources/slug]]` link
 
 **Step 5 — Identify affected wiki pages**
-- Run: `INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd query -c wiki "<source topic and key claims>"`
+- Run: `INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd query -c wiki "<source topic and key claims>"`
 - Also Glob `wiki/*.md` and `wiki/sources/*.md` to catch anything qmd missed
 - List all pages to create or update before proceeding
 

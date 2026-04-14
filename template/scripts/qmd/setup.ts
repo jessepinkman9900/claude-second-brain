@@ -3,16 +3,17 @@
  * Safe to re-run: skips collections that already exist, upserts contexts.
  *
  * Run once from vault root:
- *   bun scripts/qmd/setup.ts
+ *   pnpm qmd:setup
  *
  * After setup, index the vault:
- *   bun scripts/qmd/reindex.ts
+ *   pnpm qmd:reindex
  */
 
 import { createStore } from "@tobilu/qmd"
-import { join } from "path"
+import { dirname, join } from "node:path"
+import { fileURLToPath } from "node:url"
 
-const VAULT = join(import.meta.dir, "../..")
+const VAULT = join(dirname(fileURLToPath(import.meta.url)), "../..")
 const DB = "__QMD_PATH__"
 
 const store = await createStore({ dbPath: DB })
@@ -53,4 +54,4 @@ await store.addContext("raw-sources", "/articles", "Web articles saved as markdo
 await store.addContext("raw-sources", "/pdfs",     "PDF files or their extracted text")
 await store.addContext("raw-sources", "/personal", "Personal notes flagged for wiki ingestion")
 
-console.log("\nSetup complete. Run: bun scripts/qmd/reindex.ts")
+console.log("\nSetup complete. Run: pnpm qmd:reindex")

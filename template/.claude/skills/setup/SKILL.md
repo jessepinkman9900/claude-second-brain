@@ -21,7 +21,7 @@ All commands run from the vault root.
 
 Run:
 ```bash
-bun scripts/qmd/setup.ts
+pnpm qmd:setup
 ```
 
 Registers the two core qmd collections (`wiki`, `raw-sources`) and their path-level context descriptions. Idempotent — safe to re-run.
@@ -30,7 +30,7 @@ Registers the two core qmd collections (`wiki`, `raw-sources`) and their path-le
 
 Run:
 ```bash
-bun scripts/qmd/reindex.ts
+pnpm qmd:reindex
 ```
 
 Scans all collections for new/changed files and generates vector embeddings. The first run downloads ~2GB of local GGUF models — this will take a while.
@@ -39,7 +39,7 @@ Scans all collections for new/changed files and generates vector embeddings. The
 
 Skip step 1 and run only:
 ```bash
-bun scripts/qmd/reindex.ts
+pnpm qmd:reindex
 ```
 
 Do **not** re-run after every single file edit — batch it after a session.
@@ -50,17 +50,17 @@ Run these three commands to confirm everything is working:
 
 ```bash
 # List registered collections (expect: wiki, raw-sources)
-INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd collection list
+INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd collection list
 
 # List registered contexts
-INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd context list
+INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd context list
 
 # Show index status and embedding counts
-INDEX_PATH=__QMD_PATH__ bunx @tobilu/qmd status
+INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd status
 ```
 
 Both collections should appear in `collection list`. `status` should show non-zero document and embedding counts — if embeddings are 0, re-run step 2.
 
 ## Notes
-- `bun` is managed via `mise` — ensure `mise install` has been run before setup
-- If `bunx @tobilu/qmd` commands fail after setup, re-run step 1 then step 2
+- `node` and `pnpm` are managed via `mise` — ensure `mise install` and `pnpm install` have been run before setup
+- If `pnpm dlx @tobilu/qmd` commands fail after setup, re-run step 1 then step 2
