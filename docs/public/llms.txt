@@ -36,3 +36,4 @@ Stack: **Claude Code** (agent + slash commands), **qmd** (local vector + BM25 hy
 ## Optional
 
 - [Ship log](https://jessepinkman9900.github.io/claude-second-brain/ship-log): Release history and changelog entries for the CLI and skills
+- [Full documentation (llms-full.txt)](https://jessepinkman9900.github.io/claude-second-brain/llms-full.txt): Complete text of every documentation page in a single file, for AI agents that prefer one-shot context loading
