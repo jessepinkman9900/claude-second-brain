@@ -58,7 +58,12 @@ Everything is pre-configured. You bring the sources.
 npx claude-second-brain
 ```
 
-Creates your vault (the folder itself is the Obsidian vault), installs `mise` + `bun`, and runs `git init` with an initial commit.
+The CLI will ask:
+- **Folder name** — where to create your vault (default: `my-brain`)
+- **qmd index path** — where to store the local search index (default: `~/.cache/qmd/index.sqlite`)
+- **GitHub repo** — optionally create a private repo and push automatically (requires `gh` CLI)
+
+Then scaffolds the vault, installs `mise` + `bun`, and runs `git init`.
 
 **Step 2 — Initialize inside Claude Code**
 
@@ -74,7 +79,11 @@ Then run:
 
 Registers the qmd collections and generates local vector embeddings. First run downloads ~2GB of GGUF models — once.
 
-**Step 3 — Push to GitHub and open in Obsidian**
+**Step 3 — Open in Obsidian (and push to GitHub if not done)**
+
+**If you created a GitHub repo during setup**, it's already pushed — skip straight to opening in Obsidian.
+
+**If you skipped GitHub during setup**, connect it now:
 
 ```bash
 git remote add origin https://github.com/you/my-brain.git
