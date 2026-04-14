@@ -18,7 +18,7 @@ Claude is responsible for: summarizing, cross-referencing, filing, and maintaini
 ```
 claude-second-brain/
 ├── CLAUDE.md              ← This file. The schema.
-├── sources/               ← Raw source material. IMMUTABLE — Claude never modifies these.
+├── raw-sources/           ← Raw source material. IMMUTABLE — Claude never modifies these.
 │   ├── articles/          ← Web articles saved as markdown
 │   ├── pdfs/              ← PDF files or extracted text
 │   └── personal/          ← Personal notes flagged for ingestion
@@ -95,7 +95,7 @@ Run this workflow whenever the user adds a new source. Do not skip steps.
 
 **Step 1 — Read the source**
 - If URL: fetch and read the full content.
-- If file in `sources/`: read it with the Read tool.
+- If file in `raw-sources/`: read it with the Read tool.
 - If pasted text: treat as the source.
 
 **Step 2 — Discuss with the user**
@@ -199,7 +199,7 @@ N issues found, N fixed. [Brief summary of notable findings.]
 
 ## Hard Rules
 
-1. **Never modify anything in `sources/`**. These are immutable raw inputs.
+1. **Never modify anything in `raw-sources/`**. These are immutable raw inputs.
 2. **Never touch existing vault files** (daily-notes, misc, ideas, root-level .md files, .obsidian/). The wiki lives only in `wiki/`.
 3. **Always append to `wiki/log.md`** — never overwrite it.
 4. **One source summary per ingested source** in `wiki/sources/`. Never merge two sources into one summary page.

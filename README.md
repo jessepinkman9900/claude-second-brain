@@ -100,7 +100,7 @@ The wiki ships with a set of slash commands that cover the full workflow. No man
 
 ### Daily workflow
 
-**`/brain-ingest`** — Drop a file into `sources/articles/`, `sources/pdfs/`, or `sources/personal/`. Run `/brain-ingest`. Claude summarizes the source, asks what matters most to you, creates a `wiki/sources/` page, updates or creates related topic pages, flags any contradictions with existing knowledge, and logs everything.
+**`/brain-ingest`** — Drop a file into `raw-sources/articles/`, `raw-sources/pdfs/`, or `raw-sources/personal/`. Run `/brain-ingest`. Claude summarizes the source, asks what matters most to you, creates a `wiki/sources/` page, updates or creates related topic pages, flags any contradictions with existing knowledge, and logs everything.
 
 **`/brain-search`** — Ask anything about what you know. Claude runs hybrid semantic search across the wiki, reads the most relevant pages, and writes an answer with inline `[[wiki/page]]` citations. If the answer synthesizes multiple pages in a novel way, it offers to file it as a permanent `wiki/qa/` entry.
 
@@ -137,7 +137,7 @@ Sources flow in on the left, Claude synthesizes them into the wiki, qmd indexes 
 
 ```mermaid
 flowchart TB
-  subgraph Sources["sources/ — raw, immutable"]
+  subgraph Sources["raw-sources/ — raw, immutable"]
     direction LR
     S1[articles/]
     S2[pdfs/]
@@ -226,7 +226,7 @@ All pages cross-link with Obsidian `[[wikilinks]]`. Contradictions are flagged w
 ```
 my-brain/
 ├── CLAUDE.md              ← The schema. Claude reads this every session.
-├── sources/               ← Your raw inputs. Claude never modifies these.
+├── raw-sources/           ← Your raw inputs. Claude never modifies these.
 │   ├── articles/
 │   ├── pdfs/
 │   └── personal/

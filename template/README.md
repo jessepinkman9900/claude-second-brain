@@ -36,7 +36,7 @@ Registers the qmd collections and generates local vector embeddings. First run d
 
 ### Daily workflow
 
-**`/brain-ingest`** — Add a file to `sources/articles/`, `sources/pdfs/`, or `sources/personal/`, then run `/brain-ingest`. Claude summarizes the source, asks what aspects matter most, updates related wiki pages, flags contradictions, and logs everything.
+**`/brain-ingest`** — Add a file to `raw-sources/articles/`, `raw-sources/pdfs/`, or `raw-sources/personal/`, then run `/brain-ingest`. Claude summarizes the source, asks what aspects matter most, updates related wiki pages, flags contradictions, and logs everything.
 
 **`/brain-search`** — Ask anything: `what do I know about [topic]?` Claude searches the wiki semantically and returns a cited answer. If it synthesizes multiple pages in a useful way, it offers to file it as a permanent `wiki/qa/` entry.
 
@@ -60,7 +60,7 @@ Sources flow in on the left, Claude synthesizes them into the wiki, qmd indexes 
 
 ```mermaid
 flowchart TB
-  subgraph Sources["sources/ — raw, immutable"]
+  subgraph Sources["raw-sources/ — raw, immutable"]
     direction LR
     S1[articles/]
     S2[pdfs/]
@@ -138,7 +138,7 @@ All pages cross-link with Obsidian `[[wikilinks]]`. Contradictions are flagged w
 ```
 claude-second-brain/
 ├── CLAUDE.md              ← The schema. Claude reads this every session.
-├── sources/               ← Your raw inputs. Claude never modifies these.
+├── raw-sources/           ← Your raw inputs. Claude never modifies these.
 │   ├── articles/          ← Web articles saved as markdown
 │   ├── pdfs/              ← PDFs or extracted text
 │   └── personal/          ← Brain dumps, rough notes

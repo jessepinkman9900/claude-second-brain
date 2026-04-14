@@ -52,9 +52,9 @@ jobs:
           check "wiki/overview.md"                         test-vault/wiki/overview.md
           check "wiki/sources/"                            test-vault/wiki/sources
           check "wiki/qa/"                                 test-vault/wiki/qa
-          check "sources/articles/"                        test-vault/sources/articles
-          check "sources/pdfs/"                            test-vault/sources/pdfs
-          check "sources/personal/"                        test-vault/sources/personal
+          check "raw-sources/articles/"                    test-vault/raw-sources/articles
+          check "raw-sources/pdfs/"                        test-vault/raw-sources/pdfs
+          check "raw-sources/personal/"                    test-vault/raw-sources/personal
           check ".claude/skills/setup"                     test-vault/.claude/skills/setup
           check ".claude/skills/brain-ingest"              test-vault/.claude/skills/brain-ingest
           check ".claude/skills/brain-search"              test-vault/.claude/skills/brain-search

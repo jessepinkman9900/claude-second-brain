@@ -32,7 +32,7 @@ async function ensureCollection(name: string, relPath: string, pattern: string) 
 
 console.log("Collections:")
 await ensureCollection("wiki",        "wiki",        "**/*.md")
-await ensureCollection("raw-sources", "sources",     "**/*.md")
+await ensureCollection("raw-sources", "raw-sources", "**/*.md")
 
 // --- Global context ---
 console.log("\nContexts:")
@@ -47,7 +47,7 @@ await store.addContext("wiki", "",         "LLM-maintained synthesized knowledge
 await store.addContext("wiki", "/sources", "Source summaries — one page per ingested source, with abstract, key claims, and synthesis notes")
 await store.addContext("wiki", "/qa",      "Filed Q&A answers that synthesize multiple wiki pages around a notable question")
 
-// sources/
+// raw-sources/
 await store.addContext("raw-sources", "",          "Raw source material — immutable originals, never modified after ingestion")
 await store.addContext("raw-sources", "/articles", "Web articles saved as markdown")
 await store.addContext("raw-sources", "/pdfs",     "PDF files or their extracted text")

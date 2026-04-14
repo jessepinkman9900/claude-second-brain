@@ -11,7 +11,7 @@ Refreshes the qmd index so search reflects the current state of the vault. Wraps
 ## When to Use
 
 - After a `/brain-ingest` session (or several) — batch the refresh, don't run after every file edit
-- After manual edits to `wiki/` or `sources/` files
+- After manual edits to `wiki/` or `raw-sources/` files
 - When `/brain-search` results feel stale or miss recently added content
 - After upgrading `@tobilu/qmd` or changing the embedding model — use `force` mode
 
