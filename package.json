@@ -1,7 +1,7 @@
 {
   "name": "claude-second-brain",
   "version": "0.5.0",
-  "description": "Scaffold an LLM-maintained Obsidian knowledge wiki",
+  "description": "The fastest way to start your personal knowledge base powered by Obsidian, Claude Code, qmd, and GitHub.",
   "type": "module",
   "bin": {
     "claude-second-brain": "./bin/create.js"
