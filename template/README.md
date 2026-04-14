@@ -1,4 +1,6 @@
-# claude-second-brain
+# __BRAIN_NAME__
+
+built using [claude-second-brain](https://github.com/jessepinkman9900/claude-second-brain)
 
 **Your notes don't compound. This wiki does.**
 

@@ -20,7 +20,7 @@ function commandExists(cmd) {
   return result.status === 0
 }
 
-async function patchVault(targetDir, qmdPath) {
+async function patchVault(targetDir, qmdPath, brainName) {
   const filesToPatch = [
     join(targetDir, "scripts/qmd/setup.ts"),
     join(targetDir, "scripts/qmd/reindex.ts"),
@@ -43,6 +43,14 @@ async function patchVault(targetDir, qmdPath) {
       await writeFile(file, content, "utf8")
     } catch { /* file may not exist */ }
   }
+
+  // Patch README title with chosen brain name
+  const readmePath = join(targetDir, "README.md")
+  try {
+    let readme = await readFile(readmePath, "utf8")
+    readme = readme.replaceAll("__BRAIN_NAME__", brainName)
+    await writeFile(readmePath, readme, "utf8")
+  } catch { /* README may not exist */ }
 }
 
 async function installGlobalSkills(qmdPath) {
@@ -133,7 +141,7 @@ async function main() {
   console.log(`✓ Created ${targetName}/`)
 
   // 4. Patch vault files with chosen qmd path
-  await patchVault(targetDir, qmdPath)
+  await patchVault(targetDir, qmdPath, targetName)
   console.log(`✓ Configured qmd path: ${qmdPath}`)
 
   // 5. Install mise if not present
