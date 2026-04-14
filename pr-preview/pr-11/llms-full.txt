@@ -22,7 +22,7 @@ The CLI will ask:
 * **qmd index path** — where to store the local search index (default: `~/.cache/qmd/index.sqlite`)
 * **GitHub repo** — optionally create a private repo and push automatically (requires `gh` CLI)
 
-Then scaffolds the vault, installs `mise` + `bun`, and runs `git init`.
+Then scaffolds the vault, installs `mise` + `node` + `pnpm`, runs `pnpm install`, and `git init`.
 
 ### Step 2 — Initialize inside Claude Code
 
