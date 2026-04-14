@@ -23,10 +23,10 @@ Produces `claude-second-brain-<version>.tgz` in the repo root, where `<version>`
 **Step 2 — Scaffold via npx**
 
 ```bash
-printf '\n\n' | npx -y claude-second-brain-$(node -p "require('./package.json').version").tgz test-vault
+npx -y claude-second-brain-$(node -p "require('./package.json').version").tgz test-vault
 ```
 
-Use `npx` with the `file:` prefix — without it, npx tries to execute the tarball as a shell script and fails with "Permission denied". Pass `test-vault` as the target dir argument to skip the interactive folder name prompt. Pipe `printf '\n\n'` to accept defaults for both the qmd path prompt and the GitHub repo prompt (`y/N` → defaults to `N`, skipping GitHub setup). The vault is created in the repo root and cleaned up in Step 4.
+Use `npx` to run from the local tarball — `bunx` doesn't support local tarball paths. Pass `test-vault` as the target dir argument to skip the interactive folder name prompt. When stdin is not a TTY (non-interactive), the CLI automatically uses defaults for the qmd path (`~/.cache/qmd/index.sqlite`) and skips the GitHub repo prompt. No `printf` pipe needed. The vault is created in the repo root and cleaned up in Step 4.
 
 **Step 3 — Verify checklist**
 
@@ -98,7 +98,7 @@ gh repo delete test-vault --yes
 - **`.gitignore.template` present instead of `.gitignore`** — npm stripped `.gitignore` from the tarball but the rename in `bin/create.js` didn't fire; check the `try/catch` rename block
 - **Missing skill dirs** — template copy failed or `.claude/` hidden dir wasn't included; check `npm pack --dry-run` output
 - **`npx` fails to run the bin** — shebang or `bin` field in `package.json` is wrong; check `#!/usr/bin/env node` on line 1 of `bin/create.js`
-- **`qmd.sqlite` still in CLAUDE.md or skill files** — `patchVault()` didn't run or the replaceAll target string didn't match; check for typos in the patch targets in `bin/create.js`
+- **`qmd.sqlite` still in CLAUDE.md or skill files** — `patchVault()` didn't run (CLI exited early, often due to a non-TTY prompt hanging) or the replaceAll target string didn't match; check the `isInteractive` guard in `bin/create.js` and the patch target strings
 - **Global skills not installed** — `installGlobalSkills()` failed; check that `~/.claude/skills/` is writable and template skill dirs are named `brain-ingest`/`brain-search`
 - **`join(VAULT, ...)` still in setup.ts** — the DB line patch didn't match; verify the exact string `const DB = join(VAULT, "qmd.sqlite")` exists in the template
 - **Note:** `bunx` cannot run local tarballs — use `npx` for this test. After publishing, `bunx claude-second-brain` from the registry works fine.

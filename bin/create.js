@@ -78,6 +78,8 @@ async function installGlobalSkills(qmdPath) {
 }
 
 async function main() {
+  const isInteractive = Boolean(process.stdin.isTTY)
+
   p.intro(`${pc.bgCyan(pc.black(" claude-second-brain "))} v${version}`)
 
   // 1. Folder name
@@ -97,29 +99,39 @@ async function main() {
     process.env.XDG_CACHE_HOME || join(homedir(), ".cache"),
     "qmd", "index.sqlite"
   )
-  const qmdPath = await p.text({
-    message: "Where to store the qmd index?",
-    placeholder: defaultQmdPath,
-    defaultValue: defaultQmdPath,
-  })
-  if (p.isCancel(qmdPath)) { p.cancel("Setup cancelled."); process.exit(0) }
-
-  // 3. GitHub repo
-  const createGhRepo = await p.confirm({
-    message: "Create a private GitHub repo?",
-    initialValue: false,
-  })
-  if (p.isCancel(createGhRepo)) { p.cancel("Setup cancelled."); process.exit(0) }
-
-  let ghRepoName = null
-  if (createGhRepo) {
+  let qmdPath
+  if (isInteractive) {
     const answer = await p.text({
-      message: "GitHub repo name?",
-      placeholder: targetName,
-      defaultValue: targetName,
+      message: "Where to store the qmd index?",
+      placeholder: defaultQmdPath,
+      defaultValue: defaultQmdPath,
     })
     if (p.isCancel(answer)) { p.cancel("Setup cancelled."); process.exit(0) }
-    ghRepoName = answer
+    qmdPath = answer
+  } else {
+    qmdPath = defaultQmdPath
+  }
+
+  // 3. GitHub repo
+  let createGhRepo = false
+  let ghRepoName = null
+  if (isInteractive) {
+    const confirm = await p.confirm({
+      message: "Create a private GitHub repo?",
+      initialValue: false,
+    })
+    if (p.isCancel(confirm)) { p.cancel("Setup cancelled."); process.exit(0) }
+    createGhRepo = confirm
+
+    if (createGhRepo) {
+      const answer = await p.text({
+        message: "GitHub repo name?",
+        placeholder: targetName,
+        defaultValue: targetName,
+      })
+      if (p.isCancel(answer)) { p.cancel("Setup cancelled."); process.exit(0) }
+      ghRepoName = answer
+    }
   }
 
   const targetDir = join(process.cwd(), targetName)
