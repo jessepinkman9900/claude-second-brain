@@ -5,6 +5,7 @@
 ## Docs
 
 - [Getting Started](/claude-second-brain/getting-started): [mise](https://mise.jdx.dev/) — auto-installed by the CLI if missing
+- [Ship log](/claude-second-brain/ship-log): A running record of every released version of `claude-second-brain` on npm. Newest releases first. For auto-generated notes and tags, see the [GitHub releases](https://github.com/jessepinkman9900/claude-second-brain/releases) page.
 - [Skills](/claude-second-brain/skills): The wiki ships with a set of Claude Code slash commands that cover the full workflow. No manual prompting, no copy-pasting.
 - [/brain-ingest](/claude-second-brain/skills/brain-ingest): Ingest a new source into the wiki.
 - [/brain-rebuild](/claude-second-brain/skills/brain-rebuild): **Destructive.** Redesign the qmd schema from scratch.
