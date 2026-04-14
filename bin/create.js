@@ -36,7 +36,6 @@ async function patchVault(targetDir, qmdPath, brainName) {
     join(targetDir, "CLAUDE.md"),
   ]
 
-  // Add all skill SKILL.md files
   const skillsDir = join(targetDir, ".claude/skills")
   try {
     for (const skill of readdirSync(skillsDir)) {
@@ -44,16 +43,15 @@ async function patchVault(targetDir, qmdPath, brainName) {
     }
   } catch { /* no skills dir */ }
 
-  for (const file of filesToPatch) {
+  await Promise.all(filesToPatch.map(async file => {
     try {
       let content = await readFile(file, "utf8")
-      content = content.replaceAll('const DB = join(VAULT, "qmd.sqlite")', `const DB = "${qmdPath}"`)
+      content = content.replaceAll('"__QMD_PATH__"', `"${qmdPath}"`)
       content = content.replaceAll("INDEX_PATH=qmd.sqlite", `INDEX_PATH=${qmdPath}`)
       await writeFile(file, content, "utf8")
     } catch { /* file may not exist */ }
-  }
+  }))
 
-  // Patch README title with chosen brain name
   const readmePath = join(targetDir, "README.md")
   try {
     let readme = await readFile(readmePath, "utf8")
@@ -65,7 +63,7 @@ async function patchVault(targetDir, qmdPath, brainName) {
 async function installGlobalSkills(qmdPath) {
   const globalSkillsDir = join(homedir(), ".claude", "skills")
 
-  for (const skillName of ["brain-ingest", "brain-search"]) {
+  await Promise.all(["brain-ingest", "brain-search"].map(async skillName => {
     const srcFile = join(TEMPLATE, ".claude/skills", skillName, "SKILL.md")
     const destDir = join(globalSkillsDir, skillName)
 
@@ -74,7 +72,7 @@ async function installGlobalSkills(qmdPath) {
 
     await mkdir(destDir, { recursive: true })
     await writeFile(join(destDir, "SKILL.md"), content, "utf8")
-  }
+  }))
 }
 
 async function main() {
@@ -82,7 +80,6 @@ async function main() {
 
   p.intro(`${pc.bgCyan(pc.black(" claude-second-brain "))} v${version}`)
 
-  // 1. Folder name
   let targetName = process.argv[2]
   if (!targetName) {
     const answer = await p.text({
@@ -94,7 +91,6 @@ async function main() {
     targetName = answer
   }
 
-  // 2. qmd path
   const defaultQmdPath = join(
     process.env.XDG_CACHE_HOME || join(homedir(), ".cache"),
     "qmd", "index.sqlite"
@@ -112,7 +108,6 @@ async function main() {
     qmdPath = defaultQmdPath
   }
 
-  // 3. GitHub repo
   let createGhRepo = false
   let ghRepoName = null
   if (isInteractive) {
