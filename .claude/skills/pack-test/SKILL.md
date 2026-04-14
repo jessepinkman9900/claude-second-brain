@@ -45,7 +45,7 @@ ls test-vault/wiki/
 # Sources dirs
 ls test-vault/sources/
 
-# Claude Code skills (expect: brain-ingest, brain-search, lint, qmd-cli, setup)
+# Claude Code skills (expect: brain-ingest, brain-search, brain-refresh, brain-rebuild, lint, qmd-cli, setup)
 ls test-vault/.claude/skills/
 
 # qmd scripts
@@ -60,9 +60,11 @@ grep "const DB" test-vault/scripts/qmd/setup.ts
 # Global skills must be installed
 ls ~/.claude/skills/brain-ingest/
 ls ~/.claude/skills/brain-search/
+ls ~/.claude/skills/brain-refresh/
 
 # Global skill content must have the absolute INDEX_PATH
 grep "INDEX_PATH=" ~/.claude/skills/brain-ingest/SKILL.md
+grep "INDEX_PATH=" ~/.claude/skills/brain-refresh/SKILL.md
 ```
 
 Report results against this checklist:
@@ -73,13 +75,14 @@ Report results against this checklist:
 | `wiki/index.md`, `log.md`, `overview.md` | All present | |
 | `wiki/sources/` and `wiki/qa/` | Present | |
 | `sources/articles/`, `pdfs/`, `personal/` | Present | |
-| `.claude/skills/` — 5 subdirs | brain-ingest, brain-search, lint, qmd-cli, setup | |
+| `.claude/skills/` — 7 subdirs | brain-ingest, brain-search, brain-refresh, brain-rebuild, lint, qmd-cli, setup | |
 | `scripts/qmd/setup.ts`, `reindex.ts`, `package.json` | All present | |
 | `CLAUDE.md`, `mise.toml` | Present | |
 | `CLAUDE.md` INDEX_PATH | Absolute path (not `qmd.sqlite`) | |
 | `scripts/qmd/setup.ts` DB const | Hardcoded absolute path (not `join(VAULT, ...)`) | |
 | `~/.claude/skills/brain-ingest/SKILL.md` | Present with absolute INDEX_PATH | |
 | `~/.claude/skills/brain-search/SKILL.md` | Present with absolute INDEX_PATH | |
+| `~/.claude/skills/brain-refresh/SKILL.md` | Present with absolute INDEX_PATH | |
 
 **Step 4 — Clean up**
 
@@ -88,10 +91,11 @@ rm -rf test-vault
 rm claude-second-brain-$(node -p "require('./package.json').version").tgz
 rm -rf ~/.claude/skills/brain-ingest
 rm -rf ~/.claude/skills/brain-search
+rm -rf ~/.claude/skills/brain-refresh
 gh repo delete test-vault --yes
 ```
 
-> **Note:** If you had pre-existing `brain-ingest` / `brain-search` global skills from a real vault, they were overwritten by this test. Re-run `/setup` inside your real vault to restore them.
+> **Note:** If you had pre-existing `brain-ingest` / `brain-search` / `brain-refresh` global skills from a real vault, they were overwritten by this test. Re-run `/setup` inside your real vault to restore them.
 
 ## What failure means
 

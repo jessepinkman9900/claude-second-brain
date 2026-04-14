@@ -58,6 +58,8 @@ jobs:
           check ".claude/skills/setup"                     test-vault/.claude/skills/setup
           check ".claude/skills/brain-ingest"              test-vault/.claude/skills/brain-ingest
           check ".claude/skills/brain-search"              test-vault/.claude/skills/brain-search
+          check ".claude/skills/brain-refresh"             test-vault/.claude/skills/brain-refresh
+          check ".claude/skills/brain-rebuild"             test-vault/.claude/skills/brain-rebuild
           check ".claude/skills/lint"                      test-vault/.claude/skills/lint
           check ".claude/skills/qmd-cli"                   test-vault/.claude/skills/qmd-cli
           check "scripts/qmd/setup.ts"                     test-vault/scripts/qmd/setup.ts
@@ -65,8 +67,9 @@ jobs:
           check "scripts/qmd/package.json"                 test-vault/scripts/qmd/package.json
           check "CLAUDE.md"                                test-vault/CLAUDE.md
           check "mise.toml"                                test-vault/mise.toml
-          check "~/.claude/skills/brain-ingest/SKILL.md"  "$HOME/.claude/skills/brain-ingest/SKILL.md"
-          check "~/.claude/skills/brain-search/SKILL.md"  "$HOME/.claude/skills/brain-search/SKILL.md"
+          check "~/.claude/skills/brain-ingest/SKILL.md"   "$HOME/.claude/skills/brain-ingest/SKILL.md"
+          check "~/.claude/skills/brain-search/SKILL.md"   "$HOME/.claude/skills/brain-search/SKILL.md"
+          check "~/.claude/skills/brain-refresh/SKILL.md"  "$HOME/.claude/skills/brain-refresh/SKILL.md"
 
           grep_check() {
             local label="$1"
@@ -80,9 +83,11 @@ jobs:
             fi
           }
 
-          grep_check "CLAUDE.md INDEX_PATH is absolute"          "INDEX_PATH=/"          test-vault/CLAUDE.md
-          grep_check "setup.ts DB is hardcoded absolute path"    'const DB = "/'         test-vault/scripts/qmd/setup.ts
-          grep_check "global brain-ingest INDEX_PATH is absolute" "INDEX_PATH=/"         "$HOME/.claude/skills/brain-ingest/SKILL.md"
+          grep_check "CLAUDE.md INDEX_PATH is absolute"           "INDEX_PATH=/"  test-vault/CLAUDE.md
+          grep_check "setup.ts DB is hardcoded absolute path"     'const DB = "/' test-vault/scripts/qmd/setup.ts
+          grep_check "global brain-ingest INDEX_PATH is absolute"  "INDEX_PATH=/" "$HOME/.claude/skills/brain-ingest/SKILL.md"
+          grep_check "global brain-search INDEX_PATH is absolute"  "INDEX_PATH=/" "$HOME/.claude/skills/brain-search/SKILL.md"
+          grep_check "global brain-refresh INDEX_PATH is absolute" "INDEX_PATH=/" "$HOME/.claude/skills/brain-refresh/SKILL.md"
 
           if [ "$fail" -ne 0 ]; then
             echo ""

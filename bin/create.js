@@ -62,7 +62,7 @@ async function patchVault(targetDir, qmdPath, brainName) {
 async function installGlobalSkills(qmdPath) {
   const globalSkillsDir = join(homedir(), ".claude", "skills")
 
-  await Promise.all(["brain-ingest", "brain-search"].map(async skillName => {
+  await Promise.all(["brain-ingest", "brain-search", "brain-refresh"].map(async skillName => {
     const srcFile = join(TEMPLATE, ".claude/skills", skillName, "SKILL.md")
     const destDir = join(globalSkillsDir, skillName)
 

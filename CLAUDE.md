@@ -229,3 +229,21 @@ Add `--json` for structured output. Omit `-c wiki` to search all collections (wi
 bun scripts/qmd/reindex.ts
 ```
 Do NOT re-index after every single file edit.
+
+---
+
+## Repo Maintenance (dev-only, not shipped to user vaults)
+
+This section applies only when working on the `claude-second-brain` repo itself — it is not part of the template copied into user vaults.
+
+Whenever you **add, remove, or rename a skill** under `template/.claude/skills/`, you MUST update the following in the same change:
+
+1. **`README.md`** (root) — the "Claude Code skills included" section and the "Installing and updating skills" block. Bump the skill count ("N wiki skills") in the install commands.
+2. **`template/README.md`** — the "Your Claude Code skills" section and the "Installing and updating skills" block. Bump the skill count.
+3. **`bin/create.js`** — the `installGlobalSkills()` array (lines ~65) if the skill should be installed globally (`~/.claude/skills/`). `brain-ingest`, `brain-search`, `brain-refresh` are global today; `brain-rebuild`, `lint`, `setup`, `qmd-cli` are vault-local.
+4. **`.github/workflows/pack-test.yml`** — add a `check` line for the new vault-local skill directory, and if the skill is global, add a `check` line for `$HOME/.claude/skills/<name>/SKILL.md` plus a `grep_check` for `INDEX_PATH=/`.
+5. **`.claude/skills/pack-test/SKILL.md`** — update the expected-skills comment, the `ls` and `grep` commands in Step 3, the checklist table (including the "N subdirs" count), and the cleanup / overwrite-warning note in Step 4.
+
+Whenever you **change a qmd collection name, context path, or CLI invocation** in `scripts/qmd/setup.ts` or in skill workflows, you MUST also update every `-c <collection>` reference in `template/CLAUDE.md`, all `SKILL.md` files under `template/.claude/skills/`, and both READMEs.
+
+Use `__QMD_PATH__` as the placeholder in any template file that references the qmd index path — `bin/create.js::patchVault()` substitutes it at scaffold time.
