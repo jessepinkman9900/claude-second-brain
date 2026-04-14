@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { cp, rename, access, readFile, writeFile, mkdir } from "fs/promises"
-import { readdirSync } from "fs"
+import { readdirSync, readFileSync } from "fs"
 import { join, dirname } from "path"
 import { fileURLToPath } from "url"
 import { spawnSync } from "child_process"
@@ -10,6 +10,7 @@ import pc from "picocolors"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const TEMPLATE = join(__dirname, "../template")
+const { version } = JSON.parse(readFileSync(join(__dirname, "../package.json"), "utf8"))
 
 // Non-interactive commands — output piped (won't corrupt spinner)
 function run(cmd, cwd) {
@@ -77,7 +78,7 @@ async function installGlobalSkills(qmdPath) {
 }
 
 async function main() {
-  p.intro(`${pc.bgCyan(pc.black(" claude-second-brain "))} v0.4.0`)
+  p.intro(`${pc.bgCyan(pc.black(" claude-second-brain "))} v${version}`)
 
   // 1. Folder name
   let targetName = process.argv[2]
