@@ -96,13 +96,25 @@ Open `my-brain/` as a vault in Obsidian — the folder is already a valid Obsidi
 
 ## Claude Code skills included
 
-The wiki ships with two global slash commands that cover the full workflow. No manual prompting, no copy-pasting.
+The wiki ships with a set of slash commands that cover the full workflow. No manual prompting, no copy-pasting.
+
+### Daily workflow
 
 **`/brain-ingest`** — Drop a file into `sources/articles/`, `sources/pdfs/`, or `sources/personal/`. Run `/brain-ingest`. Claude summarizes the source, asks what matters most to you, creates a `wiki/sources/` page, updates or creates related topic pages, flags any contradictions with existing knowledge, and logs everything.
 
 **`/brain-search`** — Ask anything about what you know. Claude runs hybrid semantic search across the wiki, reads the most relevant pages, and writes an answer with inline `[[wiki/page]]` citations. If the answer synthesizes multiple pages in a novel way, it offers to file it as a permanent `wiki/qa/` entry.
 
 **`/lint`** — Health-check the wiki. Surfaces orphan pages, broken links, unresolved contradictions, and data gaps. Reports findings and applies fixes where possible.
+
+### Maintenance
+
+**`/brain-refresh`** — Re-scan the vault for new or changed files and regenerate vector embeddings. Run after a bulk ingest session or manual edits. Pass `force` to re-embed every chunk (e.g. after changing the embedding model).
+
+**`/brain-rebuild`** — **Destructive.** Redesigns the qmd schema: analyzes the wiki, proposes new collections and contexts, waits for your approval, then patches `scripts/qmd/setup.ts`, drops the old index, and rebuilds embeddings from scratch. Use only when the current structure no longer fits how you search.
+
+### Setup
+
+**`/setup`** — First-time initialization. Registers the qmd collections and generates local vector embeddings. Run once after scaffolding.
 
 ---
 
@@ -176,14 +188,14 @@ my-brain/
 
 ## Installing and updating skills
 
-Skills are slash commands Claude Code loads from `.claude/skills/[name]/SKILL.md`. `/brain-ingest` and `/brain-search` are installed globally to `~/.claude/skills/` during setup so they work in any Claude Code session. `/lint`, `/setup`, and `/qmd-cli` are installed into the vault itself.
+Skills are slash commands Claude Code loads from `.claude/skills/[name]/SKILL.md`. `/brain-ingest`, `/brain-search`, and `/brain-refresh` install globally to `~/.claude/skills/` during setup so they work in any Claude Code session. `/brain-rebuild`, `/lint`, `/setup`, and `/qmd-cli` live inside the vault at `.claude/skills/`.
 
 ### Update the built-in wiki skills
 
-The wiki's own skills (`/brain-ingest`, `/brain-search`, `/lint`, `/setup`, `/qmd-cli`) are scaffolded at creation time. To pull in improvements, use `npx skills` pointing to the template skills directory in this repo:
+The wiki's own skills are scaffolded at creation time. To pull in improvements, use `npx skills` pointing to the template skills directory in this repo:
 
 ```bash
-# Install or update all 5 wiki skills from the latest template
+# Install or update all 7 wiki skills from the latest template
 npx skills add https://github.com/jessepinkman9900/claude-second-brain/tree/main/template/.claude/skills -a claude-code -y
 
 # Or update a specific skill
@@ -200,7 +212,7 @@ npx skills update -a claude-code
 
 ## Roadmap
 
-- [ ] GitHub Actions for scheduled re-indexing
+- [ ] GitHub Actions to invoke `/brain-refresh` on a schedule
 - [ ] GitHub agentic workflows — auto-ingest on push, scheduled lint, auto-summary on new sources
 - [ ] More Claude Code skills (source discovery, topic clustering)
 

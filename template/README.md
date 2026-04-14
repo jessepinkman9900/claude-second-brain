@@ -34,11 +34,23 @@ Registers the qmd collections and generates local vector embeddings. First run d
 
 ## Your Claude Code skills
 
+### Daily workflow
+
 **`/brain-ingest`** — Add a file to `sources/articles/`, `sources/pdfs/`, or `sources/personal/`, then run `/brain-ingest`. Claude summarizes the source, asks what aspects matter most, updates related wiki pages, flags contradictions, and logs everything.
 
 **`/brain-search`** — Ask anything: `what do I know about [topic]?` Claude searches the wiki semantically and returns a cited answer. If it synthesizes multiple pages in a useful way, it offers to file it as a permanent `wiki/qa/` entry.
 
 **`/lint`** — Health-check the wiki. Finds orphan pages, broken links, unresolved contradictions, and data gaps. Reports findings and fixes what it can.
+
+### Maintenance
+
+**`/brain-refresh`** — Re-scan the vault for new or changed files and regenerate vector embeddings. Run after a bulk ingest session or manual edits. Pass `force` to re-embed every chunk.
+
+**`/brain-rebuild`** — **Destructive.** Redesigns the qmd schema: analyzes the wiki, proposes new collections and contexts, waits for your approval, then patches `scripts/qmd/setup.ts`, drops the old index, and rebuilds embeddings from scratch.
+
+### Setup
+
+**`/setup`** — First-time initialization. Registers the qmd collections and generates local vector embeddings. Run once after scaffolding.
 
 ---
 
@@ -86,14 +98,14 @@ claude-second-brain/
 
 ## Installing and updating skills
 
-Skills are slash commands Claude Code loads from `.claude/skills/[name]/SKILL.md` in this vault. The wiki ships with `/brain-ingest`, `/brain-search`, `/lint`, `/setup`, and `/qmd-cli` pre-installed.
+Skills are slash commands Claude Code loads from `.claude/skills/[name]/SKILL.md` in this vault. The wiki ships with `/brain-ingest`, `/brain-search`, `/brain-refresh`, `/brain-rebuild`, `/lint`, `/setup`, and `/qmd-cli` pre-installed.
 
 ### Update built-in wiki skills
 
-Pull the latest `/brain-ingest`, `/brain-search`, `/lint`, `/setup`, and `/qmd-cli` from the upstream template:
+Pull the latest skills from the upstream template:
 
 ```bash
-# Install or update all 5 wiki skills
+# Install or update all 7 wiki skills
 npx skills add https://github.com/jessepinkman9900/claude-second-brain/tree/main/template/.claude/skills -a claude-code -y
 
 # Or update a specific skill
@@ -112,11 +124,11 @@ npx skills update -a claude-code
 
 After a bulk ingest session, re-index to keep search current:
 
-```bash
-bun scripts/qmd/reindex.ts
+```
+/brain-refresh
 ```
 
-Or run `/setup` again inside Claude Code.
+This wraps `bun scripts/qmd/reindex.ts` — you can also run that command directly if you're not inside Claude Code. Pass `force` to `/brain-refresh` to re-embed every chunk (e.g. after changing the embedding model).
 
 ---
 
