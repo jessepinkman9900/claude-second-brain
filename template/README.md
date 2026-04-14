@@ -88,32 +88,6 @@ claude-second-brain/
 
 Skills are slash commands Claude Code loads from `.claude/skills/[name]/SKILL.md` in this vault. The wiki ships with `/brain-ingest`, `/brain-search`, `/lint`, `/setup`, and `/qmd-cli` pre-installed.
 
-Additional skills can be installed from any GitHub repo using [vercel-labs/skills](https://github.com/vercel-labs/skills) — a CLI that works across Claude Code, Cursor, Codex, and 40+ other agents.
-
-### Discover skills
-
-```bash
-npx skills find                                     # interactive catalog search
-npx skills add vercel-labs/agent-skills --list      # browse a specific repo
-```
-
-### Install a skill
-
-```bash
-# Install from a repo (prompts to pick skills + agents)
-npx skills add vercel-labs/agent-skills
-
-# Install a specific skill to Claude Code
-npx skills add vercel-labs/agent-skills --skill frontend-design -a claude-code
-```
-
-### Update skills
-
-```bash
-npx skills update          # update all installed skills
-npx skills update my-skill # update a specific skill
-```
-
 ### Update built-in wiki skills
 
 Pull the latest `/brain-ingest`, `/brain-search`, `/lint`, `/setup`, and `/qmd-cli` from the upstream template:
