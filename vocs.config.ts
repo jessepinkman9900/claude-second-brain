@@ -49,5 +49,6 @@ export default defineConfig({
         { text: 'setup', link: '/skills/setup' },
       ],
     },
+    { text: 'Ship log', link: '/ship-log' },
   ],
 })
