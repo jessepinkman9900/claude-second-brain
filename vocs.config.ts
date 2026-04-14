@@ -3,6 +3,9 @@ import { defineConfig } from 'vocs'
 const basePath = process.env.BASE_PATH ?? ''
 
 export default defineConfig({
+  llms: {
+    generateMarkdown: true,
+  },
   title: 'claude-second-brain',
   description:
     'The fastest way to start your personal knowledge base powered by Obsidian, Claude Code, qmd, and GitHub.',
