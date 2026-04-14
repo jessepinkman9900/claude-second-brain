@@ -1,0 +1,56 @@
+## Getting Started
+
+### Requirements
+
+* [mise](https://mise.jdx.dev/) — auto-installed by the CLI if missing
+* [Claude Code](https://claude.ai/code) — the CLI that runs the wiki
+* [Obsidian](https://obsidian.md/) — optional but recommended
+
+### Step 1 — Scaffold
+
+```bash
+npx claude-second-brain
+```
+
+The CLI will ask:
+
+* **Folder name** — where to create your vault (default: `my-brain`)
+* **qmd index path** — where to store the local search index (default: `~/.cache/qmd/index.sqlite`)
+* **GitHub repo** — optionally create a private repo and push automatically (requires `gh` CLI)
+
+Then scaffolds the vault, installs `mise` + `node` + `pnpm`, runs `pnpm install`, and `git init`.
+
+### Step 2 — Initialize inside Claude Code
+
+```bash
+cd my-brain && claude
+```
+
+Then run:
+
+```
+/setup
+```
+
+Registers the qmd collections and generates local vector embeddings. First run downloads \~2GB of GGUF models — once.
+
+### Step 3 — Open in Obsidian (and push to GitHub if not done)
+
+**If you created a GitHub repo during setup**, it's already pushed — skip straight to opening in Obsidian.
+
+**If you skipped GitHub during setup**, connect it now:
+
+```bash
+git remote add origin https://github.com/you/my-brain.git
+git push -u origin main
+```
+
+Open `my-brain/` as a vault in Obsidian — the folder is already a valid Obsidian vault. The Git plugin is pre-configured — enable it and sync is automatic.
+
+### Access from anywhere
+
+**Edit anywhere — Claude Code on desktop or mobile.** Claude Code's GitHub integration lets you open the repo and work from anywhere — ingest a source, run a query, or update a page from your phone.
+
+**Read anywhere — Obsidian desktop and mobile.** Open the repo as an Obsidian vault. The bundled `.obsidian` folder pre-configures [obsidian-git](https://github.com/Vinzent03/obsidian-git) — no setup required. Your wiki syncs automatically on every commit. For iOS: put the repo folder inside iCloud Drive — Obsidian Mobile picks it up natively.
+
+**Browse anywhere — GitHub.** It's a plain GitHub repo. View and edit files directly in the browser at any time.
