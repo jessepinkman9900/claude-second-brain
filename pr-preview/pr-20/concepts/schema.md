@@ -1,0 +1,64 @@
+## Wiki schema
+
+The authoritative schema lives in [CLAUDE.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/CLAUDE.md) — Claude reads it at the start of every session. This page is a readable summary.
+
+### Page types
+
+| Type             | File                     | Purpose                             |
+| ---------------- | ------------------------ | ----------------------------------- |
+| `overview`       | `wiki/overview.md`       | Evolving high-level synthesis       |
+| `topic`          | `wiki/[concept].md`      | A concept, domain, or idea          |
+| `entity`         | `wiki/[name].md`         | A person, tool, company, or project |
+| `source-summary` | `wiki/sources/[slug].md` | One page per ingested source        |
+| `qa`             | `wiki/qa/[slug].md`      | Filed answers to notable queries    |
+
+Plus two admin pages: `wiki/index.md` (master index) and `wiki/log.md` (running activity log).
+
+### Frontmatter
+
+Every wiki page has YAML frontmatter:
+
+```yaml
+---
+type: overview | topic | entity | source-summary | qa | admin
+tags: [tag1, tag2]
+sources: ["[[wiki/sources/source-slug]]"]
+related: ["[[wiki/related-page]]"]
+updated: YYYY-MM-DD
+---
+```
+
+### Naming conventions
+
+* **File names** — kebab-case, all lowercase. `machine-learning-ops.md`, not `MachineLearningOps.md`.
+* **Links** — always Obsidian `[[wikilinks]]` for internal cross-references. Full paths from vault root: `[[wiki/distributed-systems]]`.
+* **Sections** — `##` for top-level, `###` for subsections.
+* **Contradictions** — flagged with a `> [!WARNING] Contradiction` callout. Both claims and their sources are stated.
+* **Uncertainty** — claims the model isn't sure about are marked with `[?]` inline.
+
+### Directory layout
+
+```
+my-brain/
+├── CLAUDE.md              ← The schema
+├── raw-sources/           ← Immutable raw inputs
+│   ├── articles/
+│   ├── pdfs/
+│   └── personal/
+└── wiki/                  ← Claude-owned knowledge base
+    ├── index.md
+    ├── log.md
+    ├── overview.md
+    ├── sources/
+    └── qa/
+```
+
+### Hard rules
+
+1. Nothing in `raw-sources/` is ever modified — they are immutable raw inputs.
+2. Only `wiki/` is owned by Claude; the rest of the vault is untouched.
+3. `wiki/log.md` is append-only, never overwritten.
+4. One source summary per ingested source in `wiki/sources/` — never merged.
+5. Every wiki page has frontmatter with at least `type` and `updated`.
+6. Cross-link aggressively — if a topic has (or should have) a page, link it with `[[wiki/page]]`.
+7. Pages are **synthesis**, not transcription.
