@@ -277,6 +277,26 @@ async function main() {
     targetName = answer
   }
 
+  const defaultQmdPath = join(
+    process.env.XDG_CACHE_HOME || join(homedir(), ".cache"),
+    "qmd", "index.sqlite"
+  )
+  const toDisplayPath = p => p.startsWith(homedir()) ? "~" + p.slice(homedir().length) : p
+  const expandHome = p => p.startsWith("~/") || p === "~" ? join(homedir(), p.slice(1)) : p
+  const displayQmdPath = toDisplayPath(defaultQmdPath)
+  let qmdPath
+  if (isInteractive) {
+    const answer = await p.text({
+      message: "Where to store the qmd index?",
+      placeholder: displayQmdPath,
+      defaultValue: displayQmdPath,
+    })
+    if (p.isCancel(answer)) { p.cancel("Setup cancelled."); process.exit(0) }
+    qmdPath = expandHome(answer)
+  } else {
+    qmdPath = defaultQmdPath
+  }
+
   let remoteProvider = "none"
   let repoName = null
   let cfNamespace = "default"
@@ -312,26 +332,6 @@ async function main() {
       if (p.isCancel(ns)) { p.cancel("Setup cancelled."); process.exit(0) }
       cfNamespace = ns
     }
-  }
-
-  const defaultQmdPath = join(
-    process.env.XDG_CACHE_HOME || join(homedir(), ".cache"),
-    "qmd", "index.sqlite"
-  )
-  const toDisplayPath = p => p.startsWith(homedir()) ? "~" + p.slice(homedir().length) : p
-  const expandHome = p => p.startsWith("~/") || p === "~" ? join(homedir(), p.slice(1)) : p
-  const displayQmdPath = toDisplayPath(defaultQmdPath)
-  let qmdPath
-  if (isInteractive) {
-    const answer = await p.text({
-      message: "Where to store the qmd index?",
-      placeholder: displayQmdPath,
-      defaultValue: displayQmdPath,
-    })
-    if (p.isCancel(answer)) { p.cancel("Setup cancelled."); process.exit(0) }
-    qmdPath = expandHome(answer)
-  } else {
-    qmdPath = defaultQmdPath
   }
 
   const targetDir = join(process.cwd(), targetName)
@@ -386,6 +386,11 @@ async function main() {
   if (pnpmOk) spin.stop("dependencies installed")
   else spin.stop("pnpm install failed — run it manually inside your vault", 1)
 
+  // Install global skills
+  spin.start("Installing global Claude skills")
+  await installGlobalSkills(qmdPath)
+  spin.stop(`Global skills installed → ${pc.dim(toDisplayPath(join(homedir(), ".claude", "skills")))}`)
+
   // Git init
   spin.start("Initializing git repo")
   const gitOk = run(["git", "init"], targetDir)
@@ -432,11 +437,6 @@ async function main() {
       p.log.warn(`Save your Artifacts repo token — it expires and you'll need to mint a new one:\n  ${result.repoToken}`)
     }
   }
-
-  // Install global skills
-  spin.start("Installing global Claude skills")
-  await installGlobalSkills(qmdPath)
-  spin.stop("Global skills installed")
 
   // Next steps
   const remoteSteps = remoteProvider === "cloudflare"
