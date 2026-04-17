@@ -281,18 +281,18 @@ async function main() {
     process.env.XDG_CACHE_HOME || join(homedir(), ".cache"),
     "qmd", "index.sqlite"
   )
-  const displayQmdPath = defaultQmdPath.startsWith(homedir())
-    ? "~" + defaultQmdPath.slice(homedir().length)
-    : defaultQmdPath
+  const toDisplayPath = p => p.startsWith(homedir()) ? "~" + p.slice(homedir().length) : p
+  const expandHome = p => p.startsWith("~/") || p === "~" ? join(homedir(), p.slice(1)) : p
+  const displayQmdPath = toDisplayPath(defaultQmdPath)
   let qmdPath
   if (isInteractive) {
     const answer = await p.text({
       message: "Where to store the qmd index?",
       placeholder: displayQmdPath,
-      defaultValue: defaultQmdPath,
+      defaultValue: displayQmdPath,
     })
     if (p.isCancel(answer)) { p.cancel("Setup cancelled."); process.exit(0) }
-    qmdPath = answer
+    qmdPath = expandHome(answer)
   } else {
     qmdPath = defaultQmdPath
   }
@@ -363,8 +363,7 @@ async function main() {
   // Patch vault files with chosen qmd path
   spin.start("Configuring qmd index path")
   await patchVault(targetDir, qmdPath, targetName)
-  const displayPath = qmdPath.startsWith(homedir()) ? "~" + qmdPath.slice(homedir().length) : qmdPath
-  spin.stop(`qmd index → ${pc.dim(displayPath)}`)
+  spin.stop(`qmd index → ${pc.dim(toDisplayPath(qmdPath))}`)
 
   // Install mise if not present
   if (!commandExists("mise")) {
