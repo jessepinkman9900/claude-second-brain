@@ -16,7 +16,7 @@ The CLI will ask:
 
 - **Folder name** — where to create your vault (default: `my-brain`)
 - **qmd index path** — where to store the local search index (default: `~/.cache/qmd/index.sqlite`)
-- **GitHub repo** — optionally create a private repo and push automatically (requires `gh` CLI)
+- **Git remote** — optionally host your vault on **[GitHub](/remotes/github)** (requires `gh` CLI) or **[Cloudflare Artifacts](/remotes/cloudflare-artifacts)** (requires a Cloudflare account + wrangler)
 
 Then scaffolds the vault, installs `mise` + `node` + `pnpm`, runs `pnpm install`, and `git init`.
 

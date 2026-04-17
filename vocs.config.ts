@@ -45,6 +45,13 @@ export default defineConfig({
       ],
     },
     {
+      text: 'Git backends',
+      items: [
+        { text: 'GitHub', link: '/remotes/github' },
+        { text: 'Cloudflare Artifacts', link: '/remotes/cloudflare-artifacts' },
+      ],
+    },
+    {
       text: 'Skills',
       items: [
         { text: 'Overview', link: '/skills' },
