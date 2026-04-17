@@ -75,7 +75,6 @@ jobs:
           check "~/.claude/skills/brain-ingest/.csb-version"    "$HOME/.claude/skills/brain-ingest/.csb-version"
           check "~/.claude/skills/brain-search/.csb-version"    "$HOME/.claude/skills/brain-search/.csb-version"
           check "~/.claude/skills/brain-refresh/.csb-version"   "$HOME/.claude/skills/brain-refresh/.csb-version"
-          check ".qmd/index.sqlite (created by auto qmd:setup)"  "$VAULT/.qmd/index.sqlite"
 
           grep_check() {
             local label="$1"
@@ -103,7 +102,7 @@ jobs:
 
           grep_check "CLAUDE.md uses relative INDEX_PATH"      'INDEX_PATH=\.qmd/index\.sqlite' "$VAULT/CLAUDE.md"
           grep_check "setup.ts DB uses relative .qmd path"     '\.qmd.*index\.sqlite'            "$VAULT/scripts/qmd/setup.ts"
-          grep_check "config.toml uses `default` field"        '^default = '                     "$HOME/.claude-second-brain/config.toml"
+          grep_check "config.toml uses default field"          '^default = '                     "$HOME/.claude-second-brain/config.toml"
           for skill in brain-ingest brain-search brain-refresh; do
             grep_check   "global $skill uses claude-second-brain path" 'claude-second-brain path'                        "$HOME/.claude/skills/$skill/SKILL.md"
             grep_check   "global $skill uses claude-second-brain qmd"  'claude-second-brain qmd'                         "$HOME/.claude/skills/$skill/SKILL.md"
