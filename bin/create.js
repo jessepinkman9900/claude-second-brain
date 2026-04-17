@@ -277,26 +277,6 @@ async function main() {
     targetName = answer
   }
 
-  const defaultQmdPath = join(
-    process.env.XDG_CACHE_HOME || join(homedir(), ".cache"),
-    "qmd", "index.sqlite"
-  )
-  const toDisplayPath = p => p.startsWith(homedir()) ? "~" + p.slice(homedir().length) : p
-  const expandHome = p => p.startsWith("~/") || p === "~" ? join(homedir(), p.slice(1)) : p
-  const displayQmdPath = toDisplayPath(defaultQmdPath)
-  let qmdPath
-  if (isInteractive) {
-    const answer = await p.text({
-      message: "Where to store the qmd index?",
-      placeholder: displayQmdPath,
-      defaultValue: displayQmdPath,
-    })
-    if (p.isCancel(answer)) { p.cancel("Setup cancelled."); process.exit(0) }
-    qmdPath = expandHome(answer)
-  } else {
-    qmdPath = defaultQmdPath
-  }
-
   let remoteProvider = "none"
   let repoName = null
   let cfNamespace = "default"
@@ -332,6 +312,26 @@ async function main() {
       if (p.isCancel(ns)) { p.cancel("Setup cancelled."); process.exit(0) }
       cfNamespace = ns
     }
+  }
+
+  const defaultQmdPath = join(
+    process.env.XDG_CACHE_HOME || join(homedir(), ".cache"),
+    "qmd", "index.sqlite"
+  )
+  const toDisplayPath = p => p.startsWith(homedir()) ? "~" + p.slice(homedir().length) : p
+  const expandHome = p => p.startsWith("~/") || p === "~" ? join(homedir(), p.slice(1)) : p
+  const displayQmdPath = toDisplayPath(defaultQmdPath)
+  let qmdPath
+  if (isInteractive) {
+    const answer = await p.text({
+      message: "Where to store the qmd index?",
+      placeholder: displayQmdPath,
+      defaultValue: displayQmdPath,
+    })
+    if (p.isCancel(answer)) { p.cancel("Setup cancelled."); process.exit(0) }
+    qmdPath = expandHome(answer)
+  } else {
+    qmdPath = defaultQmdPath
   }
 
   const targetDir = join(process.cwd(), targetName)
