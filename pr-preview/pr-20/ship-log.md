@@ -9,6 +9,7 @@ A running record of every released version of `claude-second-brain` on npm. Newe
 * Added `claude-second-brain path [--brain N] [--root|--qmd|--config]` and `claude-second-brain qmd [--brain N] -- …` subcommands. The global skills now resolve paths at call time via these commands instead of having absolute paths baked in at scaffold time.
 * `config.toml`'s `active` field renamed to `default`. Existing configs with `active = …` are still read transparently and rewritten to `default = …` on the next write.
 * Global skills (`brain-ingest`, `brain-search`, `brain-refresh`) now ship with a `.csb-version` sidecar file. Re-running `npx claude-second-brain <name>` detects version mismatches and prompts before overwriting; `CSB_SKIP_SKILL_UPDATES=1` disables the prompt.
+* Added `csb` as a bin alias. After `npm i -g claude-second-brain`, both `claude-second-brain` and `csb` are available globally.
 
 **Refactors:**
 

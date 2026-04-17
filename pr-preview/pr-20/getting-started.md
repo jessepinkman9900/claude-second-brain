@@ -12,6 +12,13 @@
 npx claude-second-brain
 ```
 
+Or install globally for a shorter command (`csb` is an alias):
+
+```bash
+npm i -g claude-second-brain
+csb                    # same as: claude-second-brain
+```
+
 The CLI will ask:
 
 * **Brain name** — what to call this brain (default: `my-brain`)
@@ -48,7 +55,9 @@ Open `~/.claude-second-brain/my-brain/` as a vault in Obsidian — the folder is
 
 ### Multiple brains
 
-Run `npx claude-second-brain` again to create additional brains. Each gets its own folder under `~/.claude-second-brain/` and its own isolated qmd index. The global skills (`/brain-ingest`, `/brain-search`, `/brain-refresh`) always operate on the **default brain** in `~/.claude-second-brain/config.toml`. The first brain created is set as the default automatically.
+Run `npx claude-second-brain` (or `csb` if installed globally) again to create additional brains. Each gets its own folder under `~/.claude-second-brain/` and its own isolated qmd index. The global skills (`/brain-ingest`, `/brain-search`, `/brain-refresh`) always operate on the **default brain** in `~/.claude-second-brain/config.toml`. The first brain created is set as the default automatically.
+
+See the [CLI Reference](/cli) for `ls`, `rm`, `path`, and `qmd` subcommands that manage and target specific brains.
 
 ### Access from anywhere
 

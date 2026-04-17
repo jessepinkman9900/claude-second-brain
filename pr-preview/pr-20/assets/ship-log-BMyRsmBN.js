@@ -1,4 +1,4 @@
-import{u as s,j as e}from"./index-BZe23yTK.js";const l={title:"Ship log",description:"undefined"};function d(i){const n={a:"a",code:"code",div:"div",h1:"h1",h2:"h2",header:"header",li:"li",p:"p",strong:"strong",ul:"ul",...s(),...i.components};return e.jsxs(e.Fragment,{children:[e.jsx(n.header,{children:e.jsxs(n.h1,{id:"ship-log",children:["Ship log",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#ship-log",children:e.jsx(n.div,{"data-autolink-icon":!0})})]})}),`
+import{u as s,j as e}from"./index-C0fcjZF3.js";const l={title:"Ship log",description:"undefined"};function d(i){const n={a:"a",code:"code",div:"div",h1:"h1",h2:"h2",header:"header",li:"li",p:"p",strong:"strong",ul:"ul",...s(),...i.components};return e.jsxs(e.Fragment,{children:[e.jsx(n.header,{children:e.jsxs(n.h1,{id:"ship-log",children:["Ship log",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#ship-log",children:e.jsx(n.div,{"data-autolink-icon":!0})})]})}),`
 `,e.jsxs(n.p,{children:["A running record of every released version of ",e.jsx(n.code,{children:"claude-second-brain"})," on npm. Newest releases first. For auto-generated notes and tags, see the ",e.jsx(n.a,{href:"https://github.com/jessepinkman9900/claude-second-brain/releases",children:"GitHub releases"})," page."]}),`
 `,e.jsxs(n.h2,{id:"v070--2026-04-17",children:["v0.7.0 — 2026-04-17",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#v070--2026-04-17",children:e.jsx(n.div,{"data-autolink-icon":!0})})]}),`
 `,e.jsx(n.strong,{children:"CLI:"}),`
@@ -6,6 +6,7 @@ import{u as s,j as e}from"./index-BZe23yTK.js";const l={title:"Ship log",descrip
 `,e.jsxs(n.li,{children:["Added ",e.jsx(n.code,{children:"claude-second-brain path [--brain N] [--root|--qmd|--config]"})," and ",e.jsx(n.code,{children:"claude-second-brain qmd [--brain N] -- …"})," subcommands. The global skills now resolve paths at call time via these commands instead of having absolute paths baked in at scaffold time."]}),`
 `,e.jsxs(n.li,{children:[e.jsx(n.code,{children:"config.toml"}),"'s ",e.jsx(n.code,{children:"active"})," field renamed to ",e.jsx(n.code,{children:"default"}),". Existing configs with ",e.jsx(n.code,{children:"active = …"})," are still read transparently and rewritten to ",e.jsx(n.code,{children:"default = …"})," on the next write."]}),`
 `,e.jsxs(n.li,{children:["Global skills (",e.jsx(n.code,{children:"brain-ingest"}),", ",e.jsx(n.code,{children:"brain-search"}),", ",e.jsx(n.code,{children:"brain-refresh"}),") now ship with a ",e.jsx(n.code,{children:".csb-version"})," sidecar file. Re-running ",e.jsx(n.code,{children:"npx claude-second-brain <name>"})," detects version mismatches and prompts before overwriting; ",e.jsx(n.code,{children:"CSB_SKIP_SKILL_UPDATES=1"})," disables the prompt."]}),`
+`,e.jsxs(n.li,{children:["Added ",e.jsx(n.code,{children:"csb"})," as a bin alias. After ",e.jsx(n.code,{children:"npm i -g claude-second-brain"}),", both ",e.jsx(n.code,{children:"claude-second-brain"})," and ",e.jsx(n.code,{children:"csb"})," are available globally."]}),`
 `]}),`
 `,e.jsx(n.strong,{children:"Refactors:"}),`
 `,e.jsxs(n.ul,{children:[`
@@ -111,4 +112,4 @@ import{u as s,j as e}from"./index-BZe23yTK.js";const l={title:"Ship log",descrip
 `,e.jsx(n.li,{children:"First public release to npm."}),`
 `,e.jsxs(n.li,{children:["Introduced the template scaffold and the ",e.jsx(n.code,{children:"npx claude-second-brain"})," flow."]}),`
 `,e.jsxs(n.li,{children:["Added the initial README, the release workflow, and the ",e.jsx(n.code,{children:"/pack-test"})," skill."]}),`
-`]})]})}function t(i={}){const{wrapper:n}={...s(),...i.components};return n?e.jsx(n,{...i,children:e.jsx(d,{...i})}):d(i)}export{t as default,l as frontmatter};
+`]})]})}function a(i={}){const{wrapper:n}={...s(),...i.components};return n?e.jsx(n,{...i,children:e.jsx(d,{...i})}):d(i)}export{a as default,l as frontmatter};

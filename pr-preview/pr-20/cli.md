@@ -1,0 +1,92 @@
+## CLI Reference
+
+The `claude-second-brain` CLI creates and manages brains registered in `~/.claude-second-brain/config.toml`. Run it via `npx claude-second-brain`, `pnpm dlx claude-second-brain`, or — if installed globally with `npm i -g claude-second-brain` — the shorter `csb` alias.
+
+All examples below use `claude-second-brain`; substitute `csb` if you've installed it globally.
+
+### Commands
+
+| Command                                | Description                                                       |
+| -------------------------------------- | ----------------------------------------------------------------- |
+| `claude-second-brain`                  | Create a new brain (interactive).                                 |
+| `claude-second-brain <name>`           | Create a new brain named `<name>`, skipping the name prompt.      |
+| `claude-second-brain ls`               | List all registered brains. The default brain is marked with `*`. |
+| `claude-second-brain rm <name>`        | Delete a brain directory and remove its entry from `config.toml`. |
+| `claude-second-brain path [flags]`     | Print the path of the default (or named) brain.                   |
+| `claude-second-brain qmd [flags] -- …` | Run `qmd` against the default (or named) brain.                   |
+| `claude-second-brain help`             | Show usage.                                                       |
+
+`ls` is also available as `list`, and `rm` as `remove`.
+
+### Create a brain
+
+```bash
+npx claude-second-brain                 # interactive — prompts for name + remote
+npx claude-second-brain my-brain        # skip the name prompt
+```
+
+Creates the brain at `~/.claude-second-brain/<name>/`, runs `mise install`, `pnpm install`, `pnpm qmd:setup`, `git init`, and registers it in `~/.claude-second-brain/config.toml`. The first brain created is set as the default.
+
+During the interactive flow the CLI asks:
+
+* **Brain name** — defaults to `my-brain`.
+* **Git remote** — `GitHub`, `Cloudflare Artifacts`, or `Skip`. See [GitHub](/remotes/github) and [Cloudflare Artifacts](/remotes/cloudflare-artifacts).
+* **Repo name** — only shown when a remote is selected; defaults to the brain name.
+* **Artifacts namespace** — only shown for Cloudflare; defaults to `default`.
+* **Register qmd collections now?** — confirms running `pnpm qmd:setup`.
+
+### List brains
+
+```bash
+npx claude-second-brain ls
+```
+
+Prints each registered brain with its path, creation date, and git remote. The default brain is shown in bold with a `*` marker.
+
+### Remove a brain
+
+```bash
+npx claude-second-brain rm my-brain         # prompts for confirmation
+npx claude-second-brain rm my-brain --yes   # skip the confirmation
+npx claude-second-brain rm                  # interactive — pick from a list
+```
+
+Deletes the brain's directory under `~/.claude-second-brain/` and removes its entry from `config.toml`. If you remove the default brain and others remain, the first remaining brain becomes the new default.
+
+Flags:
+
+* `-y`, `--yes` — skip the confirmation prompt.
+
+### Print a path
+
+```bash
+npx claude-second-brain path                        # default brain root
+npx claude-second-brain path --qmd                  # default brain's qmd index
+npx claude-second-brain path --config               # ~/.claude-second-brain/config.toml
+npx claude-second-brain path --brain work --qmd     # a specific brain's qmd index
+```
+
+Flags:
+
+* `--root` *(default)* — the brain's directory (e.g. `~/.claude-second-brain/my-brain`).
+* `--qmd` — the brain's qmd SQLite index (e.g. `~/.claude-second-brain/my-brain/.qmd/index.sqlite`).
+* `--config` — the central config path. Ignores `--brain`.
+* `--brain <name>` — target a specific brain instead of the default.
+
+Used by the global skills (`/brain-ingest`, `/brain-search`, `/brain-refresh`) to resolve paths at call time so they work from any working directory.
+
+### Run qmd against a brain
+
+```bash
+npx claude-second-brain qmd -- query -c wiki "distributed systems"
+npx claude-second-brain qmd --brain work -- search -c wiki "kafka"
+```
+
+Forwards all arguments after `--` to `npx @tobilu/qmd`, with `INDEX_PATH` set to the resolved brain's qmd index. Flags:
+
+* `--brain <name>` — target a specific brain instead of the default.
+* `--` — end of CLI flags; everything after is passed to qmd verbatim.
+
+### Exit status
+
+Every command exits non-zero on failure (invalid brain name, missing config, etc.) and writes the error to stderr.
