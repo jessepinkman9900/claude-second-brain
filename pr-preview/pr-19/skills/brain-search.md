@@ -1,9 +1,0 @@
-## /brain-search
-
-Query the wiki to answer a question.
-
-Runs hybrid search (vector + BM25) across the entire wiki, reads the 2–5 most relevant pages, and synthesizes an answer with inline `[[wiki/page]]` citations. Flags gaps where the wiki has no coverage.
-
-If the answer pulls together multiple pages in a novel way, it offers to file it as a permanent `wiki/qa/[slug].md` entry — so the synthesis compounds next time.
-
-Scope: global skill, installed at `~/.claude/skills/brain-search/SKILL.md`. Source: [template/.claude/skills/brain-search/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-search/SKILL.md).
