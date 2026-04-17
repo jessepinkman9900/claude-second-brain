@@ -75,6 +75,7 @@ jobs:
           check "~/.claude/skills/brain-ingest/.csb-version"    "$HOME/.claude/skills/brain-ingest/.csb-version"
           check "~/.claude/skills/brain-search/.csb-version"    "$HOME/.claude/skills/brain-search/.csb-version"
           check "~/.claude/skills/brain-refresh/.csb-version"   "$HOME/.claude/skills/brain-refresh/.csb-version"
+          check ".qmd/index.sqlite (created by auto qmd:setup)"  "$VAULT/.qmd/index.sqlite"
 
           grep_check() {
             local label="$1"
