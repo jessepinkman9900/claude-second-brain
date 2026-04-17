@@ -20,7 +20,7 @@ The CLI will ask:
 
 * **Folder name** — where to create your vault (default: `my-brain`)
 * **qmd index path** — where to store the local search index (default: `~/.cache/qmd/index.sqlite`)
-* **GitHub repo** — optionally create a private repo and push automatically (requires `gh` CLI)
+* **Git remote** — optionally host your vault on **[GitHub](/remotes/github)** (requires `gh` CLI) or **[Cloudflare Artifacts](/remotes/cloudflare-artifacts)** (requires a Cloudflare account + wrangler)
 
 Then scaffolds the vault, installs `mise` + `node` + `pnpm`, runs `pnpm install`, and `git init`.
 
@@ -63,6 +63,24 @@ Open `my-brain/` as a vault in Obsidian — the folder is already a valid Obsidi
 ## Ship log
 
 A running record of every released version of `claude-second-brain` on npm. Newest releases first. For auto-generated notes and tags, see the [GitHub releases](https://github.com/jessepinkman9900/claude-second-brain/releases) page.
+
+### v0.6.0 — 2026-04-17
+
+**Features:**
+
+* Added Cloudflare Artifacts as an alternate Git remote option during `npx claude-second-brain` setup. The CLI authenticates via wrangler, creates a repo via the Artifacts API, and pushes the initial commit automatically.
+
+**CLI UX:**
+
+* qmd index path prompt now appears before the Git remote selection.
+* Global Claude skills are installed right after `pnpm install`, before git init. Install path is shown with `~/...` notation.
+* qmd index prompt placeholder and default value display `~/...` instead of the full home directory path.
+
+**Docs:**
+
+* Added a **Git backends** section to the docs site covering GitHub and Cloudflare Artifacts setup.
+* Added `llms.txt` for LLM/AI crawler discoverability.
+* Docs site now generates `.md` files alongside HTML pages.
 
 ### v0.5.1 — 2026-04-14
 
@@ -281,6 +299,100 @@ What it does:
 The first run downloads \~2 GB of GGUF embedding models — this happens once, then is cached across vaults.
 
 Scope: vault-local, installed at `.claude/skills/setup/SKILL.md`. Source: [template/.claude/skills/setup/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/setup/SKILL.md).
+
+
+## Cloudflare Artifacts remote
+
+[Cloudflare Artifacts](https://developers.cloudflare.com/artifacts/) is a git-compatible object storage remote. It's a good choice if you don't want to use GitHub — your vault data stays on Cloudflare's infrastructure and never touches GitHub.
+
+### Prerequisites
+
+* A [Cloudflare account](https://dash.cloudflare.com/sign-up)
+* `wrangler` CLI — if not installed, the setup wizard falls back to `npx wrangler` automatically
+
+### Setup (automatic)
+
+When you run `npx claude-second-brain` and select **Cloudflare Artifacts** as your remote, the CLI handles everything:
+
+1. Checks wrangler auth (logs you in and requests the `artifacts:write` scope if needed)
+2. Creates a new Artifacts repo via the Cloudflare API
+3. Runs `git remote add origin <remote-url>`
+4. Pushes the initial commit
+5. Prints a short-lived repo token — **save it**
+
+### Saving your repo token
+
+After setup, the CLI prints a repo token:
+
+```
+Save your Artifacts repo token — it expires and you'll need to mint a new one:
+  <token>
+```
+
+This token is used as the git credential for push and pull. It expires (default TTL: 24 hours). Save it somewhere — you'll need to mint a replacement when it expires.
+
+### Pushing and pulling after setup
+
+Repo tokens expire, so mint a fresh one before each push/pull session:
+
+```bash
+# 1. Get your wrangler OAuth token
+TOKEN=$(wrangler auth token)
+
+# 2. Mint a new repo token (replace 'my-brain' and 'default' with your repo and namespace)
+curl -X POST https://artifacts.cloudflare.net/v1/api/namespaces/default/tokens \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"repo":"my-brain","scope":"write","ttl":86400}'
+```
+
+The response contains a `token` field. Use it as a git credential:
+
+```bash
+git -c http.extraHeader="Authorization: Bearer <token>" push origin main
+git -c http.extraHeader="Authorization: Bearer <token>" pull origin main
+```
+
+### Namespace
+
+During setup, the CLI asks for an **Artifacts namespace** (default: `default`). Namespaces scope repos within your Cloudflare account — useful if you manage multiple projects. For personal use, the default is fine.
+
+
+## GitHub remote
+
+GitHub is the default Git backend for claude-second-brain. Your vault is stored as a private GitHub repository — you get version history, access from any device, and Obsidian mobile sync via the bundled Git plugin.
+
+### Prerequisites
+
+* A [GitHub account](https://github.com/join)
+* [`gh` CLI](https://cli.github.com/) — used for authentication and repo creation during setup
+
+### Setup (automatic)
+
+When you run `npx claude-second-brain` and select **GitHub** as your remote, the CLI handles everything:
+
+1. Checks `gh auth status` — runs `gh auth login` if not authenticated
+2. Creates a private repo: `gh repo create <name> --private --source=. --remote=origin --push`
+3. Pushes the initial commit
+
+### Manual setup
+
+If you skipped GitHub during setup, or `gh` wasn't installed, connect it manually:
+
+```bash
+# With gh CLI
+gh repo create my-brain --private --source=. --remote=origin --push
+
+# Without gh CLI
+git remote add origin https://github.com/you/my-brain.git
+git push -u origin main
+```
+
+### Syncing from Obsidian
+
+The vault includes a pre-configured `.obsidian/` folder with [obsidian-git](https://github.com/Vinzent03/obsidian-git) settings. Enable the plugin in Obsidian → Community plugins and it will auto-commit and push on a schedule.
+
+For iOS: place the repo folder inside iCloud Drive — Obsidian Mobile picks it up natively and obsidian-git handles sync.
 
 
 ## How it works

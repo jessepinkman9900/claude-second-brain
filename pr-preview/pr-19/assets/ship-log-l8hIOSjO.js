@@ -1,5 +1,22 @@
-import{u as s,j as e}from"./index-CCZ4N2yZ.js";const l={title:"Ship log",description:"undefined"};function d(i){const n={a:"a",code:"code",div:"div",h1:"h1",h2:"h2",header:"header",li:"li",p:"p",strong:"strong",ul:"ul",...s(),...i.components};return e.jsxs(e.Fragment,{children:[e.jsx(n.header,{children:e.jsxs(n.h1,{id:"ship-log",children:["Ship log",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#ship-log",children:e.jsx(n.div,{"data-autolink-icon":!0})})]})}),`
+import{u as s,j as e}from"./index-DnRVv2kr.js";const l={title:"Ship log",description:"undefined"};function d(i){const n={a:"a",code:"code",div:"div",h1:"h1",h2:"h2",header:"header",li:"li",p:"p",strong:"strong",ul:"ul",...s(),...i.components};return e.jsxs(e.Fragment,{children:[e.jsx(n.header,{children:e.jsxs(n.h1,{id:"ship-log",children:["Ship log",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#ship-log",children:e.jsx(n.div,{"data-autolink-icon":!0})})]})}),`
 `,e.jsxs(n.p,{children:["A running record of every released version of ",e.jsx(n.code,{children:"claude-second-brain"})," on npm. Newest releases first. For auto-generated notes and tags, see the ",e.jsx(n.a,{href:"https://github.com/jessepinkman9900/claude-second-brain/releases",children:"GitHub releases"})," page."]}),`
+`,e.jsxs(n.h2,{id:"v060--2026-04-17",children:["v0.6.0 — 2026-04-17",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#v060--2026-04-17",children:e.jsx(n.div,{"data-autolink-icon":!0})})]}),`
+`,e.jsx(n.strong,{children:"Features:"}),`
+`,e.jsxs(n.ul,{children:[`
+`,e.jsxs(n.li,{children:["Added Cloudflare Artifacts as an alternate Git remote option during ",e.jsx(n.code,{children:"npx claude-second-brain"})," setup. The CLI authenticates via wrangler, creates a repo via the Artifacts API, and pushes the initial commit automatically."]}),`
+`]}),`
+`,e.jsx(n.strong,{children:"CLI UX:"}),`
+`,e.jsxs(n.ul,{children:[`
+`,e.jsx(n.li,{children:"qmd index path prompt now appears before the Git remote selection."}),`
+`,e.jsxs(n.li,{children:["Global Claude skills are installed right after ",e.jsx(n.code,{children:"pnpm install"}),", before git init. Install path is shown with ",e.jsx(n.code,{children:"~/..."})," notation."]}),`
+`,e.jsxs(n.li,{children:["qmd index prompt placeholder and default value display ",e.jsx(n.code,{children:"~/..."})," instead of the full home directory path."]}),`
+`]}),`
+`,e.jsx(n.strong,{children:"Docs:"}),`
+`,e.jsxs(n.ul,{children:[`
+`,e.jsxs(n.li,{children:["Added a ",e.jsx(n.strong,{children:"Git backends"})," section to the docs site covering GitHub and Cloudflare Artifacts setup."]}),`
+`,e.jsxs(n.li,{children:["Added ",e.jsx(n.code,{children:"llms.txt"})," for LLM/AI crawler discoverability."]}),`
+`,e.jsxs(n.li,{children:["Docs site now generates ",e.jsx(n.code,{children:".md"})," files alongside HTML pages."]}),`
+`]}),`
 `,e.jsxs(n.h2,{id:"v051--2026-04-14",children:["v0.5.1 — 2026-04-14",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#v051--2026-04-14",children:e.jsx(n.div,{"data-autolink-icon":!0})})]}),`
 `,e.jsxs(n.ul,{children:[`
 `,e.jsx(n.li,{children:"Maintenance release (version bump only)."}),`
@@ -83,4 +100,4 @@ import{u as s,j as e}from"./index-CCZ4N2yZ.js";const l={title:"Ship log",descrip
 `,e.jsx(n.li,{children:"First public release to npm."}),`
 `,e.jsxs(n.li,{children:["Introduced the template scaffold and the ",e.jsx(n.code,{children:"npx claude-second-brain"})," flow."]}),`
 `,e.jsxs(n.li,{children:["Added the initial README, the release workflow, and the ",e.jsx(n.code,{children:"/pack-test"})," skill."]}),`
-`]})]})}function a(i={}){const{wrapper:n}={...s(),...i.components};return n?e.jsx(n,{...i,children:e.jsx(d,{...i})}):d(i)}export{a as default,l as frontmatter};
+`]})]})}function t(i={}){const{wrapper:n}={...s(),...i.components};return n?e.jsx(n,{...i,children:e.jsx(d,{...i})}):d(i)}export{t as default,l as frontmatter};

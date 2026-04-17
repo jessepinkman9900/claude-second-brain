@@ -1,4 +1,4 @@
-import{u as i,j as e}from"./index-CCZ4N2yZ.js";const c={title:"/setup",description:"undefined"};function t(s){const n={a:"a",code:"code",div:"div",h1:"h1",header:"header",li:"li",ol:"ol",p:"p",...i(),...s.components};return e.jsxs(e.Fragment,{children:[e.jsx(n.header,{children:e.jsxs(n.h1,{id:"setup",children:["/setup",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#setup",children:e.jsx(n.div,{"data-autolink-icon":!0})})]})}),`
+import{u as i,j as e}from"./index-DnRVv2kr.js";const c={title:"/setup",description:"undefined"};function t(s){const n={a:"a",code:"code",div:"div",h1:"h1",header:"header",li:"li",ol:"ol",p:"p",...i(),...s.components};return e.jsxs(e.Fragment,{children:[e.jsx(n.header,{children:e.jsxs(n.h1,{id:"setup",children:["/setup",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#setup",children:e.jsx(n.div,{"data-autolink-icon":!0})})]})}),`
 `,e.jsx(n.p,{children:"First-time initialization. Run this once, right after scaffolding the vault."}),`
 `,e.jsx(n.p,{children:"What it does:"}),`
 `,e.jsxs(n.ol,{children:[`
