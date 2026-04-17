@@ -109,18 +109,37 @@ async function setupCloudflareRemote({ targetDir, repoName, namespace, spin }) {
 
     p.log.info(`Checking Cloudflare auth via \`${wranglerLabel} whoami\`...`)
     const authCheck = spawnSync(wrangler.cmd, [...wrangler.prefix, "whoami"], { stdio: "pipe" })
+    const whoamiOut = stripAnsi(authCheck.stdout?.toString() || "") + "\n" + stripAnsi(authCheck.stderr?.toString() || "")
     let loggedIn = authCheck.status === 0
+    // Wrangler's existing session may predate Artifacts — it warns "missing some expected Oauth scopes"
+    // and lists "artifacts:write". Detect that and force a re-login.
+    const hasArtifactsScope = /^\s*-\s*artifacts\s*\(write\)/im.test(whoamiOut)
+    const missingArtifactsScope = /missing some expected Oauth scopes/i.test(whoamiOut)
+      && /artifacts:write/i.test(whoamiOut)
+    const needsRelogin = loggedIn && (!hasArtifactsScope || missingArtifactsScope)
+
     if (!loggedIn) {
       const stderr = authCheck.stderr?.toString().trim()
       p.log.info(`wrangler whoami exited ${authCheck.status}${stderr ? ` (${truncate(stderr, 160)})` : ""}`)
+    } else if (needsRelogin) {
+      p.log.info("Your wrangler session is missing the artifacts:write scope — re-login required.")
     }
 
-    if (!loggedIn) {
+    if (!loggedIn || needsRelogin) {
       p.log.info("Starting wrangler login (grants artifacts:write scope)...")
       const loginResult = spawnSync(wrangler.cmd, [...wrangler.prefix, "login"], { stdio: "inherit" })
       loggedIn = loginResult.status === 0
       if (!loggedIn) {
         p.log.warn(`wrangler login exited ${loginResult.status} — set CLOUDFLARE_API_TOKEN and re-run.`)
+        return null
+      }
+
+      // Verify the new session actually has artifacts:write before proceeding.
+      const verify = spawnSync(wrangler.cmd, [...wrangler.prefix, "whoami"], { stdio: "pipe" })
+      const verifyOut = stripAnsi(verify.stdout?.toString() || "") + "\n" + stripAnsi(verify.stderr?.toString() || "")
+      if (!/^\s*-\s*artifacts\s*\(write\)/im.test(verifyOut)) {
+        p.log.warn("wrangler login completed but artifacts:write scope is still missing.")
+        p.log.warn("Upgrade wrangler (npm i -g wrangler@latest) or set CLOUDFLARE_API_TOKEN manually.")
         return null
       }
     }
