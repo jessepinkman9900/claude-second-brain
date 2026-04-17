@@ -58,6 +58,13 @@ Everything is pre-configured. You bring the sources.
 npx claude-second-brain
 ```
 
+Or install globally — `csb` is a shorter alias:
+
+```bash
+npm i -g claude-second-brain
+csb
+```
+
 The CLI will ask:
 - **Brain name** — what to call this brain (default: `my-brain`)
 - **GitHub repo** — optionally create a private repo and push automatically (requires `gh` CLI)

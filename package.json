@@ -4,7 +4,8 @@
   "description": "The fastest way to start your personal knowledge base powered by Obsidian, Claude Code, qmd, and GitHub.",
   "type": "module",
   "bin": {
-    "claude-second-brain": "./bin/create.js"
+    "claude-second-brain": "./bin/create.js",
+    "csb": "./bin/create.js"
   },
   "scripts": {
     "docs:dev": "vocs dev",
