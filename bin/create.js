@@ -65,95 +65,42 @@ async function patchVault(targetDir, qmdPath, brainName) {
   }
 }
 
-// Resolve the `cf` CLI as either an installed binary or `npx cf` fallback.
-function resolveCfCli() {
-  if (commandExists("cf")) return { cmd: "cf", prefix: [] }
-  return { cmd: "npx", prefix: ["cf"] }
+// Resolve the `wrangler` CLI as either an installed binary or `npx wrangler` fallback.
+function resolveWranglerCli() {
+  if (commandExists("wrangler")) return { cmd: "wrangler", prefix: [] }
+  return { cmd: "npx", prefix: ["wrangler"] }
 }
 
-// Look up the Artifacts permission group ID via the cf CLI.
-// Filters by name "Artifacts" and picks the Edit/Write scoped group.
-function lookupArtifactsEditPermissionGroup(cfCli) {
-  const result = spawnSync(
-    cfCli.cmd,
-    [...cfCli.prefix, "accounts", "tokens", "permission-groups-list", "--name", "Artifacts", "--ndjson"],
-    { stdio: "pipe" }
-  )
-  if (result.status !== 0) return null
-  const lines = result.stdout.toString().trim().split("\n").filter(Boolean)
-  for (const line of lines) {
-    try {
-      const group = JSON.parse(line)
-      const name = (group.name || "").toLowerCase()
-      if (name.includes("write") || name.includes("edit")) return group.id
-    } catch {
-      // skip malformed lines
-    }
-  }
-  return null
-}
-
-// End-to-end Cloudflare Artifacts setup: auth, mint API token, create repo, set remote, push.
+// End-to-end Cloudflare Artifacts setup: auth, create repo, set remote, push.
 async function setupCloudflareRemote({ targetDir, repoName, namespace, spin }) {
+  // Honor an existing API token as a shortcut — skip wrangler entirely.
   let cfApiToken = process.env.CLOUDFLARE_API_TOKEN
-  let tokenWasMinted = false
 
   if (!cfApiToken) {
-    const cfCli = resolveCfCli()
+    // wrangler login requests artifacts:write by default — use it for auth.
+    const wrangler = resolveWranglerCli()
 
-    const authCheck = spawnSync(cfCli.cmd, [...cfCli.prefix, "auth", "whoami"], { stdio: "pipe" })
+    const authCheck = spawnSync(wrangler.cmd, [...wrangler.prefix, "whoami"], { stdio: "pipe" })
     let loggedIn = authCheck.status === 0
 
     if (!loggedIn) {
-      p.log.info("Not logged in to Cloudflare. Starting OAuth login...")
-      loggedIn = spawnSync(cfCli.cmd, [...cfCli.prefix, "auth", "login"], { stdio: "inherit" }).status === 0
+      p.log.info("Not logged in to Cloudflare. Starting wrangler login...")
+      loggedIn = spawnSync(wrangler.cmd, [...wrangler.prefix, "login"], { stdio: "inherit" }).status === 0
     }
 
     if (!loggedIn) {
-      p.log.warn("Cloudflare login failed — set CLOUDFLARE_API_TOKEN and re-run, or run `cf auth login` manually.")
+      p.log.warn("Cloudflare login failed — set CLOUDFLARE_API_TOKEN and re-run.")
       return null
     }
 
-    spin.start("Looking up Artifacts permission group")
-    const permissionGroupId = lookupArtifactsEditPermissionGroup(cfCli)
-    if (!permissionGroupId) {
-      spin.stop("Could not find Artifacts permission group", 1)
-      return null
-    }
-    spin.stop(`Permission group: ${pc.dim(permissionGroupId)}`)
+    // Retrieve the OAuth token wrangler stored; it refreshes automatically if expired.
+    const tokenResult = spawnSync(wrangler.cmd, [...wrangler.prefix, "auth", "token"], { stdio: "pipe" })
+    cfApiToken = tokenResult.stdout.toString().trim()
 
-    spin.start("Minting scoped Cloudflare API token")
-    const tokenName = `claude-second-brain-${repoName}`
-    const tokenBody = JSON.stringify({
-      name: tokenName,
-      policies: [{
-        effect: "allow",
-        resources: { "com.cloudflare.api.account.*": "*" },
-        permission_groups: [{ id: permissionGroupId }],
-      }],
-    })
-    const mintResult = spawnSync(
-      cfCli.cmd,
-      [...cfCli.prefix, "accounts", "tokens", "create", "--name", tokenName, "--body", tokenBody, "--ndjson"],
-      { stdio: "pipe" }
-    )
-    if (mintResult.status !== 0) {
-      spin.stop(`Failed to mint API token: ${mintResult.stderr.toString().trim() || "unknown error"}`, 1)
-      return null
-    }
-    try {
-      const parsed = JSON.parse(mintResult.stdout.toString().trim().split("\n")[0])
-      cfApiToken = parsed.value || parsed.result?.value
-    } catch (err) {
-      spin.stop(`Failed to parse token response: ${err.message}`, 1)
-      return null
-    }
     if (!cfApiToken) {
-      spin.stop("Mint succeeded but token value missing from response", 1)
+      p.log.warn("Could not retrieve token from wrangler — run `wrangler auth token` to debug.")
       return null
     }
-    tokenWasMinted = true
-    spin.stop("Scoped API token minted")
   }
 
   spin.start(`Creating Cloudflare Artifact ${pc.dim(repoName)}`)
@@ -171,13 +118,13 @@ async function setupCloudflareRemote({ targetDir, repoName, namespace, spin }) {
     createData = await res.json()
   } catch (err) {
     spin.stop(`Network error creating artifact: ${err.message}`, 1)
-    return { cfApiToken, tokenWasMinted }
+    return null
   }
 
   if (!createData?.success) {
     const errMsg = createData?.errors?.[0]?.message || "unknown error"
     spin.stop(`Failed to create artifact: ${errMsg}`, 1)
-    return { cfApiToken, tokenWasMinted }
+    return null
   }
 
   const { remote, token: repoToken } = createData.result
@@ -192,7 +139,7 @@ async function setupCloudflareRemote({ targetDir, repoName, namespace, spin }) {
   } else {
     spin.stop("Push to Cloudflare Artifact failed", 1)
   }
-  return { cfApiToken, tokenWasMinted, repoToken, remote }
+  return { repoToken, remote }
 }
 
 async function installGlobalSkills(qmdPath) {
@@ -375,10 +322,7 @@ async function main() {
   if (remoteProvider === "cloudflare") {
     const result = await setupCloudflareRemote({ targetDir, repoName, namespace: cfNamespace, spin })
     if (result?.repoToken) {
-      p.log.warn(`Save your Artifacts repo token (used for git push/pull):\n  ${result.repoToken}`)
-    }
-    if (result?.cfApiToken && result.tokenWasMinted) {
-      p.log.warn(`Save your scoped Cloudflare API token (used to mint future repo tokens):\n  ${result.cfApiToken}`)
+      p.log.warn(`Save your Artifacts repo token — it expires and you'll need to mint a new one:\n  ${result.repoToken}`)
     }
   }
 
@@ -390,9 +334,10 @@ async function main() {
   // Next steps
   const remoteSteps = remoteProvider === "cloudflare"
     ? [
-        `${pc.dim("# Mint a fresh git push/pull token when needed:")}`,
+        `${pc.dim("# Mint a fresh git push/pull token when the current one expires:")}`,
+        `${pc.cyan(`TOKEN=$(wrangler auth token)`)}`,
         `${pc.cyan(`curl -X POST https://artifacts.cloudflare.net/v1/api/namespaces/${cfNamespace}/tokens \\`)}`,
-        `${pc.cyan(`  -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \\`)}`,
+        `${pc.cyan(`  -H "Authorization: Bearer $TOKEN" \\`)}`,
         `${pc.cyan(`  -H "Content-Type: application/json" \\`)}`,
         `${pc.cyan(`  -d '{"repo":"${repoName}","scope":"write","ttl":86400}'`)}`,
       ]
