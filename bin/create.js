@@ -71,43 +71,99 @@ function resolveWranglerCli() {
   return { cmd: "npx", prefix: ["wrangler"] }
 }
 
+// Strip ANSI escape sequences that wrangler injects into stdout.
+function stripAnsi(s) {
+  // eslint-disable-next-line no-control-regex
+  return s.replace(/\x1B\[[0-9;]*[A-Za-z]/g, "")
+}
+
+// Wrangler prints a decorative banner (⛅, ❅, etc.) alongside the token.
+// Find the actual token line — a long run of Bearer-safe ASCII chars — and ignore the rest.
+function extractBearerToken(stdout) {
+  const lines = stripAnsi(stdout).split(/\r?\n/)
+  const candidates = lines
+    .map(l => l.trim())
+    .filter(l => /^[A-Za-z0-9._~+/=-]{20,}$/.test(l))
+  // Prefer the longest candidate (real tokens are longer than any accidental match).
+  candidates.sort((a, b) => b.length - a.length)
+  return candidates[0] || null
+}
+
+function truncate(s, n = 80) {
+  if (!s) return ""
+  return s.length > n ? s.slice(0, n) + "…" : s
+}
+
 // End-to-end Cloudflare Artifacts setup: auth, create repo, set remote, push.
+// Every failure logs the exact step, exit codes, stderr, and HTTP bodies so the
+// user can see where in the flow the break happened.
 async function setupCloudflareRemote({ targetDir, repoName, namespace, spin }) {
   // Honor an existing API token as a shortcut — skip wrangler entirely.
   let cfApiToken = process.env.CLOUDFLARE_API_TOKEN
+  let tokenSource = "CLOUDFLARE_API_TOKEN env"
 
   if (!cfApiToken) {
     // wrangler login requests artifacts:write by default — use it for auth.
     const wrangler = resolveWranglerCli()
+    const wranglerLabel = [wrangler.cmd, ...wrangler.prefix].join(" ")
 
+    p.log.info(`Checking Cloudflare auth via \`${wranglerLabel} whoami\`...`)
     const authCheck = spawnSync(wrangler.cmd, [...wrangler.prefix, "whoami"], { stdio: "pipe" })
     let loggedIn = authCheck.status === 0
-
     if (!loggedIn) {
-      p.log.info("Not logged in to Cloudflare. Starting wrangler login...")
-      loggedIn = spawnSync(wrangler.cmd, [...wrangler.prefix, "login"], { stdio: "inherit" }).status === 0
+      const stderr = authCheck.stderr?.toString().trim()
+      p.log.info(`wrangler whoami exited ${authCheck.status}${stderr ? ` (${truncate(stderr, 160)})` : ""}`)
     }
 
     if (!loggedIn) {
-      p.log.warn("Cloudflare login failed — set CLOUDFLARE_API_TOKEN and re-run.")
-      return null
+      p.log.info("Starting wrangler login (grants artifacts:write scope)...")
+      const loginResult = spawnSync(wrangler.cmd, [...wrangler.prefix, "login"], { stdio: "inherit" })
+      loggedIn = loginResult.status === 0
+      if (!loggedIn) {
+        p.log.warn(`wrangler login exited ${loginResult.status} — set CLOUDFLARE_API_TOKEN and re-run.`)
+        return null
+      }
     }
 
     // Retrieve the OAuth token wrangler stored; it refreshes automatically if expired.
+    p.log.info(`Fetching OAuth token via \`${wranglerLabel} auth token\`...`)
     const tokenResult = spawnSync(wrangler.cmd, [...wrangler.prefix, "auth", "token"], { stdio: "pipe" })
-    cfApiToken = tokenResult.stdout.toString().trim()
+    const rawStdout = tokenResult.stdout?.toString() || ""
+    const rawStderr = tokenResult.stderr?.toString() || ""
 
-    if (!cfApiToken) {
-      p.log.warn("Could not retrieve token from wrangler — run `wrangler auth token` to debug.")
+    if (tokenResult.status !== 0) {
+      p.log.warn(`wrangler auth token exited ${tokenResult.status}`)
+      if (rawStderr.trim()) p.log.warn(`stderr: ${truncate(rawStderr.trim(), 400)}`)
+      if (rawStdout.trim()) p.log.warn(`stdout: ${truncate(rawStdout.trim(), 400)}`)
       return null
     }
+
+    cfApiToken = extractBearerToken(rawStdout)
+    if (!cfApiToken) {
+      p.log.warn("Could not parse a Bearer-safe token from wrangler output.")
+      p.log.warn(`raw stdout: ${truncate(rawStdout.trim(), 400)}`)
+      if (rawStderr.trim()) p.log.warn(`raw stderr: ${truncate(rawStderr.trim(), 400)}`)
+      return null
+    }
+    tokenSource = "wrangler auth token"
   }
 
-  spin.start(`Creating Cloudflare Artifact ${pc.dim(repoName)}`)
-  let createData
+  // Guard against tokens that contain non-ASCII (which would crash fetch's header encoder).
+  if (!/^[\x20-\x7E]+$/.test(cfApiToken)) {
+    p.log.warn(`Token from ${tokenSource} contains non-ASCII characters — refusing to use it.`)
+    p.log.warn(`token preview: ${truncate(cfApiToken, 60)}`)
+    return null
+  }
+
+  p.log.info(`Using token from ${tokenSource} (length ${cfApiToken.length}, prefix ${cfApiToken.slice(0, 8)}…)`)
+
+  const baseUrl = `https://artifacts.cloudflare.net/v1/api/namespaces/${namespace}`
+  spin.start(`Creating Cloudflare Artifact ${pc.dim(repoName)} at ${pc.dim(baseUrl)}`)
+
+  let res
+  let rawBody = ""
   try {
-    const baseUrl = `https://artifacts.cloudflare.net/v1/api/namespaces/${namespace}`
-    const res = await fetch(`${baseUrl}/repos`, {
+    res = await fetch(`${baseUrl}/repos`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${cfApiToken}`,
@@ -115,30 +171,59 @@ async function setupCloudflareRemote({ targetDir, repoName, namespace, spin }) {
       },
       body: JSON.stringify({ name: repoName, default_branch: "main" }),
     })
-    createData = await res.json()
+    rawBody = await res.text()
   } catch (err) {
-    spin.stop(`Network error creating artifact: ${err.message}`, 1)
+    spin.stop(`Network error calling Artifacts API: ${err.message}`, 1)
     return null
   }
 
-  if (!createData?.success) {
-    const errMsg = createData?.errors?.[0]?.message || "unknown error"
-    spin.stop(`Failed to create artifact: ${errMsg}`, 1)
+  let createData
+  try {
+    createData = rawBody ? JSON.parse(rawBody) : {}
+  } catch {
+    spin.stop(`Artifacts API returned non-JSON (HTTP ${res.status})`, 1)
+    p.log.warn(`body: ${truncate(rawBody, 400)}`)
+    return null
+  }
+
+  if (!res.ok || !createData?.success) {
+    const errMsg = createData?.errors?.[0]?.message || createData?.message || "unknown error"
+    spin.stop(`Artifacts API failed (HTTP ${res.status}): ${errMsg}`, 1)
+    p.log.warn(`full response: ${truncate(rawBody, 400)}`)
     return null
   }
 
   const { remote, token: repoToken } = createData.result
-  run(["git", "remote", "add", "origin", remote], targetDir)
-  const pushOk = run(
-    ["git", "-c", `http.extraHeader=Authorization: Bearer ${repoToken}`, "push", "-u", "origin", "main"],
-    targetDir
-  )
-  if (pushOk) {
-    spin.stop(`Cloudflare Artifact created: ${pc.cyan(repoName)}`)
-    p.log.info(`Remote: ${pc.dim(remote)}`)
-  } else {
-    spin.stop("Push to Cloudflare Artifact failed", 1)
+  if (!remote || !repoToken) {
+    spin.stop("Artifacts API succeeded but response is missing remote/token", 1)
+    p.log.warn(`response: ${truncate(rawBody, 400)}`)
+    return null
   }
+
+  const remoteAddResult = spawnSync("git", ["remote", "add", "origin", remote], { cwd: targetDir, stdio: "pipe" })
+  if (remoteAddResult.status !== 0) {
+    spin.stop(`git remote add failed (exit ${remoteAddResult.status})`, 1)
+    const stderr = remoteAddResult.stderr?.toString().trim()
+    if (stderr) p.log.warn(`git stderr: ${truncate(stderr, 400)}`)
+    return null
+  }
+
+  const pushResult = spawnSync(
+    "git",
+    ["-c", `http.extraHeader=Authorization: Bearer ${repoToken}`, "push", "-u", "origin", "main"],
+    { cwd: targetDir, stdio: "pipe" }
+  )
+  if (pushResult.status !== 0) {
+    spin.stop(`git push to Cloudflare Artifact failed (exit ${pushResult.status})`, 1)
+    const stderr = pushResult.stderr?.toString().trim()
+    const stdout = pushResult.stdout?.toString().trim()
+    if (stderr) p.log.warn(`git stderr: ${truncate(stderr, 400)}`)
+    if (stdout) p.log.warn(`git stdout: ${truncate(stdout, 400)}`)
+    return { repoToken, remote }
+  }
+
+  spin.stop(`Cloudflare Artifact created: ${pc.cyan(repoName)}`)
+  p.log.info(`Remote: ${pc.dim(remote)}`)
   return { repoToken, remote }
 }
 
