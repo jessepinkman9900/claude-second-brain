@@ -14,16 +14,15 @@ npx claude-second-brain
 
 The CLI will ask:
 
-- **Folder name** — where to create your vault (default: `my-brain`)
-- **qmd index path** — where to store the local search index (default: `~/.cache/qmd/index.sqlite`)
+- **Brain name** — what to call this brain (default: `my-brain`)
 - **Git remote** — optionally host your vault on **[GitHub](/remotes/github)** (requires `gh` CLI) or **[Cloudflare Artifacts](/remotes/cloudflare-artifacts)** (requires a Cloudflare account + wrangler)
 
-Then scaffolds the vault, installs `mise` + `node` + `pnpm`, runs `pnpm install`, and `git init`.
+Creates the brain at `~/.claude-second-brain/my-brain/`, registers it in `~/.claude-second-brain/config.toml`, installs `mise` + `node` + `pnpm`, runs `pnpm install`, and `git init`.
 
 ## Step 2 — Initialize inside Claude Code
 
 ```bash
-cd my-brain && claude
+cd ~/.claude-second-brain/my-brain && claude
 ```
 
 Then run:
@@ -45,7 +44,11 @@ git remote add origin https://github.com/you/my-brain.git
 git push -u origin main
 ```
 
-Open `my-brain/` as a vault in Obsidian — the folder is already a valid Obsidian vault. The Git plugin is pre-configured — enable it and sync is automatic.
+Open `~/.claude-second-brain/my-brain/` as a vault in Obsidian — the folder is already a valid Obsidian vault. The Git plugin is pre-configured — enable it and sync is automatic.
+
+## Multiple brains
+
+Run `npx claude-second-brain` again to create additional brains. Each gets its own folder under `~/.claude-second-brain/` and its own isolated qmd index. The global skills (`/brain-ingest`, `/brain-search`, `/brain-refresh`) always operate on the **default brain** in `~/.claude-second-brain/config.toml`. The first brain created is set as the default automatically.
 
 ## Access from anywhere
 

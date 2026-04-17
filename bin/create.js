@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { cp, rename, access, readFile, writeFile, mkdir } from "fs/promises"
-import { readdirSync, readFileSync } from "fs"
+import { cp, rename, access, readFile, writeFile, mkdir, rm } from "fs/promises"
+import { readFileSync } from "fs"
 import { join, dirname } from "path"
 import { fileURLToPath } from "url"
 import { spawnSync } from "child_process"
@@ -11,6 +11,8 @@ import pc from "picocolors"
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const TEMPLATE = join(__dirname, "../template")
 const { version } = JSON.parse(readFileSync(join(__dirname, "../package.json"), "utf8"))
+const CSB_ROOT   = join(homedir(), ".claude-second-brain")
+const CSB_CONFIG = join(CSB_ROOT, "config.toml")
 
 // Non-interactive commands — output piped (won't corrupt spinner)
 function run(cmd, cwd) {
@@ -29,32 +31,9 @@ function commandExists(cmd) {
   return result.status === 0
 }
 
-async function patchVault(targetDir, qmdPath, brainName) {
-  const filesToPatch = [
-    join(targetDir, "scripts/qmd/setup.ts"),
-    join(targetDir, "scripts/qmd/reindex.ts"),
-    join(targetDir, "CLAUDE.md"),
-  ]
-
-  const skillsDir = join(targetDir, ".claude/skills")
-  try {
-    for (const skill of readdirSync(skillsDir)) {
-      filesToPatch.push(join(skillsDir, skill, "SKILL.md"))
-    }
-  } catch (err) {
-    if (err.code !== "ENOENT") throw err
-  }
-
-  await Promise.all(filesToPatch.map(async file => {
-    try {
-      let content = await readFile(file, "utf8")
-      content = content.replaceAll("__QMD_PATH__", qmdPath)
-      await writeFile(file, content, "utf8")
-    } catch (err) {
-      if (err.code !== "ENOENT") throw err
-    }
-  }))
-
+async function patchVault(targetDir, brainName) {
+  // Only __BRAIN_NAME__ is substituted — all path resolution happens at
+  // invocation time via the `claude-second-brain` CLI subcommands.
   const readmePath = join(targetDir, "README.md")
   try {
     let readme = await readFile(readmePath, "utf8")
@@ -246,27 +225,364 @@ async function setupCloudflareRemote({ targetDir, repoName, namespace, spin }) {
   return { repoToken, remote }
 }
 
-async function installGlobalSkills(qmdPath) {
+const GLOBAL_SKILLS = ["brain-ingest", "brain-search", "brain-refresh"]
+
+async function readSkillVersion(skillDir) {
+  try {
+    const raw = await readFile(join(skillDir, ".csb-version"), "utf8")
+    return JSON.parse(raw).version || null
+  } catch {
+    return null
+  }
+}
+
+// Decide whether to (re)install each global skill. Returns a map name→"install"|"skip".
+// Interactive mismatch prompts once per run with update-all / skip-all / ask-per-skill.
+async function planGlobalSkillInstall({ isInteractive }) {
+  const decisions = {}
+  const mismatches = []
+
+  for (const name of GLOBAL_SKILLS) {
+    const destDir = join(homedir(), ".claude", "skills", name)
+    const installed = await readSkillVersion(destDir)
+    if (!installed) {
+      decisions[name] = "install"
+    } else if (installed === version) {
+      decisions[name] = "skip"
+    } else {
+      mismatches.push({ name, installed })
+    }
+  }
+
+  if (mismatches.length === 0) return decisions
+
+  // CI / non-interactive / opt-out: silently update.
+  if (!isInteractive || process.env.CSB_SKIP_SKILL_UPDATES === "1") {
+    for (const m of mismatches) decisions[m.name] = "install"
+    return decisions
+  }
+
+  const mode = await p.select({
+    message: `${mismatches.length} global skill${mismatches.length === 1 ? "" : "s"} at a different version than this release (v${version}). Update?`,
+    options: [
+      { value: "update-all", label: "Update all" },
+      { value: "skip-all", label: "Keep existing (skip all)" },
+      { value: "ask", label: "Ask per skill" },
+    ],
+    initialValue: "update-all",
+  })
+  if (p.isCancel(mode)) {
+    for (const m of mismatches) decisions[m.name] = "skip"
+    return decisions
+  }
+
+  if (mode === "update-all") {
+    for (const m of mismatches) decisions[m.name] = "install"
+  } else if (mode === "skip-all") {
+    for (const m of mismatches) decisions[m.name] = "skip"
+  } else {
+    for (const m of mismatches) {
+      const ok = await p.confirm({
+        message: `Update "${m.name}" from v${m.installed} → v${version}?`,
+        initialValue: true,
+      })
+      decisions[m.name] = p.isCancel(ok) || !ok ? "skip" : "install"
+    }
+  }
+  return decisions
+}
+
+async function installGlobalSkills({ isInteractive }) {
   const globalSkillsDir = join(homedir(), ".claude", "skills")
+  const decisions = await planGlobalSkillInstall({ isInteractive })
 
-  await Promise.all(["brain-ingest", "brain-search", "brain-refresh"].map(async skillName => {
-    const srcFile = join(TEMPLATE, ".claude/skills", skillName, "SKILL.md")
-    const destDir = join(globalSkillsDir, skillName)
+  const installed = []
+  const skipped = []
+  const sameVersion = []
 
-    let content = await readFile(srcFile, "utf8")
-    content = content.replaceAll("__QMD_PATH__", qmdPath)
+  await Promise.all(GLOBAL_SKILLS.map(async name => {
+    const destDir = join(globalSkillsDir, name)
+    const decision = decisions[name]
+
+    if (decision === "skip") {
+      // Differentiate "already at this version" from "user declined update" for logging.
+      const current = await readSkillVersion(destDir)
+      if (current === version) sameVersion.push(name)
+      else skipped.push(name)
+      return
+    }
+
+    const srcFile = join(TEMPLATE, ".claude/skills", name, "SKILL.md")
+    const content = await readFile(srcFile, "utf8")
 
     await mkdir(destDir, { recursive: true })
     await writeFile(join(destDir, "SKILL.md"), content, "utf8")
+    await writeFile(
+      join(destDir, ".csb-version"),
+      JSON.stringify({ version, installed: new Date().toISOString() }, null, 2) + "\n",
+      "utf8",
+    )
+    installed.push(name)
   }))
+
+  return { installed, skipped, sameVersion }
 }
 
-async function main() {
+function parseConfig(content) {
+  if (!content) return { defaultBrain: null, brains: [], header: "" }
+  const blocks = content.split(/\n(?=\[\[brains\]\])/)
+  const header = blocks[0] || ""
+  // Prefer `default = …` over legacy `active = …` so existing configs upgrade
+  // transparently on the next write.
+  const defaultMatch =
+    header.match(/^default\s*=\s*"([^"]+)"/m) ||
+    header.match(/^active\s*=\s*"([^"]+)"/m)
+  const brains = blocks.slice(1).map(block => {
+    const get = re => (block.match(re) || [])[1] || ""
+    return {
+      raw: block,
+      name: get(/^name\s*=\s*"([^"]+)"/m),
+      path: get(/^path\s*=\s*"([^"]+)"/m),
+      qmd_index: get(/^qmd_index\s*=\s*"([^"]*)"/m),
+      created: get(/^created\s*=\s*"([^"]*)"/m),
+      git_remote: get(/^git_remote\s*=\s*"([^"]*)"/m),
+    }
+  }).filter(b => b.name)
+  return { defaultBrain: defaultMatch ? defaultMatch[1] : null, brains, header }
+}
+
+function printHelp() {
+  const lines = [
+    `${pc.bold("claude-second-brain")} v${version}`,
+    "",
+    "Usage:",
+    `  ${pc.cyan("claude-second-brain")}                         create a new brain (interactive)`,
+    `  ${pc.cyan("claude-second-brain <name>")}                  create a new brain named <name>`,
+    `  ${pc.cyan("claude-second-brain ls")}                      list all brains`,
+    `  ${pc.cyan("claude-second-brain rm <name>")}               remove a brain (directory + config entry)`,
+    `  ${pc.cyan("claude-second-brain path [--brain N] [flag]")} print a path (flags: --root, --qmd, --config)`,
+    `  ${pc.cyan("claude-second-brain qmd [--brain N] -- …")}    run qmd against the resolved brain`,
+    `  ${pc.cyan("claude-second-brain help")}                    show this message`,
+  ]
+  console.log(lines.join("\n"))
+}
+
+// Resolve a brain entry from config. Name defaults to the `default` field.
+async function resolveBrain(name) {
+  let content
+  try {
+    content = await readFile(CSB_CONFIG, "utf8")
+  } catch {
+    throw new Error(`No config at ${CSB_CONFIG}. Run \`claude-second-brain <name>\` to create your first brain.`)
+  }
+  const { defaultBrain, brains } = parseConfig(content)
+  const target = name || defaultBrain
+  if (!target) throw new Error("No default brain set in config.toml.")
+  const entry = brains.find(b => b.name === target)
+  if (!entry) throw new Error(`No brain named "${target}". Run \`claude-second-brain ls\` to see registered brains.`)
+  return entry
+}
+
+async function cmdPath(args) {
+  // Parse flags: --brain <name>, --root | --qmd | --config (default: --root)
+  let name = null
+  let mode = "root"
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i]
+    if (a === "--brain") { name = args[++i]; continue }
+    if (a === "--root")   { mode = "root"; continue }
+    if (a === "--qmd")    { mode = "qmd"; continue }
+    if (a === "--config") { mode = "config"; continue }
+    throw new Error(`Unknown path arg: ${a}`)
+  }
+  if (mode === "config") {
+    process.stdout.write(CSB_CONFIG + "\n")
+    return
+  }
+  const brain = await resolveBrain(name)
+  const out = mode === "qmd" ? brain.qmd_index : brain.path
+  process.stdout.write(out + "\n")
+}
+
+async function cmdQmd(args) {
+  // `claude-second-brain qmd [--brain N] [--] <qmd args…>`
+  let name = null
+  const rest = []
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i]
+    if (a === "--brain") { name = args[++i]; continue }
+    if (a === "--") { rest.push(...args.slice(i + 1)); break }
+    rest.push(a)
+  }
+  const brain = await resolveBrain(name)
+  const result = spawnSync("npx", ["-y", "@tobilu/qmd", ...rest], {
+    stdio: "inherit",
+    env: { ...process.env, INDEX_PATH: brain.qmd_index },
+  })
+  process.exit(result.status ?? 1)
+}
+
+async function listBrains() {
+  const toDisplayPath = p => p && p.startsWith(homedir()) ? "~" + p.slice(homedir().length) : p
+  let content
+  try {
+    content = await readFile(CSB_CONFIG, "utf8")
+  } catch {
+    p.intro(`${pc.bgCyan(pc.black(" claude-second-brain "))} v${version}`)
+    p.log.info("No brains yet. Run `claude-second-brain <name>` to create one.")
+    p.outro("")
+    return
+  }
+
+  const { defaultBrain, brains } = parseConfig(content)
+  p.intro(`${pc.bgCyan(pc.black(" claude-second-brain "))} v${version}`)
+
+  if (brains.length === 0) {
+    p.log.info("No brains registered in config.toml.")
+    p.outro("")
+    return
+  }
+
+  const rows = brains.map(b => {
+    const marker = b.name === defaultBrain ? pc.green("*") : " "
+    const name = b.name === defaultBrain ? pc.bold(b.name) : b.name
+    const remote = b.git_remote || pc.dim("—")
+    return `${marker} ${name}\n  path:    ${pc.dim(toDisplayPath(b.path))}\n  created: ${pc.dim(b.created || "—")}\n  remote:  ${pc.dim(remote)}`
+  })
+
+  p.note(rows.join("\n\n"), `${brains.length} brain${brains.length === 1 ? "" : "s"}`)
+  p.outro(defaultBrain ? `default: ${pc.cyan(defaultBrain)}` : "no default brain")
+}
+
+async function removeBrain(name, { yes = false } = {}) {
+  p.intro(`${pc.bgCyan(pc.black(" claude-second-brain "))} v${version}`)
+
+  let content
+  try {
+    content = await readFile(CSB_CONFIG, "utf8")
+  } catch {
+    p.cancel(`No config at ${CSB_CONFIG} — nothing to remove.`)
+    process.exit(1)
+  }
+
+  const { defaultBrain, brains, header } = parseConfig(content)
+
+  if (brains.length === 0) {
+    p.cancel("No brains registered in config.toml.")
+    process.exit(1)
+  }
+
+  const toDisplayPath = p => p && p.startsWith(homedir()) ? "~" + p.slice(homedir().length) : p
+
+  if (!name) {
+    const pick = await p.select({
+      message: "Which brain to remove?",
+      options: brains.map(b => ({
+        value: b.name,
+        label: b.name === defaultBrain ? `${b.name} ${pc.dim("(default)")}` : b.name,
+        hint: toDisplayPath(b.path),
+      })),
+    })
+    if (p.isCancel(pick)) { p.cancel("Cancelled."); process.exit(0) }
+    name = pick
+  }
+
+  const target = brains.find(b => b.name === name)
+  if (!target) {
+    p.cancel(`No brain named "${name}". Run \`claude-second-brain ls\` to see registered brains.`)
+    process.exit(1)
+  }
+
+  if (!yes) {
+    const ok = await p.confirm({
+      message: `Remove brain "${name}"? This deletes ${toDisplayPath(target.path)} and removes it from config.toml.`,
+      initialValue: false,
+    })
+    if (p.isCancel(ok) || !ok) {
+      p.cancel("Cancelled.")
+      process.exit(0)
+    }
+  }
+
+  const spin = p.spinner()
+
+  // Delete brain directory first — config removal is cheap even if this fails.
+  spin.start(`Deleting ${toDisplayPath(target.path)}`)
+  if (target.path) {
+    try {
+      await rm(target.path, { recursive: true, force: true })
+      spin.stop(`Removed ${pc.dim(toDisplayPath(target.path))}`)
+    } catch (err) {
+      spin.stop(`Failed to remove directory: ${err.message}`, 1)
+    }
+  } else {
+    spin.stop("No path on config entry — skipping directory removal", 1)
+  }
+
+  // Rewrite config.toml without the removed brain.
+  const remaining = brains.filter(b => b.name !== name)
+  // Strip both legacy `active = …` and current `default = …` from the header;
+  // we rewrite it from scratch below.
+  let newHeader = header
+    .replace(/^active\s*=\s*"[^"]*"\s*\n?/m, "")
+    .replace(/^default\s*=\s*"[^"]*"\s*\n?/m, "")
+    .replace(/^\s+|\s+$/g, "")
+  if (name === defaultBrain) {
+    if (remaining.length > 0) {
+      newHeader = `default = "${remaining[0].name}"${newHeader ? "\n" + newHeader : ""}`
+    }
+  } else if (defaultBrain) {
+    newHeader = `default = "${defaultBrain}"${newHeader ? "\n" + newHeader : ""}`
+  }
+
+  const entries = remaining.map(b => b.raw.replace(/^\s+|\s+$/g, ""))
+  const out = [newHeader, ...entries].filter(Boolean).join("\n\n").trimEnd() + "\n"
+  await writeFile(CSB_CONFIG, out, "utf8")
+
+  const defaultNow = parseConfig(out).defaultBrain
+  p.outro(
+    name === defaultBrain
+      ? (defaultNow ? `Removed. Default brain is now ${pc.cyan(defaultNow)}.` : "Removed. No brains left.")
+      : "Removed."
+  )
+}
+
+async function writeConfig(brainName, brainPath, qmdPath, gitRemote) {
+  const entry = [
+    `[[brains]]`,
+    `name = "${brainName}"`,
+    `path = "${brainPath}"`,
+    `qmd_index = "${qmdPath}"`,
+    `created = "${new Date().toISOString().slice(0, 10)}"`,
+    `git_remote = "${gitRemote}"`,
+  ].join("\n")
+
+  let existing = null
+  try {
+    existing = await readFile(CSB_CONFIG, "utf8")
+  } catch {
+    // Config doesn't exist yet — create fresh
+  }
+
+  if (!existing) {
+    await writeFile(CSB_CONFIG, `default = "${brainName}"\n\n${entry}\n`, "utf8")
+    return
+  }
+
+  // Upsert: remove existing entry for this brain name, then append updated entry.
+  // Also migrate legacy `active = …` to `default = …` on any write.
+  const blocks = existing.split(/\n(?=\[\[brains\]\])/)
+  const header = blocks[0].replace(/^active\s*=/m, "default =")
+  const otherBrains = blocks.slice(1).filter(b => !b.includes(`name = "${brainName}"`))
+  await writeFile(CSB_CONFIG, [header, ...otherBrains, entry].join("\n").trimEnd() + "\n", "utf8")
+}
+
+async function createBrain(initialName) {
   const isInteractive = Boolean(process.stdin.isTTY)
 
   p.intro(`${pc.bgCyan(pc.black(" claude-second-brain "))} v${version}`)
 
-  let targetName = process.argv[2]
+  let targetName = initialName
   if (!targetName) {
     const answer = await p.text({
       message: "Where to create your brain?",
@@ -277,25 +593,8 @@ async function main() {
     targetName = answer
   }
 
-  const defaultQmdPath = join(
-    process.env.XDG_CACHE_HOME || join(homedir(), ".cache"),
-    "qmd", "index.sqlite"
-  )
   const toDisplayPath = p => p.startsWith(homedir()) ? "~" + p.slice(homedir().length) : p
-  const expandHome = p => p.startsWith("~/") || p === "~" ? join(homedir(), p.slice(1)) : p
-  const displayQmdPath = toDisplayPath(defaultQmdPath)
-  let qmdPath
-  if (isInteractive) {
-    const answer = await p.text({
-      message: "Where to store the qmd index?",
-      placeholder: displayQmdPath,
-      defaultValue: displayQmdPath,
-    })
-    if (p.isCancel(answer)) { p.cancel("Setup cancelled."); process.exit(0) }
-    qmdPath = expandHome(answer)
-  } else {
-    qmdPath = defaultQmdPath
-  }
+  const qmdPath = join(CSB_ROOT, targetName, ".qmd", "index.sqlite")
 
   let remoteProvider = "none"
   let repoName = null
@@ -334,7 +633,8 @@ async function main() {
     }
   }
 
-  const targetDir = join(process.cwd(), targetName)
+  await mkdir(CSB_ROOT, { recursive: true })
+  const targetDir = join(CSB_ROOT, targetName)
 
   // Fail fast if target already exists
   try {
@@ -358,12 +658,13 @@ async function main() {
   } catch {
     // .gitignore.template not present (e.g. running locally where npm didn't strip it)
   }
-  spin.stop(`${targetName}/ created`)
+  spin.stop(`${pc.dim(toDisplayPath(targetDir))} created`)
 
-  // Patch vault files with chosen qmd path
-  spin.start("Configuring qmd index path")
-  await patchVault(targetDir, qmdPath, targetName)
-  spin.stop(`qmd index → ${pc.dim(toDisplayPath(qmdPath))}`)
+  // Patch vault README (__BRAIN_NAME__). All other paths are resolved at
+  // runtime via `claude-second-brain path` / `claude-second-brain qmd`.
+  spin.start("Patching README")
+  await patchVault(targetDir, targetName)
+  spin.stop("README patched")
 
   // Install mise if not present
   if (!commandExists("mise")) {
@@ -386,10 +687,16 @@ async function main() {
   if (pnpmOk) spin.stop("dependencies installed")
   else spin.stop("pnpm install failed — run it manually inside your vault", 1)
 
-  // Install global skills
+  // Install global skills (version-aware — prompts to update when versions differ)
   spin.start("Installing global Claude skills")
-  await installGlobalSkills(qmdPath)
-  spin.stop(`Global skills installed → ${pc.dim(toDisplayPath(join(homedir(), ".claude", "skills")))}`)
+  const skillResult = await installGlobalSkills({ isInteractive })
+  const installedCount = skillResult.installed.length
+  const skippedCount = skillResult.skipped.length
+  const summary = [
+    installedCount > 0 ? `installed ${installedCount}` : null,
+    skippedCount > 0 ? `kept ${skippedCount}` : null,
+  ].filter(Boolean).join(", ") || "already up to date"
+  spin.stop(`Global skills ${summary} → ${pc.dim(toDisplayPath(join(homedir(), ".claude", "skills")))}`)
 
   // Git init
   spin.start("Initializing git repo")
@@ -431,14 +738,27 @@ async function main() {
   }
 
   // Cloudflare Artifacts repo (optional)
+  let gitRemote = remoteProvider === "github"
+    ? (() => {
+        const r = spawnSync("git", ["remote", "get-url", "origin"], { cwd: targetDir, stdio: "pipe" })
+        return r.status === 0 ? r.stdout.toString().trim() : ""
+      })()
+    : ""
   if (remoteProvider === "cloudflare") {
     const result = await setupCloudflareRemote({ targetDir, repoName, namespace: cfNamespace, spin })
     if (result?.repoToken) {
       p.log.warn(`Save your Artifacts repo token — it expires and you'll need to mint a new one:\n  ${result.repoToken}`)
     }
+    gitRemote = result?.remote || ""
   }
 
+  // Write central config
+  spin.start("Registering brain in config")
+  await writeConfig(targetName, targetDir, qmdPath, gitRemote)
+  spin.stop(`Config updated → ${pc.dim(toDisplayPath(CSB_CONFIG))}`)
+
   // Next steps
+  const brainDisplayPath = toDisplayPath(targetDir)
   const remoteSteps = remoteProvider === "cloudflare"
     ? [
         `${pc.dim("# Mint a fresh git push/pull token when the current one expires:")}`,
@@ -456,13 +776,41 @@ async function main() {
       : []
 
   const nextSteps = [
-    `${pc.cyan(`cd ${targetName}`)}`,
+    `${pc.cyan(`cd ${brainDisplayPath}`)}`,
     `${pc.cyan("claude")}          open Claude Code, then run ${pc.bold("/setup")}`,
     ...remoteSteps,
   ].join("\n")
 
   p.note(nextSteps, "Next steps")
   p.outro("Happy knowledge building!")
+}
+
+async function main() {
+  const [, , cmd, ...rest] = process.argv
+
+  if (cmd === "help" || cmd === "--help" || cmd === "-h") {
+    printHelp()
+    return
+  }
+  if (cmd === "ls" || cmd === "list") {
+    await listBrains()
+    return
+  }
+  if (cmd === "rm" || cmd === "remove") {
+    const name = rest.find(a => !a.startsWith("-"))
+    const yes = rest.some(a => a === "-y" || a === "--yes")
+    await removeBrain(name, { yes })
+    return
+  }
+  if (cmd === "path") {
+    await cmdPath(rest)
+    return
+  }
+  if (cmd === "qmd") {
+    await cmdQmd(rest)
+    return
+  }
+  await createBrain(cmd)
 }
 
 main().catch(err => {

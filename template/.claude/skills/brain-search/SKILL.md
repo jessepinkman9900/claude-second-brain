@@ -8,12 +8,24 @@ argument-hint: "The question or topic to query (e.g. 'what do I know about trans
 
 Runs the 4-step query workflow defined in CLAUDE.md. Answers come with inline `[[wiki/page]]` citations — not a list of files.
 
+## Brain Discovery
+
+All commands target the **default brain** registered in `~/.claude-second-brain/config.toml`.
+Resolve paths and run qmd via the `claude-second-brain` CLI — do not bake paths into this file:
+
+```bash
+BRAIN_PATH=$(npx -y claude-second-brain path)       # absolute path to the default brain's directory
+npx -y claude-second-brain qmd -- query -c wiki "<question>"
+```
+
+Pass `--brain <name>` before the `--` to target a non-default brain.
+
 ## Workflow
 
 **Step 1 — Search the wiki**
-- Run hybrid search: `INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd query -c wiki "<question>"`
-- Read `wiki/index.md` to confirm coverage and catch any pages qmd didn't surface
-- Read the 2–5 most relevant pages in full before synthesizing
+- Run hybrid search: `npx -y claude-second-brain qmd -- query -c wiki "<question>"`
+- Read `$BRAIN_PATH/wiki/index.md` to confirm coverage and catch any pages qmd didn't surface
+- Read the 2–5 most relevant pages in full before synthesizing (paths relative to `$BRAIN_PATH`)
 
 **Step 2 — Synthesize an answer**
 - Write the answer with inline `[[wiki/page]]` citations throughout
@@ -24,12 +36,12 @@ Runs the 4-step query workflow defined in CLAUDE.md. Answers come with inline `[
 - If the answer draws together multiple pages in a novel way, ask:
   > "This answer synthesizes several pages in a useful way — want me to file it as a Q&A page?"
 - If yes:
-  - Create `wiki/qa/[slug].md` with frontmatter `type: qa`
+  - Create `$BRAIN_PATH/wiki/qa/[slug].md` with frontmatter `type: qa`
   - Add to the Q&A section in `wiki/index.md`
   - Add `[[wiki/qa/slug]]` cross-links from the relevant topic pages
 
 **Step 4 — Log (if significant)**
-- For queries that reveal new understanding or surface a gap worth tracking, append to `wiki/log.md`:
+- For queries that reveal new understanding or surface a gap worth tracking, append to `$BRAIN_PATH/wiki/log.md`:
   ```
   ## [YYYY-MM-DD] query | Brief question summary
 

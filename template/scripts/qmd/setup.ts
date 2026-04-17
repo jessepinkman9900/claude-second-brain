@@ -14,7 +14,7 @@ import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
 const VAULT = join(dirname(fileURLToPath(import.meta.url)), "../..")
-const DB = "__QMD_PATH__"
+const DB = join(VAULT, ".qmd", "index.sqlite")
 
 const store = await createStore({ dbPath: DB })
 
