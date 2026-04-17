@@ -2,6 +2,21 @@
 
 A running record of every released version of `claude-second-brain` on npm. Newest releases first. For auto-generated notes and tags, see the [GitHub releases](https://github.com/jessepinkman9900/claude-second-brain/releases) page.
 
+## v0.6.0 — 2026-04-17
+
+**Features:**
+- Added Cloudflare Artifacts as an alternate Git remote option during `npx claude-second-brain` setup. The CLI authenticates via wrangler, creates a repo via the Artifacts API, and pushes the initial commit automatically.
+
+**CLI UX:**
+- qmd index path prompt now appears before the Git remote selection.
+- Global Claude skills are installed right after `pnpm install`, before git init. Install path is shown with `~/...` notation.
+- qmd index prompt placeholder and default value display `~/...` instead of the full home directory path.
+
+**Docs:**
+- Added a **Git backends** section to the docs site covering GitHub and Cloudflare Artifacts setup.
+- Added `llms.txt` for LLM/AI crawler discoverability.
+- Docs site now generates `.md` files alongside HTML pages.
+
 ## v0.5.1 — 2026-04-14
 
 - Maintenance release (version bump only).
