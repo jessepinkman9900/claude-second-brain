@@ -192,6 +192,17 @@ This wraps `pnpm qmd:reindex` — you can also run that command directly if you'
 
 ---
 
+## Managing brains
+
+From anywhere:
+
+```bash
+npx claude-second-brain ls           # list all brains
+npx claude-second-brain rm <name>    # remove a brain
+```
+
+---
+
 ## License
 
 MIT

@@ -46,30 +46,35 @@ jobs:
             fi
           }
 
-          check ".gitignore (not .gitignore.template)"     test-vault/.gitignore
-          check "wiki/index.md"                            test-vault/wiki/index.md
-          check "wiki/log.md"                              test-vault/wiki/log.md
-          check "wiki/overview.md"                         test-vault/wiki/overview.md
-          check "wiki/sources/"                            test-vault/wiki/sources
-          check "wiki/qa/"                                 test-vault/wiki/qa
-          check "raw-sources/articles/"                    test-vault/raw-sources/articles
-          check "raw-sources/pdfs/"                        test-vault/raw-sources/pdfs
-          check "raw-sources/personal/"                    test-vault/raw-sources/personal
-          check ".claude/skills/setup"                     test-vault/.claude/skills/setup
-          check ".claude/skills/brain-ingest"              test-vault/.claude/skills/brain-ingest
-          check ".claude/skills/brain-search"              test-vault/.claude/skills/brain-search
-          check ".claude/skills/brain-refresh"             test-vault/.claude/skills/brain-refresh
-          check ".claude/skills/brain-rebuild"             test-vault/.claude/skills/brain-rebuild
-          check ".claude/skills/lint"                      test-vault/.claude/skills/lint
-          check ".claude/skills/qmd-cli"                   test-vault/.claude/skills/qmd-cli
-          check "scripts/qmd/setup.ts"                     test-vault/scripts/qmd/setup.ts
-          check "scripts/qmd/reindex.ts"                   test-vault/scripts/qmd/reindex.ts
-          check "package.json"                             test-vault/package.json
-          check "CLAUDE.md"                                test-vault/CLAUDE.md
-          check "mise.toml"                                test-vault/mise.toml
-          check "~/.claude/skills/brain-ingest/SKILL.md"   "$HOME/.claude/skills/brain-ingest/SKILL.md"
-          check "~/.claude/skills/brain-search/SKILL.md"   "$HOME/.claude/skills/brain-search/SKILL.md"
-          check "~/.claude/skills/brain-refresh/SKILL.md"  "$HOME/.claude/skills/brain-refresh/SKILL.md"
+          VAULT="$HOME/.claude-second-brain/test-vault"
+          check ".gitignore (not .gitignore.template)"     "$VAULT/.gitignore"
+          check "wiki/index.md"                            "$VAULT/wiki/index.md"
+          check "wiki/log.md"                              "$VAULT/wiki/log.md"
+          check "wiki/overview.md"                         "$VAULT/wiki/overview.md"
+          check "wiki/sources/"                            "$VAULT/wiki/sources"
+          check "wiki/qa/"                                 "$VAULT/wiki/qa"
+          check "raw-sources/articles/"                    "$VAULT/raw-sources/articles"
+          check "raw-sources/pdfs/"                        "$VAULT/raw-sources/pdfs"
+          check "raw-sources/personal/"                    "$VAULT/raw-sources/personal"
+          check ".claude/skills/setup"                     "$VAULT/.claude/skills/setup"
+          check ".claude/skills/brain-ingest"              "$VAULT/.claude/skills/brain-ingest"
+          check ".claude/skills/brain-search"              "$VAULT/.claude/skills/brain-search"
+          check ".claude/skills/brain-refresh"             "$VAULT/.claude/skills/brain-refresh"
+          check ".claude/skills/brain-rebuild"             "$VAULT/.claude/skills/brain-rebuild"
+          check ".claude/skills/lint"                      "$VAULT/.claude/skills/lint"
+          check ".claude/skills/qmd-cli"                   "$VAULT/.claude/skills/qmd-cli"
+          check "scripts/qmd/setup.ts"                     "$VAULT/scripts/qmd/setup.ts"
+          check "scripts/qmd/reindex.ts"                   "$VAULT/scripts/qmd/reindex.ts"
+          check "package.json"                             "$VAULT/package.json"
+          check "CLAUDE.md"                                "$VAULT/CLAUDE.md"
+          check "mise.toml"                                "$VAULT/mise.toml"
+          check "~/.claude-second-brain/config.toml"            "$HOME/.claude-second-brain/config.toml"
+          check "~/.claude/skills/brain-ingest/SKILL.md"        "$HOME/.claude/skills/brain-ingest/SKILL.md"
+          check "~/.claude/skills/brain-search/SKILL.md"        "$HOME/.claude/skills/brain-search/SKILL.md"
+          check "~/.claude/skills/brain-refresh/SKILL.md"       "$HOME/.claude/skills/brain-refresh/SKILL.md"
+          check "~/.claude/skills/brain-ingest/.csb-version"    "$HOME/.claude/skills/brain-ingest/.csb-version"
+          check "~/.claude/skills/brain-search/.csb-version"    "$HOME/.claude/skills/brain-search/.csb-version"
+          check "~/.claude/skills/brain-refresh/.csb-version"   "$HOME/.claude/skills/brain-refresh/.csb-version"
 
           grep_check() {
             local label="$1"
@@ -83,11 +88,27 @@ jobs:
             fi
           }
 
-          grep_check "CLAUDE.md INDEX_PATH is absolute"           "INDEX_PATH=/"  test-vault/CLAUDE.md
-          grep_check "setup.ts DB is hardcoded absolute path"     'const DB = "/' test-vault/scripts/qmd/setup.ts
-          grep_check "global brain-ingest INDEX_PATH is absolute"  "INDEX_PATH=/" "$HOME/.claude/skills/brain-ingest/SKILL.md"
-          grep_check "global brain-search INDEX_PATH is absolute"  "INDEX_PATH=/" "$HOME/.claude/skills/brain-search/SKILL.md"
-          grep_check "global brain-refresh INDEX_PATH is absolute" "INDEX_PATH=/" "$HOME/.claude/skills/brain-refresh/SKILL.md"
+          absent_check() {
+            local label="$1"
+            local pattern="$2"
+            local file="$3"
+            if grep -q "$pattern" "$file" 2>/dev/null; then
+              echo "FAIL: $label — pattern '$pattern' should be absent from $file"
+              fail=1
+            else
+              echo "PASS: $label"
+            fi
+          }
+
+          grep_check "CLAUDE.md uses relative INDEX_PATH"      'INDEX_PATH=\.qmd/index\.sqlite' "$VAULT/CLAUDE.md"
+          grep_check "setup.ts DB uses relative .qmd path"     '\.qmd.*index\.sqlite'            "$VAULT/scripts/qmd/setup.ts"
+          grep_check "config.toml uses `default` field"        '^default = '                     "$HOME/.claude-second-brain/config.toml"
+          for skill in brain-ingest brain-search brain-refresh; do
+            grep_check   "global $skill uses claude-second-brain path" 'claude-second-brain path'                        "$HOME/.claude/skills/$skill/SKILL.md"
+            grep_check   "global $skill uses claude-second-brain qmd"  'claude-second-brain qmd'                         "$HOME/.claude/skills/$skill/SKILL.md"
+            absent_check "global $skill has no legacy QMD_INDEX"       'INDEX_PATH=\$QMD_INDEX'                          "$HOME/.claude/skills/$skill/SKILL.md"
+            absent_check "global $skill has no unpatched tokens"       '__QMD_PATH__\|__CSB_CONFIG__'                    "$HOME/.claude/skills/$skill/SKILL.md"
+          done
 
           if [ "$fail" -ne 0 ]; then
             echo ""
@@ -101,7 +122,8 @@ jobs:
       - name: Clean up
         if: always()
         run: |
-          rm -rf test-vault
+          rm -rf "$HOME/.claude-second-brain/test-vault"
+          rm -f "$HOME/.claude-second-brain/config.toml"
           VERSION=$(node -p "require('./package.json').version")
           rm -f "claude-second-brain-${VERSION}.tgz"
           gh repo delete test-vault --yes 2>/dev/null || true

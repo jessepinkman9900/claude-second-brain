@@ -8,6 +8,23 @@ argument-hint: "File path (e.g. raw-sources/articles/my-article.md), URL, or lea
 
 Runs the full 9-step ingest workflow defined in CLAUDE.md. Do not skip steps.
 
+## Brain Discovery
+
+All commands target the **default brain** registered in `~/.claude-second-brain/config.toml`.
+Resolve paths at call time via the `claude-second-brain` CLI — do not bake paths into this file:
+
+```bash
+BRAIN_PATH=$(npx -y claude-second-brain path)       # absolute path to the default brain's directory
+```
+
+qmd commands go through the CLI proxy, which sets `INDEX_PATH` for you:
+
+```bash
+npx -y claude-second-brain qmd -- query -c wiki "<terms>"
+```
+
+Pass `--brain <name>` before the `--` to target a non-default brain.
+
 ## Inputs
 
 - **File path** — a file in `raw-sources/articles/`, `raw-sources/pdfs/`, or `raw-sources/personal/`
@@ -27,7 +44,7 @@ Runs the full 9-step ingest workflow defined in CLAUDE.md. Do not skip steps.
 - Let the user's response shape which topics get deep treatment before proceeding
 
 **Step 3 — Create source summary page**
-- File: `wiki/sources/[slug].md` (slug = kebab-case from title)
+- File: `$BRAIN_PATH/wiki/sources/[slug].md` (slug = kebab-case from title)
 - Sections: title, author/date, one-paragraph abstract, key claims (bulleted), notable quotes (max 3), synthesis note, links to wiki pages this source touches
 - Frontmatter: `type: source-summary`, `tags`, `updated: YYYY-MM-DD`
 
@@ -35,8 +52,8 @@ Runs the full 9-step ingest workflow defined in CLAUDE.md. Do not skip steps.
 - Add the new source to the Sources Ingested section: one-line description + `[[wiki/sources/slug]]` link
 
 **Step 5 — Identify affected wiki pages**
-- Run: `INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd query -c wiki "<source topic and key claims>"`
-- Also Glob `wiki/*.md` and `wiki/sources/*.md` to catch anything qmd missed
+- Run: `npx -y claude-second-brain qmd -- query -c wiki "<source topic and key claims>"`
+- Also Glob `$BRAIN_PATH/wiki/*.md` and `$BRAIN_PATH/wiki/sources/*.md` to catch anything qmd missed
 - List all pages to create or update before proceeding
 
 **Step 6 — Update or create wiki pages**
@@ -54,7 +71,7 @@ Runs the full 9-step ingest workflow defined in CLAUDE.md. Do not skip steps.
 - Otherwise skip this step
 
 **Step 9 — Append to log**
-- Append to `wiki/log.md` (never overwrite):
+- Append to `$BRAIN_PATH/wiki/log.md` (never overwrite):
   ```
   ## [YYYY-MM-DD] ingest | Source Title
 

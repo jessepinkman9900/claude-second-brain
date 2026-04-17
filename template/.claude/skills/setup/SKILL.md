@@ -48,15 +48,17 @@ Do **not** re-run after every single file edit — batch it after a session.
 
 Run these three commands to confirm everything is working:
 
+Run from the vault root so the relative `.qmd/index.sqlite` path resolves correctly:
+
 ```bash
 # List registered collections (expect: wiki, raw-sources)
-INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd collection list
+INDEX_PATH=.qmd/index.sqlite pnpm dlx @tobilu/qmd collection list
 
 # List registered contexts
-INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd context list
+INDEX_PATH=.qmd/index.sqlite pnpm dlx @tobilu/qmd context list
 
 # Show index status and embedding counts
-INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd status
+INDEX_PATH=.qmd/index.sqlite pnpm dlx @tobilu/qmd status
 ```
 
 Both collections should appear in `collection list`. `status` should show non-zero document and embedding counts — if embeddings are 0, re-run step 2.

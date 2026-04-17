@@ -240,12 +240,14 @@ Whenever you **add, remove, or rename a skill** under `template/.claude/skills/`
 
 1. **`README.md`** (root) — the "Claude Code skills included" section and the "Installing and updating skills" block. Bump the skill count ("N wiki skills") in the install commands.
 2. **`template/README.md`** — the "Your Claude Code skills" section and the "Installing and updating skills" block. Bump the skill count.
-3. **`bin/create.js`** — the skill-name array inside `installGlobalSkills()` if the skill should be installed globally (`~/.claude/skills/`). `brain-ingest`, `brain-search`, `brain-refresh` are global today; `brain-rebuild`, `lint`, `setup`, `qmd-cli` are vault-local.
-4. **`.github/workflows/pack-test.yml`** — add a `check` line for the new vault-local skill directory, and if the skill is global, add a `check` line for `$HOME/.claude/skills/<name>/SKILL.md` plus a `grep_check` for `INDEX_PATH=/`.
+3. **`bin/create.js`** — the `GLOBAL_SKILLS` array (top of the file) if the skill should be installed globally (`~/.claude/skills/`). `brain-ingest`, `brain-search`, `brain-refresh` are global today; `brain-rebuild`, `lint`, `setup`, `qmd-cli` are vault-local.
+4. **`.github/workflows/pack-test.yml`** — add a `check` line for the new vault-local skill directory, and if the skill is global, add `check` lines for `$HOME/.claude/skills/<name>/SKILL.md` and `$HOME/.claude/skills/<name>/.csb-version`, plus `grep_check` lines for `claude-second-brain path` and `claude-second-brain qmd` (global skills use the CLI proxy, not a baked INDEX_PATH).
 5. **`.claude/skills/pack-test/SKILL.md`** — update the expected-skills comment, the `ls` and `grep` commands in Step 3, the checklist table (including the "N subdirs" count), and the cleanup / overwrite-warning note in Step 4.
 
 Whenever you **change a qmd collection name, context path, or CLI invocation** in `scripts/qmd/setup.ts` or in skill workflows, you MUST also update every `-c <collection>` reference in `template/CLAUDE.md`, all `SKILL.md` files under `template/.claude/skills/`, and both READMEs.
 
 Whenever you **add, remove, or rename a skill, or change the wiki schema, page types, or frontmatter format**, you MUST also update the corresponding page under `docs/pages/` — skill pages at `docs/pages/skills/`, schema summary at `docs/pages/concepts/schema.mdx`, and the sidebar in `vocs.config.ts` if page paths change. The docs site is built from `docs/` and deployed to GitHub Pages on merge to `main`.
 
-Use `__QMD_PATH__` as the placeholder in any template file that references the qmd index path — `bin/create.js::patchVault()` substitutes it at scaffold time.
+Template files must **not** contain build-time placeholders for paths. The only remaining placeholder is `__BRAIN_NAME__` in `template/README.md`, substituted by `bin/create.js::patchVault()`. All path resolution happens at invocation time:
+- **Global skills** (shipped to `~/.claude/skills/`) call `npx claude-second-brain path` / `npx claude-second-brain qmd -- …`, which resolve the default brain from `~/.claude-second-brain/config.toml`.
+- **Vault-local skills and scripts** use the relative path `.qmd/index.sqlite` from the vault root (`scripts/qmd/{setup,reindex}.ts` compute the absolute path from `import.meta.url`).

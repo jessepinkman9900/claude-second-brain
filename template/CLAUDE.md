@@ -111,7 +111,7 @@ Run this workflow whenever the user adds a new source. Do not skip steps.
 - Add the new source to the Sources section with a one-line description and link.
 
 **Step 5 — Identify affected wiki pages**
-- Run `INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd query -c wiki "<source topic and key claims>"` to surface related existing wiki pages.
+- Run `INDEX_PATH=.qmd/index.sqlite pnpm dlx @tobilu/qmd query -c wiki "<source topic and key claims>"` to surface related existing wiki pages.
 - Also Glob `wiki/*.md` and `wiki/sources/*.md` to ensure completeness.
 - List all pages to create or update.
 
@@ -142,7 +142,7 @@ Run this workflow whenever the user adds a new source. Do not skip steps.
 Run this workflow when the user asks a question against the wiki.
 
 **Step 1 — Search the wiki**
-- Run `INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd query -c wiki "<question>"` to surface semantically relevant pages.
+- Run `INDEX_PATH=.qmd/index.sqlite pnpm dlx @tobilu/qmd query -c wiki "<question>"` to surface semantically relevant pages.
 - Read `wiki/index.md` to confirm coverage and catch any pages qmd didn't surface.
 - Read the 2-5 most relevant pages fully.
 
@@ -212,15 +212,15 @@ N issues found, N fixed. [Brief summary of notable findings.]
 ## Search Tool
 
 This vault uses **qmd** (`pnpm dlx @tobilu/qmd`) for local semantic and full-text search.
-Collections and contexts are registered via `pnpm qmd:setup` and stored at `__QMD_PATH__` (gitignored).
+Collections and contexts are registered via `pnpm qmd:setup` and stored at `.qmd/index.sqlite` (gitignored, relative to vault root).
 
-Key commands:
+Key commands (run from the vault root):
 
 | Command | Use |
 |---------|-----|
-| `INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd query -c wiki "<question>"` | Hybrid search — best for topic discovery |
-| `INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd search -c wiki "<terms>"` | Fast keyword search (BM25, no LLM) |
-| `INDEX_PATH=__QMD_PATH__ pnpm dlx @tobilu/qmd vsearch -c wiki "<question>"` | Pure vector/semantic search |
+| `INDEX_PATH=.qmd/index.sqlite pnpm dlx @tobilu/qmd query -c wiki "<question>"` | Hybrid search — best for topic discovery |
+| `INDEX_PATH=.qmd/index.sqlite pnpm dlx @tobilu/qmd search -c wiki "<terms>"` | Fast keyword search (BM25, no LLM) |
+| `INDEX_PATH=.qmd/index.sqlite pnpm dlx @tobilu/qmd vsearch -c wiki "<question>"` | Pure vector/semantic search |
 
 Add `--json` for structured output. Omit `-c wiki` to search all collections (wiki, raw-sources, human, daily-notes).
 
