@@ -1,6 +1,6 @@
 {
   "name": "claude-second-brain",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "The fastest way to start your personal knowledge base powered by Obsidian, Claude Code, qmd, and GitHub.",
   "type": "module",
   "bin": {
