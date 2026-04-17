@@ -37,6 +37,7 @@ export default defineConfig({
   sidebar: [
     { text: 'Introduction', link: '/' },
     { text: 'Getting Started', link: '/getting-started' },
+    { text: 'CLI Reference', link: '/cli' },
     {
       text: 'Concepts',
       items: [

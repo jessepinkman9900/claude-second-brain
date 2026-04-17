@@ -687,6 +687,28 @@ async function createBrain(initialName) {
   if (pnpmOk) spin.stop("dependencies installed")
   else spin.stop("pnpm install failed — run it manually inside your vault", 1)
 
+  // Register qmd collections + contexts. Skip reindex — first reindex downloads
+  // ~2GB of GGUF models; user runs it explicitly when ready.
+  if (pnpmOk) {
+    let doQmdSetup = true
+    if (isInteractive) {
+      const ok = await p.confirm({
+        message: "Register qmd collections now? (wiki + raw-sources)",
+        initialValue: true,
+      })
+      if (p.isCancel(ok)) { p.cancel("Setup cancelled."); process.exit(0) }
+      doQmdSetup = ok
+    }
+    if (doQmdSetup) {
+      spin.start("Registering qmd collections (wiki, raw-sources)")
+      const qmdOk = run(["mise", "exec", "--", "pnpm", "qmd:setup"], targetDir)
+      if (qmdOk) spin.stop("qmd collections registered")
+      else spin.stop("pnpm qmd:setup failed — run it manually inside your vault", 1)
+    } else {
+      p.log.info("Skipped qmd:setup — run `pnpm qmd:setup` from the vault root when ready.")
+    }
+  }
+
   // Install global skills (version-aware — prompts to update when versions differ)
   spin.start("Installing global Claude skills")
   const skillResult = await installGlobalSkills({ isInteractive })
@@ -777,7 +799,8 @@ async function createBrain(initialName) {
 
   const nextSteps = [
     `${pc.cyan(`cd ${brainDisplayPath}`)}`,
-    `${pc.cyan("claude")}          open Claude Code, then run ${pc.bold("/setup")}`,
+    `${pc.cyan("pnpm qmd:reindex")}  ${pc.dim("# first run downloads ~2GB of embedding models")}`,
+    `${pc.cyan("claude")}            open Claude Code and start ingesting sources`,
     ...remoteSteps,
   ].join("\n")
 

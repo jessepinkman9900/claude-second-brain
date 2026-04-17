@@ -7,8 +7,8 @@ argument-hint: "Optional: 'reindex' to skip registration and only re-index files
 # Vault Setup
 
 ## When to Use
-- First-time setup after cloning
-- Re-registering qmd collections (e.g., after config changes)
+- First-time indexing (collections are already registered by `npx claude-second-brain`)
+- Re-registering qmd collections after manual config changes
 - Re-indexing after a bulk wiki ingest session (run step 2 only)
 
 ## Procedure
@@ -17,14 +17,14 @@ All commands run from the vault root.
 
 ### Full Setup (first time)
 
-**Step 1 — Register collections and contexts**
+**Step 1 — Register collections and contexts** *(already done by the scaffold — re-run only if needed)*
 
 Run:
 ```bash
 pnpm qmd:setup
 ```
 
-Registers the two core qmd collections (`wiki`, `raw-sources`) and their path-level context descriptions. Idempotent — safe to re-run.
+Registers the two core qmd collections (`wiki`, `raw-sources`) and their path-level context descriptions. Idempotent — safe to re-run. `npx claude-second-brain` runs this automatically after `pnpm install`, so a fresh vault already has collections registered.
 
 **Step 2 — Index files and generate embeddings**
 
