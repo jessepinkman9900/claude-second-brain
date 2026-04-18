@@ -225,6 +225,61 @@ async function setupCloudflareRemote({ targetDir, repoName, namespace, spin }) {
   return { repoToken, remote }
 }
 
+function parseGithubRepo(url) {
+  if (!url) return null
+  const m = url.match(/github\.com[:/]([^/\s]+)\/([^/\s.]+)/)
+  return m ? `${m[1]}/${m[2]}` : null
+}
+
+function parseCloudflareArtifact(url) {
+  if (!url || !/artifacts\.cloudflare/.test(url)) return null
+  const explicit = url.match(/namespaces\/([^/]+)\/repos\/([^/.]+)/)
+  if (explicit) return { namespace: explicit[1], repo: explicit[2] }
+  const parts = url.replace(/\.git$/, "").split("/").filter(Boolean)
+  if (parts.length >= 2) return { namespace: parts[parts.length - 2], repo: parts[parts.length - 1] }
+  return null
+}
+
+async function resolveCloudflareToken() {
+  if (process.env.CLOUDFLARE_API_TOKEN) {
+    return { token: process.env.CLOUDFLARE_API_TOKEN, source: "CLOUDFLARE_API_TOKEN env" }
+  }
+  const wrangler = resolveWranglerCli()
+  const tokenResult = spawnSync(wrangler.cmd, [...wrangler.prefix, "auth", "token"], { stdio: "pipe" })
+  if (tokenResult.status !== 0) return null
+  const token = extractBearerToken(tokenResult.stdout?.toString() || "")
+  if (!token || !/^[\x20-\x7E]+$/.test(token)) return null
+  return { token, source: "wrangler auth token" }
+}
+
+function deleteGithubRepo(slug) {
+  if (!commandExists("gh")) return { ok: false, error: "gh CLI not installed" }
+  const r = spawnSync("gh", ["repo", "delete", slug, "--yes"], { stdio: "pipe" })
+  if (r.status !== 0) {
+    const stderr = r.stderr?.toString().trim() || `exit ${r.status}`
+    return { ok: false, error: truncate(stderr, 200) }
+  }
+  return { ok: true }
+}
+
+async function deleteCloudflareArtifact({ namespace, repo }) {
+  const auth = await resolveCloudflareToken()
+  if (!auth) return { ok: false, error: "no Cloudflare API token (set CLOUDFLARE_API_TOKEN or run `wrangler login`)" }
+  try {
+    const res = await fetch(`https://artifacts.cloudflare.net/v1/api/namespaces/${namespace}/repos/${repo}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${auth.token}` },
+    })
+    if (!res.ok) {
+      const body = await res.text()
+      return { ok: false, error: `HTTP ${res.status}: ${truncate(body, 200)}` }
+    }
+    return { ok: true }
+  } catch (err) {
+    return { ok: false, error: err.message }
+  }
+}
+
 const GLOBAL_SKILLS = ["brain-ingest", "brain-search", "brain-refresh"]
 
 async function readSkillVersion(skillDir) {
@@ -509,6 +564,28 @@ async function removeBrain(names, { yes = false } = {}) {
     }
   }
 
+  // Ask per-target whether to also delete the remote. Skip in -y mode — remote
+  // deletion is destructive beyond the local vault and requires explicit opt-in.
+  const remoteDecisions = new Map()
+  if (!yes) {
+    for (const target of targets) {
+      const gh = parseGithubRepo(target.git_remote)
+      const cf = parseCloudflareArtifact(target.git_remote)
+      if (!gh && !cf) continue
+      const label = gh ? `GitHub repo ${pc.cyan(gh)}` : `Cloudflare Artifact ${pc.cyan(`${cf.namespace}/${cf.repo}`)}`
+      const ok = await p.confirm({
+        message: `Also delete ${label} for "${target.name}"?`,
+        initialValue: false,
+      })
+      if (p.isCancel(ok)) { p.cancel("Cancelled."); process.exit(0) }
+      if (ok) {
+        remoteDecisions.set(target.name, gh
+          ? { kind: "github", slug: gh }
+          : { kind: "cloudflare", namespace: cf.namespace, repo: cf.repo })
+      }
+    }
+  }
+
   const spin = p.spinner()
 
   for (const target of targets) {
@@ -522,6 +599,28 @@ async function removeBrain(names, { yes = false } = {}) {
       }
     } else {
       spin.stop(`${target.name}: no path on config entry — skipping directory removal`, 1)
+    }
+  }
+
+  for (const [name, decision] of remoteDecisions) {
+    if (decision.kind === "github") {
+      spin.start(`Deleting GitHub repo ${decision.slug}`)
+      const result = deleteGithubRepo(decision.slug)
+      if (result.ok) {
+        spin.stop(`Removed GitHub repo ${pc.dim(decision.slug)}`)
+      } else {
+        spin.stop(`Failed to delete GitHub repo ${decision.slug}: ${result.error}`, 1)
+        p.log.warn(`Delete it manually: ${pc.cyan(`gh repo delete ${decision.slug} --yes`)} (or via https://github.com/${decision.slug}/settings)`)
+      }
+    } else {
+      spin.start(`Deleting Cloudflare Artifact ${decision.namespace}/${decision.repo}`)
+      const result = await deleteCloudflareArtifact(decision)
+      if (result.ok) {
+        spin.stop(`Removed Cloudflare Artifact ${pc.dim(`${decision.namespace}/${decision.repo}`)}`)
+      } else {
+        spin.stop(`Failed to delete Cloudflare Artifact for ${name}: ${result.error}`, 1)
+        p.log.warn(`Delete it manually:\n  ${pc.cyan(`TOKEN=$(wrangler auth token)`)}\n  ${pc.cyan(`curl -X DELETE https://artifacts.cloudflare.net/v1/api/namespaces/${decision.namespace}/repos/${decision.repo} \\`)}\n  ${pc.cyan(`  -H "Authorization: Bearer $TOKEN"`)}`)
+      }
     }
   }
 
@@ -595,12 +694,14 @@ async function createBrain(initialName) {
   let targetName = initialName
   if (!targetName) {
     const answer = await p.text({
-      message: "Where to create your brain?",
+      message: "Name of the brain?",
       placeholder: "my-brain",
       defaultValue: "my-brain",
     })
     if (p.isCancel(answer)) { p.cancel("Setup cancelled."); process.exit(0) }
     targetName = answer
+  } else {
+    p.log.step(`Name of the brain?\n${pc.dim(targetName)}`)
   }
 
   const toDisplayPath = p => p.startsWith(homedir()) ? "~" + p.slice(homedir().length) : p
