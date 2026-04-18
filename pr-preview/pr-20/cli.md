@@ -6,15 +6,15 @@ All examples below use `claude-second-brain`; substitute `csb` if you've install
 
 ### Commands
 
-| Command                                | Description                                                       |
-| -------------------------------------- | ----------------------------------------------------------------- |
-| `claude-second-brain`                  | Create a new brain (interactive).                                 |
-| `claude-second-brain <name>`           | Create a new brain named `<name>`, skipping the name prompt.      |
-| `claude-second-brain ls`               | List all registered brains. The default brain is marked with `*`. |
-| `claude-second-brain rm <name>`        | Delete a brain directory and remove its entry from `config.toml`. |
-| `claude-second-brain path [flags]`     | Print the path of the default (or named) brain.                   |
-| `claude-second-brain qmd [flags] -- …` | Run `qmd` against the default (or named) brain.                   |
-| `claude-second-brain help`             | Show usage.                                                       |
+| Command                                | Description                                                                                                    |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `claude-second-brain`                  | Create a new brain (interactive).                                                                              |
+| `claude-second-brain <name>`           | Create a new brain named `<name>`, skipping the name prompt.                                                   |
+| `claude-second-brain ls`               | List all registered brains. The default brain is marked with `*`.                                              |
+| `claude-second-brain rm [<name>…]`     | Delete one or more brains (directories + `config.toml` entries). Interactive multi-select if no name is given. |
+| `claude-second-brain path [flags]`     | Print the path of the default (or named) brain.                                                                |
+| `claude-second-brain qmd [flags] -- …` | Run `qmd` against the default (or named) brain.                                                                |
+| `claude-second-brain help`             | Show usage.                                                                                                    |
 
 `ls` is also available as `list`, and `rm` as `remove`.
 
@@ -46,16 +46,26 @@ Prints each registered brain with its path, creation date, and git remote. The d
 ### Remove a brain
 
 ```bash
-npx claude-second-brain rm my-brain         # prompts for confirmation
-npx claude-second-brain rm my-brain --yes   # skip the confirmation
-npx claude-second-brain rm                  # interactive — pick from a list
+npx claude-second-brain rm my-brain             # single brain, confirmation prompt
+npx claude-second-brain rm a b c                # remove multiple by name
+npx claude-second-brain rm my-brain --yes       # skip confirmation + remote prompts
+npx claude-second-brain rm                      # interactive multi-select picker
 ```
 
-Deletes the brain's directory under `~/.claude-second-brain/` and removes its entry from `config.toml`. If you remove the default brain and others remain, the first remaining brain becomes the new default.
+Deletes each brain's directory under `~/.claude-second-brain/` and removes its entry from `config.toml`. If you remove the default brain and others remain, the first remaining brain becomes the new default.
+
+**Interactive picker.** When no name is passed, the CLI shows a multi-select list — press **space** to toggle a brain, **a** to toggle all, **enter** to confirm.
+
+**Remote deletion prompt.** After the bulk confirmation, for each selected brain with a registered `git_remote`, the CLI asks whether to also delete the remote repo:
+
+* **GitHub** — runs `gh repo delete <owner>/<repo> --yes` (requires `gh` CLI with `delete_repo` scope).
+* **Cloudflare Artifacts** — calls `DELETE /v1/api/namespaces/<ns>/repos/<repo>` using `CLOUDFLARE_API_TOKEN` or a token fetched from `wrangler auth token`.
+
+If a remote deletion fails (missing CLI, revoked token, etc.), the CLI prints the exact manual command and continues — the local directory and config entry are still removed.
 
 Flags:
 
-* `-y`, `--yes` — skip the confirmation prompt.
+* `-y`, `--yes` — skip all confirmation prompts, **including** the remote-deletion prompts. In `-y` mode remotes are left intact; delete them manually if needed.
 
 ### Print a path
 
