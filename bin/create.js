@@ -359,7 +359,7 @@ function printHelp() {
     `  ${pc.cyan("claude-second-brain")}                         create a new brain (interactive)`,
     `  ${pc.cyan("claude-second-brain <name>")}                  create a new brain named <name>`,
     `  ${pc.cyan("claude-second-brain ls")}                      list all brains`,
-    `  ${pc.cyan("claude-second-brain rm <name>")}               remove a brain (directory + config entry)`,
+    `  ${pc.cyan("claude-second-brain rm [<name>…]")}            remove one or more brains (space to multi-select)`,
     `  ${pc.cyan("claude-second-brain path [--brain N] [flag]")} print a path (flags: --root, --qmd, --config)`,
     `  ${pc.cyan("claude-second-brain qmd [--brain N] -- …")}    run qmd against the resolved brain`,
     `  ${pc.cyan("claude-second-brain help")}                    show this message`,
@@ -454,7 +454,7 @@ async function listBrains() {
   p.outro(defaultBrain ? `default: ${pc.cyan(defaultBrain)}` : "no default brain")
 }
 
-async function removeBrain(name, { yes = false } = {}) {
+async function removeBrain(names, { yes = false } = {}) {
   p.intro(`${pc.bgCyan(pc.black(" claude-second-brain "))} v${version}`)
 
   let content
@@ -474,28 +474,33 @@ async function removeBrain(name, { yes = false } = {}) {
 
   const toDisplayPath = p => p && p.startsWith(homedir()) ? "~" + p.slice(homedir().length) : p
 
-  if (!name) {
-    const pick = await p.select({
-      message: "Which brain to remove?",
+  if (!names || names.length === 0) {
+    const pick = await p.multiselect({
+      message: "Which brain(s) to remove? (space to toggle, enter to confirm)",
       options: brains.map(b => ({
         value: b.name,
         label: b.name === defaultBrain ? `${b.name} ${pc.dim("(default)")}` : b.name,
         hint: toDisplayPath(b.path),
       })),
+      required: true,
     })
     if (p.isCancel(pick)) { p.cancel("Cancelled."); process.exit(0) }
-    name = pick
+    names = pick
   }
 
-  const target = brains.find(b => b.name === name)
-  if (!target) {
-    p.cancel(`No brain named "${name}". Run \`claude-second-brain ls\` to see registered brains.`)
-    process.exit(1)
-  }
+  const targets = names.map(n => {
+    const t = brains.find(b => b.name === n)
+    if (!t) {
+      p.cancel(`No brain named "${n}". Run \`claude-second-brain ls\` to see registered brains.`)
+      process.exit(1)
+    }
+    return t
+  })
 
   if (!yes) {
+    const list = targets.map(t => `  • ${t.name} ${pc.dim(toDisplayPath(t.path))}`).join("\n")
     const ok = await p.confirm({
-      message: `Remove brain "${name}"? This deletes ${toDisplayPath(target.path)} and removes it from config.toml.`,
+      message: `Remove ${targets.length} brain${targets.length === 1 ? "" : "s"}? This deletes the ${targets.length === 1 ? "directory" : "directories"} and config ${targets.length === 1 ? "entry" : "entries"}.\n${list}`,
       initialValue: false,
     })
     if (p.isCancel(ok) || !ok) {
@@ -506,28 +511,31 @@ async function removeBrain(name, { yes = false } = {}) {
 
   const spin = p.spinner()
 
-  // Delete brain directory first — config removal is cheap even if this fails.
-  spin.start(`Deleting ${toDisplayPath(target.path)}`)
-  if (target.path) {
-    try {
-      await rm(target.path, { recursive: true, force: true })
-      spin.stop(`Removed ${pc.dim(toDisplayPath(target.path))}`)
-    } catch (err) {
-      spin.stop(`Failed to remove directory: ${err.message}`, 1)
+  for (const target of targets) {
+    spin.start(`Deleting ${toDisplayPath(target.path)}`)
+    if (target.path) {
+      try {
+        await rm(target.path, { recursive: true, force: true })
+        spin.stop(`Removed ${pc.dim(toDisplayPath(target.path))}`)
+      } catch (err) {
+        spin.stop(`Failed to remove ${target.name}: ${err.message}`, 1)
+      }
+    } else {
+      spin.stop(`${target.name}: no path on config entry — skipping directory removal`, 1)
     }
-  } else {
-    spin.stop("No path on config entry — skipping directory removal", 1)
   }
 
-  // Rewrite config.toml without the removed brain.
-  const remaining = brains.filter(b => b.name !== name)
+  // Rewrite config.toml without the removed brains.
+  const removedSet = new Set(names)
+  const remaining = brains.filter(b => !removedSet.has(b.name))
+  const removedDefault = removedSet.has(defaultBrain)
   // Strip both legacy `active = …` and current `default = …` from the header;
   // we rewrite it from scratch below.
   let newHeader = header
     .replace(/^active\s*=\s*"[^"]*"\s*\n?/m, "")
     .replace(/^default\s*=\s*"[^"]*"\s*\n?/m, "")
     .replace(/^\s+|\s+$/g, "")
-  if (name === defaultBrain) {
+  if (removedDefault) {
     if (remaining.length > 0) {
       newHeader = `default = "${remaining[0].name}"${newHeader ? "\n" + newHeader : ""}`
     }
@@ -540,10 +548,12 @@ async function removeBrain(name, { yes = false } = {}) {
   await writeFile(CSB_CONFIG, out, "utf8")
 
   const defaultNow = parseConfig(out).defaultBrain
+  const n = targets.length
+  const removedMsg = `Removed ${n} brain${n === 1 ? "" : "s"}.`
   p.outro(
-    name === defaultBrain
-      ? (defaultNow ? `Removed. Default brain is now ${pc.cyan(defaultNow)}.` : "Removed. No brains left.")
-      : "Removed."
+    removedDefault
+      ? (defaultNow ? `${removedMsg} Default brain is now ${pc.cyan(defaultNow)}.` : `${removedMsg} No brains left.`)
+      : removedMsg
   )
 }
 
@@ -820,9 +830,9 @@ async function main() {
     return
   }
   if (cmd === "rm" || cmd === "remove") {
-    const name = rest.find(a => !a.startsWith("-"))
+    const names = rest.filter(a => !a.startsWith("-"))
     const yes = rest.some(a => a === "-y" || a === "--yes")
-    await removeBrain(name, { yes })
+    await removeBrain(names, { yes })
     return
   }
   if (cmd === "path") {
