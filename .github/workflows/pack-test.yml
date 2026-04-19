@@ -56,7 +56,6 @@ jobs:
           check "raw-sources/articles/"                    "$VAULT/raw-sources/articles"
           check "raw-sources/pdfs/"                        "$VAULT/raw-sources/pdfs"
           check "raw-sources/personal/"                    "$VAULT/raw-sources/personal"
-          check ".claude/skills/setup"                     "$VAULT/.claude/skills/setup"
           check ".claude/skills/brain-ingest"              "$VAULT/.claude/skills/brain-ingest"
           check ".claude/skills/brain-search"              "$VAULT/.claude/skills/brain-search"
           check ".claude/skills/brain-refresh"             "$VAULT/.claude/skills/brain-refresh"

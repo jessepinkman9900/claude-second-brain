@@ -159,7 +159,7 @@ RESOLVED_B=$(npx -y claude-second-brain-$(node -p "require('./package.json').ver
 | `.gitignore` (not `.gitignore.template`) | Present in both brains | |
 | `wiki/{index,log,overview}.md`, `sources/`, `qa/` | Present in both brains | |
 | `raw-sources/{articles,pdfs,personal}/` | Present in both brains | |
-| `.claude/skills/` — 6 subdirs | brain-ingest, brain-search, brain-refresh, brain-rebuild, lint, setup | |
+| `.claude/skills/` — 5 subdirs | brain-ingest, brain-search, brain-refresh, brain-rebuild, lint | |
 | `scripts/qmd/{setup,reindex}.ts` | Present in both brains, DB hardcoded to `.qmd/index.sqlite` relative | |
 | `CLAUDE.md`, `mise.toml`, `package.json` | Present in both brains | |
 | `CLAUDE.md` INDEX_PATH | Relative `INDEX_PATH=.qmd/index.sqlite` (no absolute substitution) | |

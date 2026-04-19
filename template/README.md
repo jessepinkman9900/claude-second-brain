@@ -51,10 +51,6 @@ Registers the qmd collections and generates local vector embeddings. First run d
 
 **`/brain-rebuild`** — **Destructive.** Redesigns the qmd schema: analyzes the wiki, proposes new collections and contexts, waits for your approval, then patches `scripts/qmd/setup.ts`, drops the old index, and rebuilds embeddings from scratch.
 
-### Setup
-
-**`/setup`** — First-time initialization. Registers the qmd collections and generates local vector embeddings. Run once after scaffolding.
-
 ---
 
 ## How it works
@@ -158,14 +154,14 @@ claude-second-brain/
 
 ## Installing and updating skills
 
-Skills are slash commands Claude Code loads from `.claude/skills/[name]/SKILL.md` in this vault. The wiki ships with `/brain-ingest`, `/brain-search`, `/brain-refresh`, `/brain-rebuild`, `/lint`, and `/setup` pre-installed.
+Skills are slash commands Claude Code loads from `.claude/skills/[name]/SKILL.md` in this vault. The wiki ships with `/brain-ingest`, `/brain-search`, `/brain-refresh`, `/brain-rebuild`, and `/lint` pre-installed.
 
 ### Update built-in wiki skills
 
 Pull the latest skills from the upstream template:
 
 ```bash
-# Install or update all 6 wiki skills
+# Install or update all 5 wiki skills
 npx skills add https://github.com/jessepinkman9900/claude-second-brain/tree/main/template/.claude/skills -a claude-code -y
 
 # Or update a specific skill

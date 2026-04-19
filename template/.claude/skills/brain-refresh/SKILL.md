@@ -73,3 +73,4 @@ Document and embedding counts should be non-zero and reflect recent activity. If
 - First run downloads ~2GB of GGUF models — expected, one-time
 - Do not run this after every single file edit — batch it after a session
 - This skill does **not** change the qmd schema (collections, contexts). For that, use `/brain-rebuild`
+- If `query` or `search` commands fail with "collection not found", run `pnpm qmd:setup` from the vault root to re-register collections, then re-run this skill

@@ -118,10 +118,6 @@ The wiki ships with a set of slash commands that cover the full workflow. No man
 
 **`/brain-rebuild`** — **Destructive.** Redesigns the qmd schema: analyzes the wiki, proposes new collections and contexts, waits for your approval, then patches `scripts/qmd/setup.ts`, drops the old index, and rebuilds embeddings from scratch. Use only when the current structure no longer fits how you search.
 
-### Setup
-
-**`/setup`** — First-time initialization. Registers the qmd collections and generates local vector embeddings. Run once after scaffolding.
-
 ---
 
 ## Access from anywhere
@@ -268,14 +264,14 @@ npx claude-second-brain qmd -- query -c wiki "<terms>"   # run qmd against the d
 
 ## Installing and updating skills
 
-Skills are slash commands Claude Code loads from `.claude/skills/[name]/SKILL.md`. `/brain-ingest`, `/brain-search`, and `/brain-refresh` install globally to `~/.claude/skills/` during setup so they work in any Claude Code session. `/brain-rebuild`, `/lint`, and `/setup` live inside the vault at `.claude/skills/`.
+Skills are slash commands Claude Code loads from `.claude/skills/[name]/SKILL.md`. `/brain-ingest`, `/brain-search`, and `/brain-refresh` install globally to `~/.claude/skills/` during setup so they work in any Claude Code session. `/brain-rebuild` and `/lint` live inside the vault at `.claude/skills/`.
 
 ### Update the built-in wiki skills
 
 The wiki's own skills are scaffolded at creation time. To pull in improvements, use `npx skills` pointing to the template skills directory in this repo:
 
 ```bash
-# Install or update all 6 wiki skills from the latest template
+# Install or update all 5 wiki skills from the latest template
 npx skills add https://github.com/jessepinkman9900/claude-second-brain/tree/main/template/.claude/skills -a claude-code -y
 
 # Or update a specific skill
