@@ -1,4 +1,4 @@
-import{u as t,j as e}from"./index-WcjDHbJu.js";const r={title:"/lint",description:"undefined"};function i(s){const n={a:"a",code:"code",div:"div",h1:"h1",header:"header",li:"li",p:"p",strong:"strong",ul:"ul",...t(),...s.components};return e.jsxs(e.Fragment,{children:[e.jsx(n.header,{children:e.jsxs(n.h1,{id:"lint",children:["/lint",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#lint",children:e.jsx(n.div,{"data-autolink-icon":!0})})]})}),`
+import{u as t,j as e}from"./index-BN3HN7wW.js";const r={title:"/lint",description:"undefined"};function i(s){const n={a:"a",code:"code",div:"div",h1:"h1",header:"header",li:"li",p:"p",strong:"strong",ul:"ul",...t(),...s.components};return e.jsxs(e.Fragment,{children:[e.jsx(n.header,{children:e.jsxs(n.h1,{id:"lint",children:["/lint",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#lint",children:e.jsx(n.div,{"data-autolink-icon":!0})})]})}),`
 `,e.jsx(n.p,{children:"Health-check the wiki."}),`
 `,e.jsx(n.p,{children:"Reports on:"}),`
 `,e.jsxs(n.ul,{children:[`

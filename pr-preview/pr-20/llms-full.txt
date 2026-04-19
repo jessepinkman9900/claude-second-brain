@@ -134,19 +134,13 @@ The CLI will ask:
 
 Creates the brain at `~/.claude-second-brain/my-brain/`, registers it in `~/.claude-second-brain/config.toml`, installs `mise` + `node` + `pnpm`, runs `pnpm install`, and `git init`.
 
-### Step 2 — Initialize inside Claude Code
+### Step 2 — Generate vector embeddings
 
 ```bash
-cd ~/.claude-second-brain/my-brain && claude
+cd ~/.claude-second-brain/my-brain && pnpm qmd:reindex
 ```
 
-Then run:
-
-```
-/setup
-```
-
-Registers the qmd collections and generates local vector embeddings. First run downloads \~2GB of GGUF models — once.
+Generates local vector embeddings. First run downloads \~2GB of GGUF models — once.
 
 ### Step 3 — Open in Obsidian (and push to GitHub if not done)
 
@@ -318,18 +312,14 @@ The wiki ships with a set of Claude Code slash commands that cover the full work
 * [**`/brain-refresh`**](/skills/brain-refresh) — Re-scan the vault and regenerate vector embeddings for new or changed files.
 * [**`/brain-rebuild`**](/skills/brain-rebuild) — **Destructive.** Redesigns the qmd schema, drops the old index, and rebuilds from scratch. Use only when the current structure no longer fits how you search.
 
-### Setup
-
-* [**`/setup`**](/skills/setup) — First-time initialization. Registers the qmd collections and generates local vector embeddings. Run once after scaffolding.
-
 ### Install or update skills
 
-`/brain-ingest`, `/brain-search`, and `/brain-refresh` install globally to `~/.claude/skills/` during setup so they work in any Claude Code session. `/brain-rebuild`, `/lint`, `/setup`, and `/qmd-cli` live inside the vault at `.claude/skills/`.
+`/brain-ingest`, `/brain-search`, and `/brain-refresh` install globally to `~/.claude/skills/` during setup so they work in any Claude Code session. `/brain-rebuild` and `/lint` live inside the vault at `.claude/skills/`.
 
 To pull in improvements from the latest template:
 
 ```bash
-# Install or update all 7 wiki skills
+# Install or update all 5 wiki skills
 npx skills add https://github.com/jessepinkman9900/claude-second-brain/tree/main/template/.claude/skills -a claude-code -y
 
 # Or update a specific skill
@@ -413,21 +403,6 @@ Reports on:
 Applies fixes where safe and flags everything else for your review. Appends a summary to `wiki/log.md`.
 
 Scope: vault-local, installed at `.claude/skills/lint/SKILL.md`. Source: [template/.claude/skills/lint/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/lint/SKILL.md).
-
-
-## /setup
-
-First-time initialization. Run this once, right after scaffolding the vault.
-
-What it does:
-
-1. Registers the qmd collections and contexts (`wiki`, `raw-sources`, `human`, `daily-notes`).
-2. Generates local vector embeddings for every markdown file.
-3. Writes the index to the path you chose during scaffolding (default `~/.cache/qmd/index.sqlite`).
-
-The first run downloads \~2 GB of GGUF embedding models — this happens once, then is cached across vaults.
-
-Scope: vault-local, installed at `.claude/skills/setup/SKILL.md`. Source: [template/.claude/skills/setup/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/setup/SKILL.md).
 
 
 ## Cloudflare Artifacts remote
