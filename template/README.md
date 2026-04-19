@@ -13,23 +13,14 @@ Inspired by [Andrej Karpathy's approach to LLM-powered knowledge management](htt
 ## Quick start
 
 ```bash
-# 1. Install tools (node + pnpm via mise)
-mise install
+# 1. Generate vector embeddings (first run downloads ~2GB of GGUF models — once per machine)
+pnpm qmd:reindex
 
-# 2. Install dependencies
-pnpm install
-
-# 3. Open Claude Code
+# 2. Open Claude Code
 claude
 ```
 
-Inside Claude Code, run:
-
-```
-/setup
-```
-
-Registers the qmd collections and generates local vector embeddings. First run downloads ~2GB of GGUF models — once.
+qmd collections are already registered by the CLI during scaffolding — `pnpm qmd:reindex` just needs to build the index.
 
 **Then open this folder in Obsidian.** The Git plugin is pre-configured — enable it in Obsidian settings and your wiki syncs automatically.
 

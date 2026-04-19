@@ -71,19 +71,14 @@ The CLI will ask:
 
 Creates the brain at `~/.claude-second-brain/my-brain/`, registers it in `~/.claude-second-brain/config.toml`, installs `mise` + `node` + `pnpm`, runs `pnpm install`, and `git init`.
 
-**Step 2 — Initialize inside Claude Code**
+**Step 2 — Generate vector embeddings**
 
 ```bash
-cd ~/.claude-second-brain/my-brain && claude
+cd ~/.claude-second-brain/my-brain
+pnpm qmd:reindex
 ```
 
-Then run:
-
-```
-/setup
-```
-
-Registers the qmd collections and generates local vector embeddings. First run downloads ~2GB of GGUF models — once.
+First run downloads ~2GB of GGUF models — once per machine. qmd collections are already registered by the CLI during scaffolding.
 
 **Step 3 — Open in Obsidian (and push to GitHub if not done)**
 
