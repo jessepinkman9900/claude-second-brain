@@ -158,14 +158,14 @@ claude-second-brain/
 
 ## Installing and updating skills
 
-Skills are slash commands Claude Code loads from `.claude/skills/[name]/SKILL.md` in this vault. The wiki ships with `/brain-ingest`, `/brain-search`, `/brain-refresh`, `/brain-rebuild`, `/lint`, `/setup`, and `/qmd-cli` pre-installed.
+Skills are slash commands Claude Code loads from `.claude/skills/[name]/SKILL.md` in this vault. The wiki ships with `/brain-ingest`, `/brain-search`, `/brain-refresh`, `/brain-rebuild`, `/lint`, and `/setup` pre-installed.
 
 ### Update built-in wiki skills
 
 Pull the latest skills from the upstream template:
 
 ```bash
-# Install or update all 7 wiki skills
+# Install or update all 6 wiki skills
 npx skills add https://github.com/jessepinkman9900/claude-second-brain/tree/main/template/.claude/skills -a claude-code -y
 
 # Or update a specific skill

@@ -62,7 +62,6 @@ jobs:
           check ".claude/skills/brain-refresh"             "$VAULT/.claude/skills/brain-refresh"
           check ".claude/skills/brain-rebuild"             "$VAULT/.claude/skills/brain-rebuild"
           check ".claude/skills/lint"                      "$VAULT/.claude/skills/lint"
-          check ".claude/skills/qmd-cli"                   "$VAULT/.claude/skills/qmd-cli"
           check "scripts/qmd/setup.ts"                     "$VAULT/scripts/qmd/setup.ts"
           check "scripts/qmd/reindex.ts"                   "$VAULT/scripts/qmd/reindex.ts"
           check "package.json"                             "$VAULT/package.json"
