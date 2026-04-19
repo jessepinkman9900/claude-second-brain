@@ -61,7 +61,6 @@ export default defineConfig({
         { text: '/brain-refresh', link: '/skills/brain-refresh' },
         { text: '/brain-rebuild', link: '/skills/brain-rebuild' },
         { text: '/lint', link: '/skills/lint' },
-        { text: '/setup', link: '/skills/setup' },
       ],
     },
     { text: 'Ship log', link: '/ship-log' },
