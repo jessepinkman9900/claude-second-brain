@@ -2,6 +2,43 @@
 
 A running record of every released version of `claude-second-brain` on npm. Newest releases first. For auto-generated notes and tags, see the [GitHub releases](https://github.com/jessepinkman9900/claude-second-brain/releases) page.
 
+### v1.0.0 — 2026-04-19
+
+First major release. Brains now live at `~/.claude-second-brain/<name>/` (not the repo root), and global skills resolve paths at call time via new CLI subcommands instead of baked-in paths. Existing single-brain installs: re-run `npx claude-second-brain <name>` to migrate. Legacy `active = …` in `config.toml` is auto-rewritten to `default = …`.
+
+**CLI:**
+
+* Added `claude-second-brain path [--brain N] [--root|--qmd|--config]` and `claude-second-brain qmd [--brain N] -- …` subcommands. The global skills now resolve paths at call time via these commands instead of having absolute paths baked in at scaffold time.
+* Added `claude-second-brain rm [<name>…]` with multi-select (space to toggle) and a follow-up prompt to delete the git remote.
+* `config.toml`'s `active` field renamed to `default`. Existing configs with `active = …` are still read transparently and rewritten to `default = …` on the next write.
+* Global skills (`brain-ingest`, `brain-search`, `brain-refresh`) now ship with a `.csb-version` sidecar file. Re-running `npx claude-second-brain <name>` detects version mismatches and prompts before overwriting; `CSB_SKIP_SKILL_UPDATES=1` disables the prompt.
+* `npx claude-second-brain` now auto-registers qmd collections during scaffold — no manual `/setup` step needed afterwards.
+* Added `csb` as a bin alias. After `npm i -g claude-second-brain`, both `claude-second-brain` and `csb` are available globally.
+
+**Skills:**
+
+* Removed `/setup` and `/qmd-cli` — their responsibilities are absorbed by `create.js` (auto-registration) and `/brain-refresh` / the `csb qmd` proxy respectively.
+* Added `/update-workflows` to audit `pack-test.yml` drift against current repo state.
+* Split `/release` into `/package-release` (version bump + PR) and an orchestrator `/release` that additionally runs `/update-workflows` and `/update-docs`.
+
+**Refactors:**
+
+* Removed the `__QMD_PATH__` and `__CSB_CONFIG__` placeholder substitutions. `scripts/qmd/{setup,reindex}.ts` now compute the index path from `import.meta.url`; CLAUDE.md and vault-local skills use a relative `.qmd/index.sqlite` path.
+* `patchVault()` now only substitutes `__BRAIN_NAME__` in `template/README.md`. Global skills ship unmodified from the template.
+
+**Fixes:**
+
+* `writeConfig()` now writes `default = …` when upserting into a pre-existing empty or default-less `config.toml`. Previously a zero-byte `config.toml` blocked the field from being written and left CLI subcommands unable to resolve a default brain.
+* `pnpm qmd:setup` failures during scaffolding now surface captured stderr (last \~10 lines) instead of a generic "failed" message.
+* `template/scripts/qmd/{setup,reindex}.ts` wrap their bodies in `try/catch` that prints a tagged error with vault + db paths and exits 1, replacing silent unhandled rejections.
+* `resolveBrain()` errors now list available brain names and include a fix hint.
+
+**Docs:**
+
+* Getting-started, per-skill docs, and vocs sidebar updated to reflect the 5-skill surface (`brain-ingest`, `brain-search`, `brain-refresh`, `brain-rebuild`, `lint`).
+* Documented `rm` multi-select and remote-deletion prompts.
+* `/setup` skill reference removed from quick-start in favor of `pnpm qmd:reindex`.
+
 ### v0.6.0 — 2026-04-17
 
 **Features:**

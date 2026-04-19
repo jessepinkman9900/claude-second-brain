@@ -6,4 +6,4 @@ Runs hybrid search (vector + BM25) across the entire wiki, reads the 2–5 most 
 
 If the answer pulls together multiple pages in a novel way, it offers to file it as a permanent `wiki/qa/[slug].md` entry — so the synthesis compounds next time.
 
-Scope: global skill, installed at `~/.claude/skills/brain-search/SKILL.md`. Source: [template/.claude/skills/brain-search/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-search/SKILL.md).
+Scope: global skill, installed at `~/.claude/skills/brain-search/SKILL.md`. Paths resolve at call time via `npx claude-second-brain path` and `npx claude-second-brain qmd` — both read `~/.claude-second-brain/config.toml` to find the default brain. Source: [template/.claude/skills/brain-search/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-search/SKILL.md).

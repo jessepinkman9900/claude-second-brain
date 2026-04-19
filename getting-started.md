@@ -12,27 +12,27 @@
 npx claude-second-brain
 ```
 
-The CLI will ask:
-
-* **Folder name** — where to create your vault (default: `my-brain`)
-* **qmd index path** — where to store the local search index (default: `~/.cache/qmd/index.sqlite`)
-* **Git remote** — optionally host your vault on **[GitHub](/remotes/github)** (requires `gh` CLI) or **[Cloudflare Artifacts](/remotes/cloudflare-artifacts)** (requires a Cloudflare account + wrangler)
-
-Then scaffolds the vault, installs `mise` + `node` + `pnpm`, runs `pnpm install`, and `git init`.
-
-### Step 2 — Initialize inside Claude Code
+Or install globally for a shorter command (`csb` is an alias):
 
 ```bash
-cd my-brain && claude
+npm i -g claude-second-brain
+csb                    # same as: claude-second-brain
 ```
 
-Then run:
+The CLI will ask:
 
-```
-/setup
+* **Brain name** — what to call this brain (default: `my-brain`)
+* **Git remote** — optionally host your vault on **[GitHub](/remotes/github)** (requires `gh` CLI) or **[Cloudflare Artifacts](/remotes/cloudflare-artifacts)** (requires a Cloudflare account + wrangler)
+
+Creates the brain at `~/.claude-second-brain/my-brain/`, registers it in `~/.claude-second-brain/config.toml`, installs `mise` + `node` + `pnpm`, runs `pnpm install`, and `git init`.
+
+### Step 2 — Generate vector embeddings
+
+```bash
+cd ~/.claude-second-brain/my-brain && pnpm qmd:reindex
 ```
 
-Registers the qmd collections and generates local vector embeddings. First run downloads \~2GB of GGUF models — once.
+Generates local vector embeddings. First run downloads \~2GB of GGUF models — once.
 
 ### Step 3 — Open in Obsidian (and push to GitHub if not done)
 
@@ -45,7 +45,13 @@ git remote add origin https://github.com/you/my-brain.git
 git push -u origin main
 ```
 
-Open `my-brain/` as a vault in Obsidian — the folder is already a valid Obsidian vault. The Git plugin is pre-configured — enable it and sync is automatic.
+Open `~/.claude-second-brain/my-brain/` as a vault in Obsidian — the folder is already a valid Obsidian vault. The Git plugin is pre-configured — enable it and sync is automatic.
+
+### Multiple brains
+
+Run `npx claude-second-brain` (or `csb` if installed globally) again to create additional brains. Each gets its own folder under `~/.claude-second-brain/` and its own isolated qmd index. The global skills (`/brain-ingest`, `/brain-search`, `/brain-refresh`) always operate on the **default brain** in `~/.claude-second-brain/config.toml`. The first brain created is set as the default automatically.
+
+See the [CLI Reference](/cli) for `ls`, `rm`, `path`, and `qmd` subcommands that manage and target specific brains.
 
 ### Access from anywhere
 

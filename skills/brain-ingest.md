@@ -11,4 +11,4 @@ Drop a file into `raw-sources/articles/`, `raw-sources/pdfs/`, or `raw-sources/p
 5. **Flag contradictions** with `[!WARNING]` callouts on any page where the new source disagrees with existing claims.
 6. **Log** the ingest in `wiki/log.md`.
 
-Scope: global skill, installed at `~/.claude/skills/brain-ingest/SKILL.md`. Source: [template/.claude/skills/brain-ingest/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-ingest/SKILL.md).
+Scope: global skill, installed at `~/.claude/skills/brain-ingest/SKILL.md`. Paths resolve at call time via `npx claude-second-brain path` and `npx claude-second-brain qmd` — both read `~/.claude-second-brain/config.toml` to find the default brain. Source: [template/.claude/skills/brain-ingest/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-ingest/SKILL.md).

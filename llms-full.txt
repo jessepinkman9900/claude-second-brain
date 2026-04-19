@@ -2,6 +2,110 @@
 
 > The fastest way to start your personal knowledge base powered by Obsidian, Claude Code, qmd, and GitHub.
 
+## CLI Reference
+
+The `claude-second-brain` CLI creates and manages brains registered in `~/.claude-second-brain/config.toml`. Run it via `npx claude-second-brain`, `pnpm dlx claude-second-brain`, or — if installed globally with `npm i -g claude-second-brain` — the shorter `csb` alias.
+
+All examples below use `claude-second-brain`; substitute `csb` if you've installed it globally.
+
+### Commands
+
+| Command                                | Description                                                                                                    |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `claude-second-brain`                  | Create a new brain (interactive).                                                                              |
+| `claude-second-brain <name>`           | Create a new brain named `<name>`, skipping the name prompt.                                                   |
+| `claude-second-brain ls`               | List all registered brains. The default brain is marked with `*`.                                              |
+| `claude-second-brain rm [<name>…]`     | Delete one or more brains (directories + `config.toml` entries). Interactive multi-select if no name is given. |
+| `claude-second-brain path [flags]`     | Print the path of the default (or named) brain.                                                                |
+| `claude-second-brain qmd [flags] -- …` | Run `qmd` against the default (or named) brain.                                                                |
+| `claude-second-brain help`             | Show usage.                                                                                                    |
+
+`ls` is also available as `list`, and `rm` as `remove`.
+
+### Create a brain
+
+```bash
+npx claude-second-brain                 # interactive — prompts for name + remote
+npx claude-second-brain my-brain        # skip the name prompt
+```
+
+Creates the brain at `~/.claude-second-brain/<name>/`, runs `mise install`, `pnpm install`, `pnpm qmd:setup`, `git init`, and registers it in `~/.claude-second-brain/config.toml`. The first brain created is set as the default.
+
+During the interactive flow the CLI asks:
+
+* **Brain name** — defaults to `my-brain`.
+* **Git remote** — `GitHub`, `Cloudflare Artifacts`, or `Skip`. See [GitHub](/remotes/github) and [Cloudflare Artifacts](/remotes/cloudflare-artifacts).
+* **Repo name** — only shown when a remote is selected; defaults to the brain name.
+* **Artifacts namespace** — only shown for Cloudflare; defaults to `default`.
+* **Register qmd collections now?** — confirms running `pnpm qmd:setup`.
+
+### List brains
+
+```bash
+npx claude-second-brain ls
+```
+
+Prints each registered brain with its path, creation date, and git remote. The default brain is shown in bold with a `*` marker.
+
+### Remove a brain
+
+```bash
+npx claude-second-brain rm my-brain             # single brain, confirmation prompt
+npx claude-second-brain rm a b c                # remove multiple by name
+npx claude-second-brain rm my-brain --yes       # skip confirmation + remote prompts
+npx claude-second-brain rm                      # interactive multi-select picker
+```
+
+Deletes each brain's directory under `~/.claude-second-brain/` and removes its entry from `config.toml`. If you remove the default brain and others remain, the first remaining brain becomes the new default.
+
+**Interactive picker.** When no name is passed, the CLI shows a multi-select list — press **space** to toggle a brain, **a** to toggle all, **enter** to confirm.
+
+**Remote deletion prompt.** After the bulk confirmation, for each selected brain with a registered `git_remote`, the CLI asks whether to also delete the remote repo:
+
+* **GitHub** — runs `gh repo delete <owner>/<repo> --yes` (requires `gh` CLI with `delete_repo` scope).
+* **Cloudflare Artifacts** — calls `DELETE /v1/api/namespaces/<ns>/repos/<repo>` using `CLOUDFLARE_API_TOKEN` or a token fetched from `wrangler auth token`.
+
+If a remote deletion fails (missing CLI, revoked token, etc.), the CLI prints the exact manual command and continues — the local directory and config entry are still removed.
+
+Flags:
+
+* `-y`, `--yes` — skip all confirmation prompts, **including** the remote-deletion prompts. In `-y` mode remotes are left intact; delete them manually if needed.
+
+### Print a path
+
+```bash
+npx claude-second-brain path                        # default brain root
+npx claude-second-brain path --qmd                  # default brain's qmd index
+npx claude-second-brain path --config               # ~/.claude-second-brain/config.toml
+npx claude-second-brain path --brain work --qmd     # a specific brain's qmd index
+```
+
+Flags:
+
+* `--root` *(default)* — the brain's directory (e.g. `~/.claude-second-brain/my-brain`).
+* `--qmd` — the brain's qmd SQLite index (e.g. `~/.claude-second-brain/my-brain/.qmd/index.sqlite`).
+* `--config` — the central config path. Ignores `--brain`.
+* `--brain <name>` — target a specific brain instead of the default.
+
+Used by the global skills (`/brain-ingest`, `/brain-search`, `/brain-refresh`) to resolve paths at call time so they work from any working directory.
+
+### Run qmd against a brain
+
+```bash
+npx claude-second-brain qmd -- query -c wiki "distributed systems"
+npx claude-second-brain qmd --brain work -- search -c wiki "kafka"
+```
+
+Forwards all arguments after `--` to `npx @tobilu/qmd`, with `INDEX_PATH` set to the resolved brain's qmd index. Flags:
+
+* `--brain <name>` — target a specific brain instead of the default.
+* `--` — end of CLI flags; everything after is passed to qmd verbatim.
+
+### Exit status
+
+Every command exits non-zero on failure (invalid brain name, missing config, etc.) and writes the error to stderr.
+
+
 ## Getting Started
 
 ### Requirements
@@ -16,27 +120,27 @@
 npx claude-second-brain
 ```
 
-The CLI will ask:
-
-* **Folder name** — where to create your vault (default: `my-brain`)
-* **qmd index path** — where to store the local search index (default: `~/.cache/qmd/index.sqlite`)
-* **Git remote** — optionally host your vault on **[GitHub](/remotes/github)** (requires `gh` CLI) or **[Cloudflare Artifacts](/remotes/cloudflare-artifacts)** (requires a Cloudflare account + wrangler)
-
-Then scaffolds the vault, installs `mise` + `node` + `pnpm`, runs `pnpm install`, and `git init`.
-
-### Step 2 — Initialize inside Claude Code
+Or install globally for a shorter command (`csb` is an alias):
 
 ```bash
-cd my-brain && claude
+npm i -g claude-second-brain
+csb                    # same as: claude-second-brain
 ```
 
-Then run:
+The CLI will ask:
 
-```
-/setup
+* **Brain name** — what to call this brain (default: `my-brain`)
+* **Git remote** — optionally host your vault on **[GitHub](/remotes/github)** (requires `gh` CLI) or **[Cloudflare Artifacts](/remotes/cloudflare-artifacts)** (requires a Cloudflare account + wrangler)
+
+Creates the brain at `~/.claude-second-brain/my-brain/`, registers it in `~/.claude-second-brain/config.toml`, installs `mise` + `node` + `pnpm`, runs `pnpm install`, and `git init`.
+
+### Step 2 — Generate vector embeddings
+
+```bash
+cd ~/.claude-second-brain/my-brain && pnpm qmd:reindex
 ```
 
-Registers the qmd collections and generates local vector embeddings. First run downloads \~2GB of GGUF models — once.
+Generates local vector embeddings. First run downloads \~2GB of GGUF models — once.
 
 ### Step 3 — Open in Obsidian (and push to GitHub if not done)
 
@@ -49,7 +153,13 @@ git remote add origin https://github.com/you/my-brain.git
 git push -u origin main
 ```
 
-Open `my-brain/` as a vault in Obsidian — the folder is already a valid Obsidian vault. The Git plugin is pre-configured — enable it and sync is automatic.
+Open `~/.claude-second-brain/my-brain/` as a vault in Obsidian — the folder is already a valid Obsidian vault. The Git plugin is pre-configured — enable it and sync is automatic.
+
+### Multiple brains
+
+Run `npx claude-second-brain` (or `csb` if installed globally) again to create additional brains. Each gets its own folder under `~/.claude-second-brain/` and its own isolated qmd index. The global skills (`/brain-ingest`, `/brain-search`, `/brain-refresh`) always operate on the **default brain** in `~/.claude-second-brain/config.toml`. The first brain created is set as the default automatically.
+
+See the [CLI Reference](/cli) for `ls`, `rm`, `path`, and `qmd` subcommands that manage and target specific brains.
 
 ### Access from anywhere
 
@@ -63,6 +173,43 @@ Open `my-brain/` as a vault in Obsidian — the folder is already a valid Obsidi
 ## Ship log
 
 A running record of every released version of `claude-second-brain` on npm. Newest releases first. For auto-generated notes and tags, see the [GitHub releases](https://github.com/jessepinkman9900/claude-second-brain/releases) page.
+
+### v1.0.0 — 2026-04-19
+
+First major release. Brains now live at `~/.claude-second-brain/<name>/` (not the repo root), and global skills resolve paths at call time via new CLI subcommands instead of baked-in paths. Existing single-brain installs: re-run `npx claude-second-brain <name>` to migrate. Legacy `active = …` in `config.toml` is auto-rewritten to `default = …`.
+
+**CLI:**
+
+* Added `claude-second-brain path [--brain N] [--root|--qmd|--config]` and `claude-second-brain qmd [--brain N] -- …` subcommands. The global skills now resolve paths at call time via these commands instead of having absolute paths baked in at scaffold time.
+* Added `claude-second-brain rm [<name>…]` with multi-select (space to toggle) and a follow-up prompt to delete the git remote.
+* `config.toml`'s `active` field renamed to `default`. Existing configs with `active = …` are still read transparently and rewritten to `default = …` on the next write.
+* Global skills (`brain-ingest`, `brain-search`, `brain-refresh`) now ship with a `.csb-version` sidecar file. Re-running `npx claude-second-brain <name>` detects version mismatches and prompts before overwriting; `CSB_SKIP_SKILL_UPDATES=1` disables the prompt.
+* `npx claude-second-brain` now auto-registers qmd collections during scaffold — no manual `/setup` step needed afterwards.
+* Added `csb` as a bin alias. After `npm i -g claude-second-brain`, both `claude-second-brain` and `csb` are available globally.
+
+**Skills:**
+
+* Removed `/setup` and `/qmd-cli` — their responsibilities are absorbed by `create.js` (auto-registration) and `/brain-refresh` / the `csb qmd` proxy respectively.
+* Added `/update-workflows` to audit `pack-test.yml` drift against current repo state.
+* Split `/release` into `/package-release` (version bump + PR) and an orchestrator `/release` that additionally runs `/update-workflows` and `/update-docs`.
+
+**Refactors:**
+
+* Removed the `__QMD_PATH__` and `__CSB_CONFIG__` placeholder substitutions. `scripts/qmd/{setup,reindex}.ts` now compute the index path from `import.meta.url`; CLAUDE.md and vault-local skills use a relative `.qmd/index.sqlite` path.
+* `patchVault()` now only substitutes `__BRAIN_NAME__` in `template/README.md`. Global skills ship unmodified from the template.
+
+**Fixes:**
+
+* `writeConfig()` now writes `default = …` when upserting into a pre-existing empty or default-less `config.toml`. Previously a zero-byte `config.toml` blocked the field from being written and left CLI subcommands unable to resolve a default brain.
+* `pnpm qmd:setup` failures during scaffolding now surface captured stderr (last \~10 lines) instead of a generic "failed" message.
+* `template/scripts/qmd/{setup,reindex}.ts` wrap their bodies in `try/catch` that prints a tagged error with vault + db paths and exits 1, replacing silent unhandled rejections.
+* `resolveBrain()` errors now list available brain names and include a fix hint.
+
+**Docs:**
+
+* Getting-started, per-skill docs, and vocs sidebar updated to reflect the 5-skill surface (`brain-ingest`, `brain-search`, `brain-refresh`, `brain-rebuild`, `lint`).
+* Documented `rm` multi-select and remote-deletion prompts.
+* `/setup` skill reference removed from quick-start in favor of `pnpm qmd:reindex`.
 
 ### v0.6.0 — 2026-04-17
 
@@ -189,18 +336,14 @@ The wiki ships with a set of Claude Code slash commands that cover the full work
 * [**`/brain-refresh`**](/skills/brain-refresh) — Re-scan the vault and regenerate vector embeddings for new or changed files.
 * [**`/brain-rebuild`**](/skills/brain-rebuild) — **Destructive.** Redesigns the qmd schema, drops the old index, and rebuilds from scratch. Use only when the current structure no longer fits how you search.
 
-### Setup
-
-* [**`/setup`**](/skills/setup) — First-time initialization. Registers the qmd collections and generates local vector embeddings. Run once after scaffolding.
-
 ### Install or update skills
 
-`/brain-ingest`, `/brain-search`, and `/brain-refresh` install globally to `~/.claude/skills/` during setup so they work in any Claude Code session. `/brain-rebuild`, `/lint`, `/setup`, and `/qmd-cli` live inside the vault at `.claude/skills/`.
+`/brain-ingest`, `/brain-search`, and `/brain-refresh` install globally to `~/.claude/skills/` during setup so they work in any Claude Code session. `/brain-rebuild` and `/lint` live inside the vault at `.claude/skills/`.
 
 To pull in improvements from the latest template:
 
 ```bash
-# Install or update all 7 wiki skills
+# Install or update all 5 wiki skills
 npx skills add https://github.com/jessepinkman9900/claude-second-brain/tree/main/template/.claude/skills -a claude-code -y
 
 # Or update a specific skill
@@ -227,7 +370,7 @@ Drop a file into `raw-sources/articles/`, `raw-sources/pdfs/`, or `raw-sources/p
 5. **Flag contradictions** with `[!WARNING]` callouts on any page where the new source disagrees with existing claims.
 6. **Log** the ingest in `wiki/log.md`.
 
-Scope: global skill, installed at `~/.claude/skills/brain-ingest/SKILL.md`. Source: [template/.claude/skills/brain-ingest/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-ingest/SKILL.md).
+Scope: global skill, installed at `~/.claude/skills/brain-ingest/SKILL.md`. Paths resolve at call time via `npx claude-second-brain path` and `npx claude-second-brain qmd` — both read `~/.claude-second-brain/config.toml` to find the default brain. Source: [template/.claude/skills/brain-ingest/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-ingest/SKILL.md).
 
 
 ## /brain-rebuild
@@ -254,7 +397,7 @@ Re-scans all collections for new or changed files and regenerates vector embeddi
 
 Pass `force` to re-embed every chunk — useful after changing the embedding model.
 
-Scope: global skill, installed at `~/.claude/skills/brain-refresh/SKILL.md`. Source: [template/.claude/skills/brain-refresh/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-refresh/SKILL.md).
+Scope: global skill, installed at `~/.claude/skills/brain-refresh/SKILL.md`. Paths resolve at call time via `npx claude-second-brain path` and `npx claude-second-brain qmd` — both read `~/.claude-second-brain/config.toml` to find the default brain. Source: [template/.claude/skills/brain-refresh/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-refresh/SKILL.md).
 
 
 ## /brain-search
@@ -265,7 +408,7 @@ Runs hybrid search (vector + BM25) across the entire wiki, reads the 2–5 most 
 
 If the answer pulls together multiple pages in a novel way, it offers to file it as a permanent `wiki/qa/[slug].md` entry — so the synthesis compounds next time.
 
-Scope: global skill, installed at `~/.claude/skills/brain-search/SKILL.md`. Source: [template/.claude/skills/brain-search/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-search/SKILL.md).
+Scope: global skill, installed at `~/.claude/skills/brain-search/SKILL.md`. Paths resolve at call time via `npx claude-second-brain path` and `npx claude-second-brain qmd` — both read `~/.claude-second-brain/config.toml` to find the default brain. Source: [template/.claude/skills/brain-search/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-search/SKILL.md).
 
 
 ## /lint
@@ -284,21 +427,6 @@ Reports on:
 Applies fixes where safe and flags everything else for your review. Appends a summary to `wiki/log.md`.
 
 Scope: vault-local, installed at `.claude/skills/lint/SKILL.md`. Source: [template/.claude/skills/lint/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/lint/SKILL.md).
-
-
-## /setup
-
-First-time initialization. Run this once, right after scaffolding the vault.
-
-What it does:
-
-1. Registers the qmd collections and contexts (`wiki`, `raw-sources`, `human`, `daily-notes`).
-2. Generates local vector embeddings for every markdown file.
-3. Writes the index to the path you chose during scaffolding (default `~/.cache/qmd/index.sqlite`).
-
-The first run downloads \~2 GB of GGUF embedding models — this happens once, then is cached across vaults.
-
-Scope: vault-local, installed at `.claude/skills/setup/SKILL.md`. Source: [template/.claude/skills/setup/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/setup/SKILL.md).
 
 
 ## Cloudflare Artifacts remote

@@ -1,0 +1,102 @@
+## CLI Reference
+
+The `claude-second-brain` CLI creates and manages brains registered in `~/.claude-second-brain/config.toml`. Run it via `npx claude-second-brain`, `pnpm dlx claude-second-brain`, or — if installed globally with `npm i -g claude-second-brain` — the shorter `csb` alias.
+
+All examples below use `claude-second-brain`; substitute `csb` if you've installed it globally.
+
+### Commands
+
+| Command                                | Description                                                                                                    |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `claude-second-brain`                  | Create a new brain (interactive).                                                                              |
+| `claude-second-brain <name>`           | Create a new brain named `<name>`, skipping the name prompt.                                                   |
+| `claude-second-brain ls`               | List all registered brains. The default brain is marked with `*`.                                              |
+| `claude-second-brain rm [<name>…]`     | Delete one or more brains (directories + `config.toml` entries). Interactive multi-select if no name is given. |
+| `claude-second-brain path [flags]`     | Print the path of the default (or named) brain.                                                                |
+| `claude-second-brain qmd [flags] -- …` | Run `qmd` against the default (or named) brain.                                                                |
+| `claude-second-brain help`             | Show usage.                                                                                                    |
+
+`ls` is also available as `list`, and `rm` as `remove`.
+
+### Create a brain
+
+```bash
+npx claude-second-brain                 # interactive — prompts for name + remote
+npx claude-second-brain my-brain        # skip the name prompt
+```
+
+Creates the brain at `~/.claude-second-brain/<name>/`, runs `mise install`, `pnpm install`, `pnpm qmd:setup`, `git init`, and registers it in `~/.claude-second-brain/config.toml`. The first brain created is set as the default.
+
+During the interactive flow the CLI asks:
+
+* **Brain name** — defaults to `my-brain`.
+* **Git remote** — `GitHub`, `Cloudflare Artifacts`, or `Skip`. See [GitHub](/remotes/github) and [Cloudflare Artifacts](/remotes/cloudflare-artifacts).
+* **Repo name** — only shown when a remote is selected; defaults to the brain name.
+* **Artifacts namespace** — only shown for Cloudflare; defaults to `default`.
+* **Register qmd collections now?** — confirms running `pnpm qmd:setup`.
+
+### List brains
+
+```bash
+npx claude-second-brain ls
+```
+
+Prints each registered brain with its path, creation date, and git remote. The default brain is shown in bold with a `*` marker.
+
+### Remove a brain
+
+```bash
+npx claude-second-brain rm my-brain             # single brain, confirmation prompt
+npx claude-second-brain rm a b c                # remove multiple by name
+npx claude-second-brain rm my-brain --yes       # skip confirmation + remote prompts
+npx claude-second-brain rm                      # interactive multi-select picker
+```
+
+Deletes each brain's directory under `~/.claude-second-brain/` and removes its entry from `config.toml`. If you remove the default brain and others remain, the first remaining brain becomes the new default.
+
+**Interactive picker.** When no name is passed, the CLI shows a multi-select list — press **space** to toggle a brain, **a** to toggle all, **enter** to confirm.
+
+**Remote deletion prompt.** After the bulk confirmation, for each selected brain with a registered `git_remote`, the CLI asks whether to also delete the remote repo:
+
+* **GitHub** — runs `gh repo delete <owner>/<repo> --yes` (requires `gh` CLI with `delete_repo` scope).
+* **Cloudflare Artifacts** — calls `DELETE /v1/api/namespaces/<ns>/repos/<repo>` using `CLOUDFLARE_API_TOKEN` or a token fetched from `wrangler auth token`.
+
+If a remote deletion fails (missing CLI, revoked token, etc.), the CLI prints the exact manual command and continues — the local directory and config entry are still removed.
+
+Flags:
+
+* `-y`, `--yes` — skip all confirmation prompts, **including** the remote-deletion prompts. In `-y` mode remotes are left intact; delete them manually if needed.
+
+### Print a path
+
+```bash
+npx claude-second-brain path                        # default brain root
+npx claude-second-brain path --qmd                  # default brain's qmd index
+npx claude-second-brain path --config               # ~/.claude-second-brain/config.toml
+npx claude-second-brain path --brain work --qmd     # a specific brain's qmd index
+```
+
+Flags:
+
+* `--root` *(default)* — the brain's directory (e.g. `~/.claude-second-brain/my-brain`).
+* `--qmd` — the brain's qmd SQLite index (e.g. `~/.claude-second-brain/my-brain/.qmd/index.sqlite`).
+* `--config` — the central config path. Ignores `--brain`.
+* `--brain <name>` — target a specific brain instead of the default.
+
+Used by the global skills (`/brain-ingest`, `/brain-search`, `/brain-refresh`) to resolve paths at call time so they work from any working directory.
+
+### Run qmd against a brain
+
+```bash
+npx claude-second-brain qmd -- query -c wiki "distributed systems"
+npx claude-second-brain qmd --brain work -- search -c wiki "kafka"
+```
+
+Forwards all arguments after `--` to `npx @tobilu/qmd`, with `INDEX_PATH` set to the resolved brain's qmd index. Flags:
+
+* `--brain <name>` — target a specific brain instead of the default.
+* `--` — end of CLI flags; everything after is passed to qmd verbatim.
+
+### Exit status
+
+Every command exits non-zero on failure (invalid brain name, missing config, etc.) and writes the error to stderr.
