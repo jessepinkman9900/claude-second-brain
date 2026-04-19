@@ -1,16 +1,39 @@
-import{u as s,j as e}from"./index-fGGB9D7K.js";const l={title:"Ship log",description:"undefined"};function d(i){const n={a:"a",code:"code",div:"div",h1:"h1",h2:"h2",header:"header",li:"li",p:"p",strong:"strong",ul:"ul",...s(),...i.components};return e.jsxs(e.Fragment,{children:[e.jsx(n.header,{children:e.jsxs(n.h1,{id:"ship-log",children:["Ship log",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#ship-log",children:e.jsx(n.div,{"data-autolink-icon":!0})})]})}),`
+import{u as s,j as e}from"./index-C0d3pozK.js";const l={title:"Ship log",description:"undefined"};function d(i){const n={a:"a",code:"code",div:"div",h1:"h1",h2:"h2",header:"header",li:"li",p:"p",strong:"strong",ul:"ul",...s(),...i.components};return e.jsxs(e.Fragment,{children:[e.jsx(n.header,{children:e.jsxs(n.h1,{id:"ship-log",children:["Ship log",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#ship-log",children:e.jsx(n.div,{"data-autolink-icon":!0})})]})}),`
 `,e.jsxs(n.p,{children:["A running record of every released version of ",e.jsx(n.code,{children:"claude-second-brain"})," on npm. Newest releases first. For auto-generated notes and tags, see the ",e.jsx(n.a,{href:"https://github.com/jessepinkman9900/claude-second-brain/releases",children:"GitHub releases"})," page."]}),`
-`,e.jsxs(n.h2,{id:"v070--2026-04-17",children:["v0.7.0 — 2026-04-17",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#v070--2026-04-17",children:e.jsx(n.div,{"data-autolink-icon":!0})})]}),`
+`,e.jsxs(n.h2,{id:"v100--2026-04-19",children:["v1.0.0 — 2026-04-19",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#v100--2026-04-19",children:e.jsx(n.div,{"data-autolink-icon":!0})})]}),`
+`,e.jsxs(n.p,{children:["First major release. Brains now live at ",e.jsx(n.code,{children:"~/.claude-second-brain/<name>/"})," (not the repo root), and global skills resolve paths at call time via new CLI subcommands instead of baked-in paths. Existing single-brain installs: re-run ",e.jsx(n.code,{children:"npx claude-second-brain <name>"})," to migrate. Legacy ",e.jsx(n.code,{children:"active = …"})," in ",e.jsx(n.code,{children:"config.toml"})," is auto-rewritten to ",e.jsx(n.code,{children:"default = …"}),"."]}),`
 `,e.jsx(n.strong,{children:"CLI:"}),`
 `,e.jsxs(n.ul,{children:[`
 `,e.jsxs(n.li,{children:["Added ",e.jsx(n.code,{children:"claude-second-brain path [--brain N] [--root|--qmd|--config]"})," and ",e.jsx(n.code,{children:"claude-second-brain qmd [--brain N] -- …"})," subcommands. The global skills now resolve paths at call time via these commands instead of having absolute paths baked in at scaffold time."]}),`
+`,e.jsxs(n.li,{children:["Added ",e.jsx(n.code,{children:"claude-second-brain rm [<name>…]"})," with multi-select (space to toggle) and a follow-up prompt to delete the git remote."]}),`
 `,e.jsxs(n.li,{children:[e.jsx(n.code,{children:"config.toml"}),"'s ",e.jsx(n.code,{children:"active"})," field renamed to ",e.jsx(n.code,{children:"default"}),". Existing configs with ",e.jsx(n.code,{children:"active = …"})," are still read transparently and rewritten to ",e.jsx(n.code,{children:"default = …"})," on the next write."]}),`
 `,e.jsxs(n.li,{children:["Global skills (",e.jsx(n.code,{children:"brain-ingest"}),", ",e.jsx(n.code,{children:"brain-search"}),", ",e.jsx(n.code,{children:"brain-refresh"}),") now ship with a ",e.jsx(n.code,{children:".csb-version"})," sidecar file. Re-running ",e.jsx(n.code,{children:"npx claude-second-brain <name>"})," detects version mismatches and prompts before overwriting; ",e.jsx(n.code,{children:"CSB_SKIP_SKILL_UPDATES=1"})," disables the prompt."]}),`
+`,e.jsxs(n.li,{children:[e.jsx(n.code,{children:"npx claude-second-brain"})," now auto-registers qmd collections during scaffold — no manual ",e.jsx(n.code,{children:"/setup"})," step needed afterwards."]}),`
 `,e.jsxs(n.li,{children:["Added ",e.jsx(n.code,{children:"csb"})," as a bin alias. After ",e.jsx(n.code,{children:"npm i -g claude-second-brain"}),", both ",e.jsx(n.code,{children:"claude-second-brain"})," and ",e.jsx(n.code,{children:"csb"})," are available globally."]}),`
+`]}),`
+`,e.jsx(n.strong,{children:"Skills:"}),`
+`,e.jsxs(n.ul,{children:[`
+`,e.jsxs(n.li,{children:["Removed ",e.jsx(n.code,{children:"/setup"})," and ",e.jsx(n.code,{children:"/qmd-cli"})," — their responsibilities are absorbed by ",e.jsx(n.code,{children:"create.js"})," (auto-registration) and ",e.jsx(n.code,{children:"/brain-refresh"})," / the ",e.jsx(n.code,{children:"csb qmd"})," proxy respectively."]}),`
+`,e.jsxs(n.li,{children:["Added ",e.jsx(n.code,{children:"/update-workflows"})," to audit ",e.jsx(n.code,{children:"pack-test.yml"})," drift against current repo state."]}),`
+`,e.jsxs(n.li,{children:["Split ",e.jsx(n.code,{children:"/release"})," into ",e.jsx(n.code,{children:"/package-release"})," (version bump + PR) and an orchestrator ",e.jsx(n.code,{children:"/release"})," that additionally runs ",e.jsx(n.code,{children:"/update-workflows"})," and ",e.jsx(n.code,{children:"/update-docs"}),"."]}),`
 `]}),`
 `,e.jsx(n.strong,{children:"Refactors:"}),`
 `,e.jsxs(n.ul,{children:[`
 `,e.jsxs(n.li,{children:["Removed the ",e.jsx(n.code,{children:"__QMD_PATH__"})," and ",e.jsx(n.code,{children:"__CSB_CONFIG__"})," placeholder substitutions. ",e.jsx(n.code,{children:"scripts/qmd/{setup,reindex}.ts"})," now compute the index path from ",e.jsx(n.code,{children:"import.meta.url"}),"; CLAUDE.md and vault-local skills use a relative ",e.jsx(n.code,{children:".qmd/index.sqlite"})," path."]}),`
+`,e.jsxs(n.li,{children:[e.jsx(n.code,{children:"patchVault()"})," now only substitutes ",e.jsx(n.code,{children:"__BRAIN_NAME__"})," in ",e.jsx(n.code,{children:"template/README.md"}),". Global skills ship unmodified from the template."]}),`
+`]}),`
+`,e.jsx(n.strong,{children:"Fixes:"}),`
+`,e.jsxs(n.ul,{children:[`
+`,e.jsxs(n.li,{children:[e.jsx(n.code,{children:"writeConfig()"})," now writes ",e.jsx(n.code,{children:"default = …"})," when upserting into a pre-existing empty or default-less ",e.jsx(n.code,{children:"config.toml"}),". Previously a zero-byte ",e.jsx(n.code,{children:"config.toml"})," blocked the field from being written and left CLI subcommands unable to resolve a default brain."]}),`
+`,e.jsxs(n.li,{children:[e.jsx(n.code,{children:"pnpm qmd:setup"}),' failures during scaffolding now surface captured stderr (last ~10 lines) instead of a generic "failed" message.']}),`
+`,e.jsxs(n.li,{children:[e.jsx(n.code,{children:"template/scripts/qmd/{setup,reindex}.ts"})," wrap their bodies in ",e.jsx(n.code,{children:"try/catch"})," that prints a tagged error with vault + db paths and exits 1, replacing silent unhandled rejections."]}),`
+`,e.jsxs(n.li,{children:[e.jsx(n.code,{children:"resolveBrain()"})," errors now list available brain names and include a fix hint."]}),`
+`]}),`
+`,e.jsx(n.strong,{children:"Docs:"}),`
+`,e.jsxs(n.ul,{children:[`
+`,e.jsxs(n.li,{children:["Getting-started, per-skill docs, and vocs sidebar updated to reflect the 5-skill surface (",e.jsx(n.code,{children:"brain-ingest"}),", ",e.jsx(n.code,{children:"brain-search"}),", ",e.jsx(n.code,{children:"brain-refresh"}),", ",e.jsx(n.code,{children:"brain-rebuild"}),", ",e.jsx(n.code,{children:"lint"}),")."]}),`
+`,e.jsxs(n.li,{children:["Documented ",e.jsx(n.code,{children:"rm"})," multi-select and remote-deletion prompts."]}),`
+`,e.jsxs(n.li,{children:[e.jsx(n.code,{children:"/setup"})," skill reference removed from quick-start in favor of ",e.jsx(n.code,{children:"pnpm qmd:reindex"}),"."]}),`
 `]}),`
 `,e.jsxs(n.h2,{id:"v060--2026-04-17",children:["v0.6.0 — 2026-04-17",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#v060--2026-04-17",children:e.jsx(n.div,{"data-autolink-icon":!0})})]}),`
 `,e.jsx(n.strong,{children:"Features:"}),`
@@ -112,4 +135,4 @@ import{u as s,j as e}from"./index-fGGB9D7K.js";const l={title:"Ship log",descrip
 `,e.jsx(n.li,{children:"First public release to npm."}),`
 `,e.jsxs(n.li,{children:["Introduced the template scaffold and the ",e.jsx(n.code,{children:"npx claude-second-brain"})," flow."]}),`
 `,e.jsxs(n.li,{children:["Added the initial README, the release workflow, and the ",e.jsx(n.code,{children:"/pack-test"})," skill."]}),`
-`]})]})}function a(i={}){const{wrapper:n}={...s(),...i.components};return n?e.jsx(n,{...i,children:e.jsx(d,{...i})}):d(i)}export{a as default,l as frontmatter};
+`]})]})}function c(i={}){const{wrapper:n}={...s(),...i.components};return n?e.jsx(n,{...i,children:e.jsx(d,{...i})}):d(i)}export{c as default,l as frontmatter};
