@@ -1,161 +1,91 @@
 ---
 name: release
-description: "Prepare and open a release PR for the claude-second-brain npm package. Analyzes changes vs main, suggests a semver version bump, updates package.json, commits, pushes, and opens a PR. Trigger phrases: /release, prepare a release, bump the version, publish a new version, open a release PR."
+description: "Full release flow for claude-second-brain: resolves the next version, updates the docs site + ship log via /update-docs, then bumps package.json and opens a single PR containing both the docs commit and the version bump via /package-release. Trigger phrases: /release, ship a new version, cut a release, prepare a release."
 argument-hint: "Optional: patch | minor | major | exact version (e.g. 0.2.0). Leave blank for auto-suggestion."
 ---
 
 # /release
 
-Prepares and opens a release PR for the `claude-second-brain` npm package. Does **not** publish to npm directly — publishing happens automatically via GitHub Actions after the PR is merged.
+Orchestrates a complete release for `claude-second-brain`:
 
-## When to use
+1. Resolve the target version.
+2. Run `/update-docs` so the docs site and ship log reflect what's shipping (ship log entry uses the target version).
+3. Commit the docs changes.
+4. Run `/package-release` to bump `package.json`, commit, push, and open the PR.
 
-- When you're ready to ship a new version of the package to npm
-- After landing a batch of features or fixes on a feature branch
-- The current branch must have commits relative to `main`
+The result is **one PR** containing both the docs commit and the version-bump commit.
 
-## Argument
+If you only want one half, run `/update-docs` or `/package-release` directly — each is usable standalone.
 
-Pass a version bump type to skip the confirmation prompt:
+## Preconditions
 
-| Argument | Effect |
-|----------|--------|
-| (none) | Analyze changes and suggest a bump; ask user to confirm |
-| `patch` | Bump patch version (e.g. 0.1.0 → 0.1.1) |
-| `minor` | Bump minor version (e.g. 0.1.0 → 0.2.0) |
-| `major` | Bump major version (e.g. 0.1.0 → 1.0.0) |
-| `0.3.0` | Use this exact version |
+- Current branch has commits relative to `main`.
+- Working tree is otherwise clean (no unrelated staged/unstaged changes — the orchestrator will commit anything staged).
 
 ## Steps
 
-Run each step in order. Stop and report if any step fails.
+### Step 1 — Resolve target version
 
-### Step 1 — Capture current state
-
-Run these commands to understand what's changed:
+Read the current version:
 
 ```bash
-# Current branch
-git branch --show-current
-
-# Commits on this branch not yet in main
-git log main..HEAD --oneline
-
-# File-level diff summary vs main
-git diff main...HEAD --stat
-
-# Current version
 cat package.json | grep '"version"'
 ```
 
-Record: the branch name, current version, list of commits, and all files changed.
-
-### Step 2 — Summarize changes
-
-Categorize all changes from Step 1 into this format:
-
-```
-## Changes in this release
-
-**New features:**
-- (e.g. new skill added, new CLI flag, new template file)
-
-**Bug fixes:**
-- (e.g. correctness fix in bin/create.ts, template fix)
-
-**Refactors / cleanup:**
-- (e.g. code reorganization, no behavior change)
-
-**Docs:**
-- (e.g. README updates, CLAUDE.md edits)
-```
-
-Show this changelog to the user. Skip empty categories.
-
-### Step 3 — Determine version bump
-
-Read the current version from `package.json`. Apply semver logic to suggest the next version:
+Apply the same semver logic `/package-release` uses:
 
 | Signal | Bump |
 |--------|------|
-| Changes to CLI interface, template structure that would break existing vaults, or commits containing "breaking" | **major** |
-| New skills added, new CLI flags, new template sections, or new behavior | **minor** |
+| Breaking CLI / template changes, or commits containing "breaking" | **major** |
+| New skills, new CLI flags, new template sections, or new behavior | **minor** |
 | Bug fixes, docs, refactors only | **patch** |
 
-State clearly:
-- Current version: `X.Y.Z`
-- Suggested next version: `A.B.C` (reason)
+**If the user passed an argument** (`/release patch`, `/release 0.2.0`, etc.) use it directly.
+**Otherwise** summarize the diff (`git log main..HEAD --oneline` + `git diff main...HEAD --stat`), suggest a bump, and ask the user to confirm. Do not continue until confirmed.
 
-**If the user passed an argument** (`/release patch`, `/release 0.2.0`, etc.), use that directly and skip asking.
+Record the resolved version as `vX.Y.Z` for the rest of the flow.
 
-**If no argument**, ask the user to confirm the suggested version before continuing. Do not proceed to Step 4 until confirmed.
+### Step 2 — Run /update-docs
 
-### Step 4 — Update package.json
+Invoke the `update-docs` skill. When it asks for approval of its proposal, forward that proposal to the user and wait.
 
-Use the Edit tool to update the `"version"` field in `package.json` to the new version. Do not reformat the file.
+**Critical:** the ship log entry for this release must use the version resolved in Step 1 (`vX.Y.Z`) and today's date. If `/update-docs` proposes a different version, correct it before approving.
 
-Verify:
-```bash
-cat package.json | grep '"version"'
-```
+Let `/update-docs` apply its edits.
 
-### Step 5 — Commit the version bump
+### Step 3 — Commit docs changes
+
+If `/update-docs` modified any files (check `git status`):
 
 ```bash
-git add package.json
-git commit -m "chore: bump version to X.Y.Z"
+git add docs/ vocs.config.ts
+git commit -m "chore(docs): update ship log and docs for vX.Y.Z"
 ```
 
-Replace `X.Y.Z` with the confirmed new version.
+If nothing changed, skip this step.
 
-### Step 6 — Push and open PR
+### Step 4 — Run /package-release
 
-Push the current branch:
+Invoke `/package-release <arg>` with the version resolved in Step 1 (e.g. `/package-release 0.8.0`). It will:
 
-```bash
-git push origin HEAD
-```
+- Bump `package.json` to `X.Y.Z`
+- Commit the bump (`chore: bump version to X.Y.Z`)
+- Push the branch
+- Open a PR — whose commit list will include both your docs commit from Step 3 and the version-bump commit
 
-Create a PR targeting `main`. Use the changelog from Step 2 in the body:
+### Step 5 — Report
 
-```bash
-gh pr create \
-  --title "release: vX.Y.Z" \
-  --body "$(cat <<'EOF'
-## Release vX.Y.Z
+Tell the user:
 
-### Changes
-
-[changelog from Step 2]
-
-### What happens after merge
-
-1. GitHub Action creates tag `vX.Y.Z` and a GitHub Release with auto-generated notes
-2. GitHub Action publishes `claude-second-brain@X.Y.Z` to npm automatically
-
-### Checklist
-
-- [ ] Changelog accurately reflects all changes
-- [ ] `package.json` version is correct
-EOF
-)" \
-  --base main
-```
-
-### Step 7 — Report to user
-
-After the PR is created, tell the user:
-
-> **PR opened:** [url]
+> **Release PR opened:** [url]
 >
-> **Pipeline after merge:**
-> 1. `release-publish.yml` creates tag `vX.Y.Z`, a GitHub Release, and publishes `claude-second-brain@X.Y.Z` to npm
+> - Docs commit: `chore(docs): update ship log and docs for vX.Y.Z`
+> - Version commit: `chore: bump version to X.Y.Z`
 >
-> **To verify after merge:** https://www.npmjs.com/package/claude-second-brain
+> After merge, `release-publish.yml` tags `vX.Y.Z`, creates a GitHub Release, and publishes `claude-second-brain@X.Y.Z` to npm.
 
 ## What can go wrong
 
-- **`gh` not authenticated** — run `gh auth login` first
-- **Nothing to release** — `git log main..HEAD` is empty; make sure you're on the right branch
-- **Merge conflicts with main** — rebase on main before running `/release`
-- **Pack-test version mismatch** — Step 5 handles this; the grep verify confirms it
+- **User declines docs proposal** — stop; do not proceed to `/package-release`. The branch is left with no changes and can be retried.
+- **Version mismatch between ship log and `package.json`** — Step 2's correction gate prevents this; if it slips through, the PR reviewer will catch it. Fix by amending the docs commit before merge.
+- **Nothing to release** — if `git log main..HEAD` is empty, abort.
