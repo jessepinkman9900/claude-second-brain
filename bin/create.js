@@ -20,6 +20,25 @@ function run(cmd, cwd) {
   return result.status === 0
 }
 
+// Like `run`, but returns captured stdout/stderr so callers can surface the
+// real failure to the user instead of a generic "failed" message.
+function runCapture(cmd, cwd) {
+  const result = spawnSync(cmd[0], cmd.slice(1), { cwd, stdio: "pipe", encoding: "utf8" })
+  return {
+    ok: result.status === 0,
+    stdout: result.stdout || "",
+    stderr: result.stderr || "",
+  }
+}
+
+// Pick the most informative tail of a child process's output for an error message.
+function tailForError({ stdout, stderr }, lines = 10) {
+  const source = (stderr && stderr.trim()) ? stderr : stdout
+  const trimmed = (source || "").trim()
+  if (!trimmed) return ""
+  return trimmed.split("\n").slice(-lines).join("\n")
+}
+
 // Interactive commands (e.g. gh auth login) — must inherit stdio; call outside spinner
 function runInteractive(cmd, cwd) {
   const result = spawnSync(cmd[0], cmd.slice(1), { cwd, stdio: "inherit" })
@@ -432,9 +451,18 @@ async function resolveBrain(name) {
   }
   const { defaultBrain, brains } = parseConfig(content)
   const target = name || defaultBrain
-  if (!target) throw new Error("No default brain set in config.toml.")
+  if (!target) {
+    const available = brains.map(b => b.name).join(", ")
+    const hint = available
+      ? `Pass --brain <name> (available: ${available}), or edit ${CSB_CONFIG} and set \`default = "<name>"\`.`
+      : `Run \`claude-second-brain <name>\` to create your first brain.`
+    throw new Error(`No default brain set in config.toml. ${hint}`)
+  }
   const entry = brains.find(b => b.name === target)
-  if (!entry) throw new Error(`No brain named "${target}". Run \`claude-second-brain ls\` to see registered brains.`)
+  if (!entry) {
+    const available = brains.map(b => b.name).join(", ") || "(none)"
+    throw new Error(`No brain named "${target}". Available: ${available}. Run \`claude-second-brain ls\` to list brains.`)
+  }
   return entry
 }
 
@@ -673,15 +701,21 @@ async function writeConfig(brainName, brainPath, qmdPath, gitRemote) {
     // Config doesn't exist yet — create fresh
   }
 
-  if (!existing) {
+  if (!existing || !existing.trim()) {
     await writeFile(CSB_CONFIG, `default = "${brainName}"\n\n${entry}\n`, "utf8")
     return
   }
 
   // Upsert: remove existing entry for this brain name, then append updated entry.
   // Also migrate legacy `active = …` to `default = …` on any write.
+  // If the header lacks any default/active key (e.g. user hand-edited an empty
+  // file, or earlier versions of this CLI wrote entries without one), inject
+  // `default = "${brainName}"` so CLI subcommands can resolve a default.
   const blocks = existing.split(/\n(?=\[\[brains\]\])/)
-  const header = blocks[0].replace(/^active\s*=/m, "default =")
+  let header = blocks[0].replace(/^active\s*=/m, "default =")
+  if (!/^default\s*=/m.test(header)) {
+    header = `default = "${brainName}"\n\n${header.trimStart()}`
+  }
   const otherBrains = blocks.slice(1).filter(b => !b.includes(`name = "${brainName}"`))
   await writeFile(CSB_CONFIG, [header, ...otherBrains, entry].join("\n").trimEnd() + "\n", "utf8")
 }
@@ -812,9 +846,14 @@ async function createBrain(initialName) {
     }
     if (doQmdSetup) {
       spin.start("Registering qmd collections (wiki, raw-sources)")
-      const qmdOk = run(["mise", "exec", "--", "pnpm", "qmd:setup"], targetDir)
-      if (qmdOk) spin.stop("qmd collections registered")
-      else spin.stop("pnpm qmd:setup failed — run it manually inside your vault", 1)
+      const qmdRes = runCapture(["mise", "exec", "--", "pnpm", "qmd:setup"], targetDir)
+      if (qmdRes.ok) {
+        spin.stop("qmd collections registered")
+      } else {
+        spin.stop("pnpm qmd:setup failed — run it manually inside your vault", 1)
+        const tail = tailForError(qmdRes)
+        if (tail) p.log.warn(`qmd:setup output:\n${tail}`)
+      }
     } else {
       p.log.info("Skipped qmd:setup — run `pnpm qmd:setup` from the vault root when ready.")
     }
