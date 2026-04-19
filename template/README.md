@@ -181,12 +181,19 @@ This wraps `pnpm qmd:reindex` — you can also run that command directly if you'
 
 ## Managing brains
 
-From anywhere:
+From anywhere (`csb` is the short alias — use `npx claude-second-brain` if not installed globally):
 
 ```bash
-npx claude-second-brain ls           # list all brains
-npx claude-second-brain rm <name>    # remove a brain
+csb ls                             # list all brains (default marked with *)
+csb use <name>                     # switch the default brain
+csb rm <name>                      # remove a brain
+csb path qmd                       # print the default brain's qmd index
+csb qmd query -c wiki "<terms>"    # run qmd against the default brain
+csb exec -- pnpm qmd:reindex       # run any command inside the default brain
+csb doctor                         # verify tools, config, and each brain
 ```
+
+Run `csb help <command>` (or `csb <command> --help`) for per-command details.
 
 ---
 

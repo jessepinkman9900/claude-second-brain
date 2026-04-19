@@ -245,15 +245,21 @@ All brains live under `~/.claude-second-brain/`. A central `config.toml` tracks 
 
 Run `npx claude-second-brain` again to create additional brains. Each gets its own folder, its own qmd index, and its own git remote — fully isolated. The global skills (`/brain-ingest`, `/brain-search`, `/brain-refresh`) always operate on the **default brain** declared in `config.toml`. The first brain you create is set as the default automatically.
 
-Manage brains from the CLI:
+Manage brains from the CLI (`csb` is the short alias — swap for `npx claude-second-brain` if not installed globally):
 
 ```bash
-npx claude-second-brain ls                  # list all brains (default marked with *)
-npx claude-second-brain rm <name>           # remove a brain (deletes its folder + config entry)
-npx claude-second-brain path                # print the default brain's directory
-npx claude-second-brain path --qmd          # print the default brain's qmd index path
-npx claude-second-brain qmd -- query -c wiki "<terms>"   # run qmd against the default brain
+csb ls                             # list all brains (default marked with *)
+csb use <name>                     # switch the default brain
+csb rm <name>                      # remove a brain (deletes its folder + config entry)
+csb path                           # print the default brain's directory
+csb path qmd                       # print the default brain's qmd index path
+csb path config                    # print ~/.claude-second-brain/config.toml
+csb qmd query -c wiki "<terms>"    # run qmd against the default brain
+csb exec -- pnpm qmd:reindex       # run any command inside the default brain
+csb doctor                         # verify tools, config, and each brain
 ```
+
+Every subcommand accepts `--help` for details (`csb rm --help`, `csb path --help`, …).
 
 ---
 

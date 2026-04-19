@@ -425,20 +425,131 @@ function parseConfig(content) {
   return { defaultBrain: defaultMatch ? defaultMatch[1] : null, brains, header }
 }
 
-function printHelp() {
-  const lines = [
-    `${pc.bold("claude-second-brain")} v${version}`,
-    "",
-    "Usage:",
-    `  ${pc.cyan("claude-second-brain")}                         create a new brain (interactive)`,
-    `  ${pc.cyan("claude-second-brain <name>")}                  create a new brain named <name>`,
-    `  ${pc.cyan("claude-second-brain ls")}                      list all brains`,
-    `  ${pc.cyan("claude-second-brain rm [<name>…]")}            remove one or more brains (space to multi-select)`,
-    `  ${pc.cyan("claude-second-brain path [--brain N] [flag]")} print a path (flags: --root, --qmd, --config)`,
-    `  ${pc.cyan("claude-second-brain qmd [--brain N] -- …")}    run qmd against the resolved brain`,
-    `  ${pc.cyan("claude-second-brain help")}                    show this message`,
-  ]
-  console.log(lines.join("\n"))
+function hasHelpFlag(args) {
+  return args.some(a => a === "--help" || a === "-h")
+}
+
+async function readConfigStatus() {
+  try {
+    const content = await readFile(CSB_CONFIG, "utf8")
+    const { defaultBrain, brains } = parseConfig(content)
+    return { defaultBrain, brains }
+  } catch {
+    return { defaultBrain: null, brains: [] }
+  }
+}
+
+function printHelp(topic = "top") {
+  const c = pc.cyan
+  const topics = {
+    top: async () => {
+      const { defaultBrain, brains } = await readConfigStatus()
+      const lines = [
+        `${pc.bold("claude-second-brain")} v${version}  ${pc.dim("(alias: csb)")}`,
+        "",
+        "Usage:",
+        `  ${c("csb")}                              create a new brain (interactive)`,
+        `  ${c("csb <name>")}                       create a new brain named <name>`,
+        `  ${c("csb ls")}                           list all brains (default marked with *)`,
+        `  ${c("csb use <name>")}                   set the default brain`,
+        `  ${c("csb rm [<name>…]")}                 remove brains + their folders`,
+        `  ${c("csb path [qmd|config|root]")}       print a path (default: root)`,
+        `  ${c("csb qmd [--brain N] <qmd args…>")}  run qmd against the resolved brain`,
+        `  ${c("csb exec [--brain N] -- <cmd…>")}   run a command inside the resolved brain`,
+        `  ${c("csb doctor")}                       verify your setup and suggest fixes`,
+        `  ${c("csb help [<command>]")}             show help for a command`,
+        "",
+        "Examples:",
+        `  ${c('csb qmd query -c wiki "distributed systems"')}`,
+        `  ${c("csb path qmd")}`,
+        `  ${c("csb use work")}`,
+        `  ${c("csb exec -- pnpm qmd:reindex")}`,
+        "",
+        `Config: ${pc.dim(CSB_CONFIG)}`,
+        brains.length === 0
+          ? pc.dim("No brains registered yet.")
+          : `Default brain: ${defaultBrain ? pc.cyan(defaultBrain) : pc.yellow("(none set — run `csb use <name>`)")}  ${pc.dim(`(${brains.length} registered)`)}`,
+      ]
+      console.log(lines.join("\n"))
+    },
+    path: () => console.log([
+      `${pc.bold("csb path")} — print a path for the default (or named) brain`,
+      "",
+      "Usage:",
+      `  ${c("csb path [qmd|config|root] [--brain <name>]")}`,
+      "",
+      "Positional (canonical):",
+      `  ${c("root")}    the brain's directory (default)`,
+      `  ${c("qmd")}     the brain's qmd SQLite index`,
+      `  ${c("config")}  the central config.toml`,
+      "",
+      "Flags:",
+      `  ${c("--brain <name>")}  target a specific brain instead of the default`,
+      `  ${c("--root | --qmd | --config")}  ${pc.dim("(deprecated — use positional form)")}`,
+    ].join("\n")),
+    qmd: () => console.log([
+      `${pc.bold("csb qmd")} — run qmd against the default (or named) brain`,
+      "",
+      "Usage:",
+      `  ${c("csb qmd [--brain <name>] [--] <qmd args…>")}`,
+      "",
+      `${pc.dim("`--` is optional; use it only to pass a literal `--brain` through to qmd.")}`,
+      "",
+      "Examples:",
+      `  ${c('csb qmd query -c wiki "kafka"')}`,
+      `  ${c("csb qmd --brain work search -c wiki kafka")}`,
+    ].join("\n")),
+    exec: () => console.log([
+      `${pc.bold("csb exec")} — run a command inside the resolved brain's directory`,
+      "",
+      "Usage:",
+      `  ${c("csb exec [--brain <name>] -- <cmd…>")}`,
+      "",
+      `Sets ${c("INDEX_PATH")} to the brain's qmd index and ${c("cwd")} to the brain's root.`,
+      "",
+      "Examples:",
+      `  ${c("csb exec -- pnpm qmd:reindex")}`,
+      `  ${c("csb exec --brain work -- git status")}`,
+    ].join("\n")),
+    use: () => console.log([
+      `${pc.bold("csb use")} — set the default brain`,
+      "",
+      "Usage:",
+      `  ${c("csb use <name>")}           ${pc.dim("(aliases: default, switch)")}`,
+      "",
+      "Rewrites the `default = …` line in config.toml. Affects every command that resolves the default brain (path, qmd, exec, global skills).",
+    ].join("\n")),
+    rm: () => console.log([
+      `${pc.bold("csb rm")} — remove one or more brains`,
+      "",
+      "Usage:",
+      `  ${c("csb rm [<name>…] [-y|--yes] [--delete-remote|--keep-remote]")}  ${pc.dim("(alias: remove)")}`,
+      "",
+      "Flags:",
+      `  ${c("-y, --yes")}         skip the confirmation prompt`,
+      `  ${c("--delete-remote")}   also delete GitHub/Cloudflare remotes (no prompt)`,
+      `  ${c("--keep-remote")}     keep remotes (no prompt)`,
+      "",
+      `${pc.dim("With -y and no remote flag, remotes are preserved (safe default).")}`,
+      `${pc.dim("Without -y and no remote flag, you'll be prompted per brain.")}`,
+    ].join("\n")),
+    ls: () => console.log([
+      `${pc.bold("csb ls")} — list all brains  ${pc.dim("(alias: list)")}`,
+      "",
+      "Prints each registered brain with its path, creation date, and remote.",
+      "The default brain is shown in bold with a `*` marker.",
+    ].join("\n")),
+    doctor: () => console.log([
+      `${pc.bold("csb doctor")} — verify your setup and suggest fixes`,
+      "",
+      "Checks required and optional tools (gh, mise, pnpm, wrangler),",
+      "the central config, each registered brain's path, and its qmd index.",
+      "Prints a `Fix:` hint under each failing check.",
+    ].join("\n")),
+  }
+  const renderer = topics[topic] || topics.top
+  const out = renderer()
+  if (out && typeof out.then === "function") return out
 }
 
 // Resolve a brain entry from config. Name defaults to the `default` field.
@@ -454,8 +565,8 @@ async function resolveBrain(name) {
   if (!target) {
     const available = brains.map(b => b.name).join(", ")
     const hint = available
-      ? `Pass --brain <name> (available: ${available}), or edit ${CSB_CONFIG} and set \`default = "<name>"\`.`
-      : `Run \`claude-second-brain <name>\` to create your first brain.`
+      ? `Quick fix: \`csb use <name>\` (available: ${available}), or pass --brain <name>.`
+      : `Run \`csb <name>\` to create your first brain.`
     throw new Error(`No default brain set in config.toml. ${hint}`)
   }
   const entry = brains.find(b => b.name === target)
@@ -466,17 +577,70 @@ async function resolveBrain(name) {
   return entry
 }
 
+// Rewrites config.toml so `name` is the new default. Returns {previous, current}.
+// Strips any existing `active = …` / `default = …` line from the header first.
+async function setDefaultBrain(name) {
+  let content
+  try {
+    content = await readFile(CSB_CONFIG, "utf8")
+  } catch {
+    throw new Error(`No config at ${CSB_CONFIG}. Run \`csb <name>\` to create your first brain.`)
+  }
+  const { defaultBrain, brains, header } = parseConfig(content)
+  if (!brains.find(b => b.name === name)) {
+    const available = brains.map(b => b.name).join(", ") || "(none)"
+    throw new Error(`No brain named "${name}". Available: ${available}.`)
+  }
+  if (defaultBrain === name) {
+    return { previous: name, current: name, changed: false }
+  }
+  const blocks = content.split(/\n(?=\[\[brains\]\])/)
+  let newHeader = (blocks[0] || "")
+    .replace(/^active\s*=\s*"[^"]*"\s*\n?/m, "")
+    .replace(/^default\s*=\s*"[^"]*"\s*\n?/m, "")
+    .replace(/^\s+|\s+$/g, "")
+  newHeader = `default = "${name}"${newHeader ? "\n" + newHeader : ""}`
+  const entries = blocks.slice(1).map(b => b.replace(/^\s+|\s+$/g, ""))
+  const out = [newHeader, ...entries].filter(Boolean).join("\n\n").trimEnd() + "\n"
+  await writeFile(CSB_CONFIG, out, "utf8")
+  return { previous: defaultBrain, current: name, changed: true }
+}
+
+async function cmdUse(args) {
+  const name = args.find(a => !a.startsWith("-"))
+  if (!name) {
+    throw new Error("Usage: csb use <name>")
+  }
+  const { previous, current, changed } = await setDefaultBrain(name)
+  if (!changed) {
+    console.log(`default is already ${pc.cyan(current)}`)
+    return
+  }
+  if (previous) {
+    console.log(`default: ${pc.dim(previous)} → ${pc.cyan(current)}`)
+  } else {
+    console.log(`default set to ${pc.cyan(current)}`)
+  }
+}
+
 async function cmdPath(args) {
-  // Parse flags: --brain <name>, --root | --qmd | --config (default: --root)
+  // Canonical:  csb path [qmd|config|root] [--brain <name>]
+  // Deprecated: csb path --qmd | --config | --root
   let name = null
-  let mode = "root"
+  let mode = null
+  let sawLegacyFlag = false
   for (let i = 0; i < args.length; i++) {
     const a = args[i]
     if (a === "--brain") { name = args[++i]; continue }
-    if (a === "--root")   { mode = "root"; continue }
-    if (a === "--qmd")    { mode = "qmd"; continue }
-    if (a === "--config") { mode = "config"; continue }
-    throw new Error(`Unknown path arg: ${a}`)
+    if (a === "--root")   { mode = "root";   sawLegacyFlag = true; continue }
+    if (a === "--qmd")    { mode = "qmd";    sawLegacyFlag = true; continue }
+    if (a === "--config") { mode = "config"; sawLegacyFlag = true; continue }
+    if (a === "root" || a === "qmd" || a === "config") { mode = a; continue }
+    throw new Error(`Unknown path arg: ${a}. Run \`csb help path\` for usage.`)
+  }
+  if (!mode) mode = "root"
+  if (sawLegacyFlag) {
+    process.stderr.write(`${pc.yellow("warning:")} \`--${mode}\` is deprecated — use \`csb path ${mode}\` instead.\n`)
   }
   if (mode === "config") {
     process.stdout.write(CSB_CONFIG + "\n")
@@ -487,8 +651,9 @@ async function cmdPath(args) {
   process.stdout.write(out + "\n")
 }
 
-async function cmdQmd(args) {
-  // `claude-second-brain qmd [--brain N] [--] <qmd args…>`
+// Parse [--brain <name>] [--] <rest…>. `--` is optional; use it only to pass a
+// literal `--brain` through to the inner command.
+function parseBrainAndRest(args) {
   let name = null
   const rest = []
   for (let i = 0; i < args.length; i++) {
@@ -497,12 +662,130 @@ async function cmdQmd(args) {
     if (a === "--") { rest.push(...args.slice(i + 1)); break }
     rest.push(a)
   }
-  const brain = await resolveBrain(name)
-  const result = spawnSync("npx", ["-y", "@tobilu/qmd", ...rest], {
+  return { name, rest }
+}
+
+async function runInBrain(brain, cmd) {
+  if (cmd.length === 0) {
+    throw new Error("No command to run. Usage: csb exec [--brain <name>] -- <cmd…>")
+  }
+  const result = spawnSync(cmd[0], cmd.slice(1), {
+    cwd: brain.path,
     stdio: "inherit",
     env: { ...process.env, INDEX_PATH: brain.qmd_index },
   })
   process.exit(result.status ?? 1)
+}
+
+async function cmdQmd(args) {
+  const { name, rest } = parseBrainAndRest(args)
+  const brain = await resolveBrain(name)
+  await runInBrain(brain, ["npx", "-y", "@tobilu/qmd", ...rest])
+}
+
+async function cmdExec(args) {
+  const { name, rest } = parseBrainAndRest(args)
+  const brain = await resolveBrain(name)
+  await runInBrain(brain, rest)
+}
+
+async function cmdDoctor() {
+  const toDisplayPath = p => p && p.startsWith(homedir()) ? "~" + p.slice(homedir().length) : p
+  const ok = s => `  ${pc.green("✓")} ${s}`
+  const warn = (s, fix) => `  ${pc.yellow("⚠")} ${s}${fix ? `\n    ${pc.dim("Fix:")} ${fix}` : ""}`
+  const fail = (s, fix) => `  ${pc.red("✗")} ${s}${fix ? `\n    ${pc.dim("Fix:")} ${fix}` : ""}`
+  const lines = []
+  let failures = 0
+  let warnings = 0
+
+  p.intro(`${pc.bgCyan(pc.black(" csb doctor "))} v${version}`)
+
+  // Tools
+  lines.push(pc.bold("Tools"))
+  lines.push(commandExists("gh")
+    ? ok("gh (GitHub CLI) installed")
+    : (warnings++, warn("gh (GitHub CLI) not installed — required for GitHub remotes", "brew install gh  |  https://cli.github.com")))
+  if (commandExists("gh")) {
+    const auth = spawnSync("gh", ["auth", "status"], { stdio: "pipe" })
+    lines.push(auth.status === 0
+      ? ok("gh authenticated")
+      : (warnings++, warn("gh is installed but not authenticated", "gh auth login")))
+  }
+  lines.push(commandExists("mise")
+    ? ok("mise installed")
+    : (failures++, fail("mise not installed — required for scaffolded vaults", "npm install -g @jdxcode/mise")))
+  lines.push(commandExists("wrangler") || commandExists("npx")
+    ? ok(commandExists("wrangler") ? "wrangler installed" : "wrangler available via npx (optional — for Cloudflare Artifacts)")
+    : (warnings++, warn("wrangler not installed — required only for Cloudflare Artifacts remotes", "npm install -g wrangler")))
+
+  // Config
+  lines.push("")
+  lines.push(pc.bold("Config"))
+  let parsed = null
+  try {
+    const content = await readFile(CSB_CONFIG, "utf8")
+    parsed = parseConfig(content)
+    lines.push(ok(`config readable at ${pc.dim(toDisplayPath(CSB_CONFIG))}`))
+  } catch {
+    failures++
+    lines.push(fail(`no config at ${toDisplayPath(CSB_CONFIG)}`, "csb <name>  # create your first brain"))
+  }
+
+  if (parsed) {
+    if (parsed.brains.length === 0) {
+      warnings++
+      lines.push(warn("no brains registered", "csb <name>  # create your first brain"))
+    } else {
+      lines.push(ok(`${parsed.brains.length} brain${parsed.brains.length === 1 ? "" : "s"} registered`))
+      if (parsed.defaultBrain) {
+        const entry = parsed.brains.find(b => b.name === parsed.defaultBrain)
+        if (entry) {
+          lines.push(ok(`default brain: ${pc.cyan(parsed.defaultBrain)}`))
+        } else {
+          failures++
+          lines.push(fail(`default brain "${parsed.defaultBrain}" is not registered`, `csb use <name>  # pick one of: ${parsed.brains.map(b => b.name).join(", ")}`))
+        }
+      } else {
+        warnings++
+        lines.push(warn("no default brain set", `csb use <name>  # pick one of: ${parsed.brains.map(b => b.name).join(", ")}`))
+      }
+    }
+
+    // Per-brain checks
+    if (parsed.brains.length > 0) {
+      lines.push("")
+      lines.push(pc.bold("Brains"))
+      for (const b of parsed.brains) {
+        lines.push(pc.cyan(b.name))
+        try {
+          await access(b.path)
+          lines.push(ok(`path exists: ${pc.dim(toDisplayPath(b.path))}`))
+        } catch {
+          failures++
+          lines.push(fail(`path missing: ${toDisplayPath(b.path)}`, `csb rm ${b.name}  # drop the dead entry, then recreate`))
+        }
+        try {
+          await access(b.qmd_index)
+          lines.push(ok(`qmd index exists: ${pc.dim(toDisplayPath(b.qmd_index))}`))
+        } catch {
+          warnings++
+          lines.push(warn(`qmd index missing: ${toDisplayPath(b.qmd_index)}`, `csb exec --brain ${b.name} -- pnpm qmd:reindex`))
+        }
+      }
+    }
+  }
+
+  p.note(lines.join("\n"), "Checks")
+
+  if (failures > 0) {
+    p.outro(`${pc.red(`${failures} failure${failures === 1 ? "" : "s"}`)}${warnings > 0 ? `, ${pc.yellow(`${warnings} warning${warnings === 1 ? "" : "s"}`)}` : ""}`)
+    process.exit(1)
+  }
+  if (warnings > 0) {
+    p.outro(`${pc.yellow(`${warnings} warning${warnings === 1 ? "" : "s"}`)}`)
+    return
+  }
+  p.outro(pc.green("all checks passed"))
 }
 
 async function listBrains() {
@@ -537,7 +820,7 @@ async function listBrains() {
   p.outro(defaultBrain ? `default: ${pc.cyan(defaultBrain)}` : "no default brain")
 }
 
-async function removeBrain(names, { yes = false } = {}) {
+async function removeBrain(names, { yes = false, remoteMode = "ask" } = {}) {
   p.intro(`${pc.bgCyan(pc.black(" claude-second-brain "))} v${version}`)
 
   let content
@@ -592,14 +875,27 @@ async function removeBrain(names, { yes = false } = {}) {
     }
   }
 
-  // Ask per-target whether to also delete the remote. Skip in -y mode — remote
-  // deletion is destructive beyond the local vault and requires explicit opt-in.
+  // Decide per-target whether to also delete the remote.
+  //   remoteMode === "keep"    → never delete remotes
+  //   remoteMode === "delete"  → always delete remotes (no prompt)
+  //   remoteMode === "ask"     → default: prompt unless -y (then keep)
   const remoteDecisions = new Map()
-  if (!yes) {
+  const resolvedRemoteMode =
+    remoteMode === "keep" ? "keep"
+      : remoteMode === "delete" ? "delete"
+        : yes ? "keep" : "ask"
+
+  if (resolvedRemoteMode !== "keep") {
     for (const target of targets) {
       const gh = parseGithubRepo(target.git_remote)
       const cf = parseCloudflareArtifact(target.git_remote)
       if (!gh && !cf) continue
+      if (resolvedRemoteMode === "delete") {
+        remoteDecisions.set(target.name, gh
+          ? { kind: "github", slug: gh }
+          : { kind: "cloudflare", namespace: cf.namespace, repo: cf.repo })
+        continue
+      }
       const label = gh ? `GitHub repo ${pc.cyan(gh)}` : `Cloudflare Artifact ${pc.cyan(`${cf.namespace}/${cf.repo}`)}`
       const ok = await p.confirm({
         message: `Also delete ${label} for "${target.name}"?`,
@@ -958,13 +1254,34 @@ async function createBrain(initialName) {
   p.outro("Happy knowledge building!")
 }
 
+const SUBCOMMANDS = new Set([
+  "help", "--help", "-h",
+  "ls", "list",
+  "rm", "remove",
+  "path",
+  "qmd",
+  "exec",
+  "use", "default", "switch",
+  "doctor",
+])
+
 async function main() {
   const [, , cmd, ...rest] = process.argv
 
   if (cmd === "help" || cmd === "--help" || cmd === "-h") {
-    printHelp()
+    // `csb help <topic>` or `csb help`
+    const topic = rest[0]
+    await printHelp(topic || "top")
     return
   }
+
+  // Per-subcommand --help / -h — intercept before any prompts run.
+  if (SUBCOMMANDS.has(cmd) && hasHelpFlag(rest)) {
+    const topicMap = { list: "ls", remove: "rm", default: "use", switch: "use" }
+    await printHelp(topicMap[cmd] || cmd)
+    return
+  }
+
   if (cmd === "ls" || cmd === "list") {
     await listBrains()
     return
@@ -972,7 +1289,13 @@ async function main() {
   if (cmd === "rm" || cmd === "remove") {
     const names = rest.filter(a => !a.startsWith("-"))
     const yes = rest.some(a => a === "-y" || a === "--yes")
-    await removeBrain(names, { yes })
+    const deleteRemote = rest.some(a => a === "--delete-remote")
+    const keepRemote = rest.some(a => a === "--keep-remote")
+    if (deleteRemote && keepRemote) {
+      throw new Error("Cannot use --delete-remote and --keep-remote together.")
+    }
+    const remoteMode = deleteRemote ? "delete" : keepRemote ? "keep" : "ask"
+    await removeBrain(names, { yes, remoteMode })
     return
   }
   if (cmd === "path") {
@@ -981,6 +1304,18 @@ async function main() {
   }
   if (cmd === "qmd") {
     await cmdQmd(rest)
+    return
+  }
+  if (cmd === "exec") {
+    await cmdExec(rest)
+    return
+  }
+  if (cmd === "use" || cmd === "default" || cmd === "switch") {
+    await cmdUse(rest)
+    return
+  }
+  if (cmd === "doctor") {
+    await cmdDoctor()
     return
   }
   await createBrain(cmd)
