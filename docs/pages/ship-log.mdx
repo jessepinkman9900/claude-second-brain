@@ -2,6 +2,19 @@
 
 A running record of every released version of `claude-second-brain` on npm. Newest releases first. For auto-generated notes and tags, see the [GitHub releases](https://github.com/jessepinkman9900/claude-second-brain/releases) page.
 
+## v1.1.0 — 2026-04-19
+
+CLI UX pass. Every addition is non-breaking — the `--` in `csb qmd -- …` and the `path --qmd` / `--config` / `--root` flag form continue to work, with a stderr deprecation notice on the flag form.
+
+**CLI:**
+- Added `csb use <name>` (aliases `default`, `switch`) to set the default brain without editing `~/.claude-second-brain/config.toml`. Runs the same header-rewrite path as `csb rm`.
+- Added `csb exec [--brain <name>] -- <cmd…>` — runs any command inside the resolved brain's directory with `INDEX_PATH` pre-set. `csb qmd` now delegates to the same helper.
+- Added `csb doctor` — checks for `gh` (+ auth), `mise`, `wrangler`, the central config, each brain's `path` and `qmd_index`, and whether the default brain resolves. Prints a `Fix:` hint under each failed check.
+- `csb path` now accepts positional subcommands: `csb path [qmd|config|root]`. The `--qmd` / `--config` / `--root` flag form still works with a stderr deprecation warning.
+- Every subcommand routes `--help` / `-h` to its own topic help. `csb help <command>` also prints per-command help. Top-level help shows the config path and current default brain.
+- `csb rm` gained `--delete-remote` and `--keep-remote` for scripting. Under `-y` with neither flag, remotes are preserved (safe default).
+- `resolveBrain()` error now points to `csb use <name>` as the fix.
+
 ## v1.0.0 — 2026-04-19
 
 First major release. Brains now live at `~/.claude-second-brain/<name>/` (not the repo root), and global skills resolve paths at call time via new CLI subcommands instead of baked-in paths. Existing single-brain installs: re-run `npx claude-second-brain <name>` to migrate. Legacy `active = …` in `config.toml` is auto-rewritten to `default = …`.

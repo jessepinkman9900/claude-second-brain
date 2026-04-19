@@ -109,6 +109,51 @@ jobs:
             absent_check "global $skill has no unpatched tokens"       '__QMD_PATH__\|__CSB_CONFIG__'                    "$HOME/.claude/skills/$skill/SKILL.md"
           done
 
+          # New CLI surface (v1.1+): use, positional path, exec, doctor.
+          VERSION=$(node -p "require('./package.json').version")
+          CSB="npx -y claude-second-brain-${VERSION}.tgz"
+
+          cmd_check() {
+            local label="$1"; local expected="$2"; shift 2
+            local actual
+            actual=$("$@" 2>/dev/null | tail -1)
+            if [ "$actual" = "$expected" ]; then
+              echo "PASS: $label"
+            else
+              echo "FAIL: $label — expected '$expected', got '$actual'"
+              fail=1
+            fi
+          }
+
+          # `csb use` — setting current default is a no-op but must succeed
+          if $CSB use test-vault > /dev/null 2>&1; then
+            echo "PASS: csb use test-vault"
+          else
+            echo "FAIL: csb use test-vault exited non-zero"; fail=1
+          fi
+
+          # `csb path qmd` (positional) should match `csb path --qmd` (legacy)
+          POS_QMD=$($CSB path qmd 2>/dev/null)
+          LEGACY_QMD=$($CSB path --qmd 2>/dev/null)
+          if [ "$POS_QMD" = "$LEGACY_QMD" ] && [ "$POS_QMD" = "$HOME/.claude-second-brain/test-vault/.qmd/index.sqlite" ]; then
+            echo "PASS: csb path qmd (positional = legacy flag)"
+          else
+            echo "FAIL: csb path qmd — positional='$POS_QMD' legacy='$LEGACY_QMD'"; fail=1
+          fi
+
+          # `csb path config` (positional) prints central config path
+          cmd_check "csb path config" "$HOME/.claude-second-brain/config.toml" $CSB path config
+
+          # `csb exec -- pwd` runs inside the resolved brain's root
+          cmd_check "csb exec -- pwd" "$HOME/.claude-second-brain/test-vault" $CSB exec -- pwd
+
+          # `csb doctor` exits 0 on a freshly-scaffolded brain
+          if $CSB doctor > /dev/null 2>&1; then
+            echo "PASS: csb doctor exits 0"
+          else
+            echo "FAIL: csb doctor exited non-zero on fresh scaffold"; fail=1
+          fi
+
           if [ "$fail" -ne 0 ]; then
             echo ""
             echo "One or more checks failed."

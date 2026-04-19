@@ -152,6 +152,39 @@ RESOLVED_B=$(npx -y claude-second-brain-$(node -p "require('./package.json').ver
 [ "$RESOLVED_B" = "$HOME/.claude-second-brain/test-brain-b" ] && echo "PASS: --brain overrides default" || echo "FAIL: --brain returned '$RESOLVED_B'"
 ```
 
+### Step 9b — Verify new CLI surface (v1.1+)
+
+```bash
+CSB="npx -y claude-second-brain-$(node -p "require('./package.json').version").tgz"
+
+# `csb use` — switch default to brain-b, then back
+$CSB use test-brain-b > /dev/null && echo "PASS: csb use test-brain-b" || echo "FAIL: csb use test-brain-b"
+grep -q 'default = "test-brain-b"' ~/.claude-second-brain/config.toml && echo "PASS: default switched to brain-b" || echo "FAIL: default did not switch"
+$CSB use test-brain-a > /dev/null && echo "PASS: csb use test-brain-a (switch back)" || echo "FAIL: csb use test-brain-a"
+grep -q 'default = "test-brain-a"' ~/.claude-second-brain/config.toml && echo "PASS: default back to brain-a" || echo "FAIL: default did not revert"
+
+# `csb path qmd` (positional) should match legacy `csb path --qmd`
+POS_QMD=$($CSB path qmd)
+LEGACY_QMD=$($CSB path --qmd 2>/dev/null)
+[ "$POS_QMD" = "$LEGACY_QMD" ] && [ "$POS_QMD" = "$HOME/.claude-second-brain/test-brain-a/.qmd/index.sqlite" ] \
+  && echo "PASS: csb path qmd (positional = legacy flag)" \
+  || echo "FAIL: positional='$POS_QMD' legacy='$LEGACY_QMD'"
+
+# `csb path config` (positional) prints central config path
+[ "$($CSB path config)" = "$HOME/.claude-second-brain/config.toml" ] && echo "PASS: csb path config" || echo "FAIL: csb path config"
+
+# `csb exec -- pwd` runs inside the resolved brain's root
+PWD_OUT=$($CSB exec -- pwd)
+[ "$PWD_OUT" = "$HOME/.claude-second-brain/test-brain-a" ] && echo "PASS: csb exec -- pwd" || echo "FAIL: csb exec -- pwd returned '$PWD_OUT'"
+
+# `csb doctor` exits 0 on a fresh scaffold
+$CSB doctor > /dev/null 2>&1 && echo "PASS: csb doctor exits 0" || echo "FAIL: csb doctor exited non-zero"
+
+# Per-subcommand --help routes to topic help instead of falling through to createBrain
+$CSB rm --help 2>&1 | grep -q "csb rm —" && echo "PASS: csb rm --help" || echo "FAIL: csb rm --help fell through"
+$CSB path --help 2>&1 | grep -q "csb path —" && echo "PASS: csb path --help" || echo "FAIL: csb path --help fell through"
+```
+
 ### Step 10 — Final checklist
 
 | Item | Expected | Pass? |
@@ -169,6 +202,12 @@ RESOLVED_B=$(npx -y claude-second-brain-$(node -p "require('./package.json').ver
 | No unpatched tokens | No `__QMD_PATH__`, `__CSB_CONFIG__`, `__BRAIN_NAME__` anywhere in vault | |
 | `~/.claude-second-brain/config.toml` | Present with `default = "test-brain-a"` and 2 `[[brains]]` entries | |
 | Global skills (`~/.claude/skills/brain-{ingest,search,refresh}/SKILL.md`) | Present; reference `claude-second-brain path` + `claude-second-brain qmd`; `.csb-version` sidecar matches package version | |
+| `csb use <name>` | Rewrites `default = "…"` in config.toml | |
+| `csb path qmd` (positional) | Equal to `csb path --qmd` | |
+| `csb path config` (positional) | Prints `~/.claude-second-brain/config.toml` | |
+| `csb exec -- pwd` | Prints the resolved brain's directory | |
+| `csb doctor` | Exits 0 on a fresh scaffold | |
+| `csb <subcommand> --help` | Each subcommand routes to its own topic help (no fall-through to createBrain) | |
 
 ### Step 11 — Clean up
 
