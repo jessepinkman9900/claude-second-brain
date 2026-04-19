@@ -1,6 +1,6 @@
 ---
 name: release
-description: "Full release flow for claude-second-brain: resolves the next version, updates the docs site + ship log via /update-docs, then bumps package.json and opens a single PR containing both the docs commit and the version bump via /package-release. Trigger phrases: /release, ship a new version, cut a release, prepare a release."
+description: "Full release flow for claude-second-brain: resolves the next version, audits CI workflows via /update-workflows, syncs docs + ship log via /update-docs, then bumps package.json and opens a single PR containing all three commits via /package-release. Trigger phrases: /release, ship a new version, cut a release, prepare a release."
 argument-hint: "Optional: patch | minor | major | exact version (e.g. 0.2.0). Leave blank for auto-suggestion."
 ---
 
@@ -9,13 +9,15 @@ argument-hint: "Optional: patch | minor | major | exact version (e.g. 0.2.0). Le
 Orchestrates a complete release for `claude-second-brain`:
 
 1. Resolve the target version.
-2. Run `/update-docs` so the docs site and ship log reflect what's shipping (ship log entry uses the target version).
-3. Commit the docs changes.
-4. Run `/package-release` to bump `package.json`, commit, push, and open the PR.
+2. Run `/update-workflows` to catch `pack-test.yml` drift before CI sees it.
+3. Commit any workflow edits.
+4. Run `/update-docs` so the docs site and ship log reflect what's shipping (ship log entry uses the target version).
+5. Commit the docs changes.
+6. Run `/package-release` to bump `package.json`, commit, push, and open the PR.
 
-The result is **one PR** containing both the docs commit and the version-bump commit.
+The result is **one PR** containing up to three commits (workflows → docs → version) so CI passes on first push.
 
-If you only want one half, run `/update-docs` or `/package-release` directly — each is usable standalone.
+If you only want one half, run `/update-workflows`, `/update-docs`, or `/package-release` directly — each is usable standalone.
 
 ## Preconditions
 
@@ -45,7 +47,26 @@ Apply the same semver logic `/package-release` uses:
 
 Record the resolved version as `vX.Y.Z` for the rest of the flow.
 
-### Step 2 — Run /update-docs
+### Step 2 — Run /update-workflows
+
+Invoke the `update-workflows` skill. When it asks for approval of its proposal, forward it to the user and wait.
+
+If the audit reports "pack-test is in sync — nothing to update," skip to Step 4.
+
+Let `/update-workflows` apply its edits.
+
+### Step 3 — Commit workflow changes
+
+If `/update-workflows` modified any files (check `git status`):
+
+```bash
+git add .github/workflows/pack-test.yml .claude/skills/pack-test/SKILL.md
+git commit -m "chore(ci): sync pack-test with current repo state"
+```
+
+If nothing changed, skip this step.
+
+### Step 4 — Run /update-docs
 
 Invoke the `update-docs` skill. When it asks for approval of its proposal, forward that proposal to the user and wait.
 
@@ -53,7 +74,7 @@ Invoke the `update-docs` skill. When it asks for approval of its proposal, forwa
 
 Let `/update-docs` apply its edits.
 
-### Step 3 — Commit docs changes
+### Step 5 — Commit docs changes
 
 If `/update-docs` modified any files (check `git status`):
 
@@ -64,28 +85,29 @@ git commit -m "chore(docs): update ship log and docs for vX.Y.Z"
 
 If nothing changed, skip this step.
 
-### Step 4 — Run /package-release
+### Step 6 — Run /package-release
 
 Invoke `/package-release <arg>` with the version resolved in Step 1 (e.g. `/package-release 0.8.0`). It will:
 
 - Bump `package.json` to `X.Y.Z`
 - Commit the bump (`chore: bump version to X.Y.Z`)
 - Push the branch
-- Open a PR — whose commit list will include both your docs commit from Step 3 and the version-bump commit
+- Open a PR — whose commit list will include any workflow commit from Step 3, any docs commit from Step 5, and the version-bump commit
 
-### Step 5 — Report
+### Step 7 — Report
 
-Tell the user:
+Tell the user which commits landed in the PR — omit any step that was skipped:
 
 > **Release PR opened:** [url]
 >
-> - Docs commit: `chore(docs): update ship log and docs for vX.Y.Z`
+> - Workflow commit: `chore(ci): sync pack-test with current repo state` *(if applicable)*
+> - Docs commit: `chore(docs): update ship log and docs for vX.Y.Z` *(if applicable)*
 > - Version commit: `chore: bump version to X.Y.Z`
 >
 > After merge, `release-publish.yml` tags `vX.Y.Z`, creates a GitHub Release, and publishes `claude-second-brain@X.Y.Z` to npm.
 
 ## What can go wrong
 
-- **User declines docs proposal** — stop; do not proceed to `/package-release`. The branch is left with no changes and can be retried.
-- **Version mismatch between ship log and `package.json`** — Step 2's correction gate prevents this; if it slips through, the PR reviewer will catch it. Fix by amending the docs commit before merge.
+- **User declines workflow or docs proposal** — stop; do not proceed to `/package-release`. The branch is left with whatever has already been committed; retry after resolving the concern.
+- **Version mismatch between ship log and `package.json`** — Step 4's correction gate prevents this; if it slips through, the PR reviewer will catch it. Fix by amending the docs commit before merge.
 - **Nothing to release** — if `git log main..HEAD` is empty, abort.
