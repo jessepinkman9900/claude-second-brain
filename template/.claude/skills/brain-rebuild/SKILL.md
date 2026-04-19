@@ -66,7 +66,7 @@ Edit `scripts/qmd/setup.ts` to reflect the new schema:
 If collection names changed:
 
 - Update every occurrence in `CLAUDE.md` (e.g. `qmd query -c wiki` → new name)
-- Update `.claude/skills/brain-ingest/SKILL.md`, `.claude/skills/brain-search/SKILL.md`, `.claude/skills/lint/SKILL.md`, `.claude/skills/qmd-cli/SKILL.md` — anywhere collection names are hard-coded
+- Update `.claude/skills/brain-ingest/SKILL.md`, `.claude/skills/brain-search/SKILL.md`, `.claude/skills/lint/SKILL.md` — anywhere collection names are hard-coded
 - Use Grep to find any remaining stale references before moving on
 
 ### Step 7 — Tear down the old schema

@@ -19,12 +19,12 @@ The wiki ships with a set of Claude Code slash commands that cover the full work
 
 ## Install or update skills
 
-`/brain-ingest`, `/brain-search`, and `/brain-refresh` install globally to `~/.claude/skills/` during setup so they work in any Claude Code session. `/brain-rebuild`, `/lint`, `/setup`, and `/qmd-cli` live inside the vault at `.claude/skills/`.
+`/brain-ingest`, `/brain-search`, and `/brain-refresh` install globally to `~/.claude/skills/` during setup so they work in any Claude Code session. `/brain-rebuild`, `/lint`, and `/setup` live inside the vault at `.claude/skills/`.
 
 To pull in improvements from the latest template:
 
 ```bash
-# Install or update all 7 wiki skills
+# Install or update all 6 wiki skills
 npx skills add https://github.com/jessepinkman9900/claude-second-brain/tree/main/template/.claude/skills -a claude-code -y
 
 # Or update a specific skill
