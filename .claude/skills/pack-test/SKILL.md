@@ -60,6 +60,9 @@ VAULT_A=~/.claude-second-brain/test-brain-a
 # .gitignore renamed from .gitignore.template
 [ -f "$VAULT_A/.gitignore" ] && echo "PASS: .gitignore present" || echo "FAIL: .gitignore missing"
 
+# qmd:setup actually created the sqlite db (not just a non-fatal warning)
+[ -f "$VAULT_A/.qmd/index.sqlite" ] && echo "PASS: qmd:setup created index.sqlite" || echo "FAIL: qmd:setup did not create .qmd/index.sqlite"
+
 # Wiki stubs, raw-sources dirs, local skills, scripts
 ls $VAULT_A/wiki/ $VAULT_A/raw-sources/ $VAULT_A/.claude/skills/ $VAULT_A/scripts/qmd/
 

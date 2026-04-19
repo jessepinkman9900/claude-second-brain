@@ -11,6 +11,7 @@
  */
 
 import { createStore } from "@tobilu/qmd"
+import { mkdir } from "node:fs/promises"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -18,6 +19,7 @@ const VAULT = join(dirname(fileURLToPath(import.meta.url)), "../..")
 const DB = join(VAULT, ".qmd", "index.sqlite")
 
 try {
+  await mkdir(dirname(DB), { recursive: true })
   const store = await createStore({ dbPath: DB })
 
   console.log("Updating file index...")

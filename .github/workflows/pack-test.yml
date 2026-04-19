@@ -66,6 +66,7 @@ jobs:
           check "package.json"                             "$VAULT/package.json"
           check "CLAUDE.md"                                "$VAULT/CLAUDE.md"
           check "mise.toml"                                "$VAULT/mise.toml"
+          check ".qmd/index.sqlite (qmd:setup succeeded)"  "$VAULT/.qmd/index.sqlite"
           check "~/.claude-second-brain/config.toml"            "$HOME/.claude-second-brain/config.toml"
           check "~/.claude/skills/brain-ingest/SKILL.md"        "$HOME/.claude/skills/brain-ingest/SKILL.md"
           check "~/.claude/skills/brain-search/SKILL.md"        "$HOME/.claude/skills/brain-search/SKILL.md"
