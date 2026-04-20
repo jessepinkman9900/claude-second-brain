@@ -20,7 +20,10 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
+
+      - name: Install pnpm
+        run: npm install -g pnpm@10.8.0
 
       - name: Pack
         run: npm pack
