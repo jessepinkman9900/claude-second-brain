@@ -425,8 +425,10 @@ function parseConfig(content) {
   return { defaultBrain: defaultMatch ? defaultMatch[1] : null, brains, header }
 }
 
-function hasHelpFlag(args) {
-  return args.some(a => a === "--help" || a === "-h")
+function hasHelpFlag(args, forwardAfterSeparator = false) {
+  const separator = forwardAfterSeparator ? args.indexOf("--") : -1
+  const ownArgs = separator === -1 ? args : args.slice(0, separator)
+  return ownArgs.some(a => a === "--help" || a === "-h")
 }
 
 async function readConfigStatus() {
@@ -1276,7 +1278,7 @@ async function main() {
   }
 
   // Per-subcommand --help / -h — intercept before any prompts run.
-  if (SUBCOMMANDS.has(cmd) && hasHelpFlag(rest)) {
+  if (SUBCOMMANDS.has(cmd) && hasHelpFlag(rest, cmd === "exec" || cmd === "qmd")) {
     const topicMap = { list: "ls", remove: "rm", default: "use", switch: "use" }
     await printHelp(topicMap[cmd] || cmd)
     return
