@@ -1110,6 +1110,14 @@ async function cmdUse(args) {
   }
 }
 
+function brainFlagValue(args, index) {
+  const value = args[index + 1]
+  if (!value || value.startsWith("-")) {
+    throw new Error("--brain requires a brain name.")
+  }
+  return value
+}
+
 async function cmdPath(args) {
   // Canonical:  csb path [qmd|config|root] [--brain <name>]
   // Deprecated: csb path --qmd | --config | --root
@@ -1118,7 +1126,7 @@ async function cmdPath(args) {
   let sawLegacyFlag = false
   for (let i = 0; i < args.length; i++) {
     const a = args[i]
-    if (a === "--brain") { name = args[++i]; continue }
+    if (a === "--brain") { name = brainFlagValue(args, i); i++; continue }
     if (a === "--root")   { mode = "root";   sawLegacyFlag = true; continue }
     if (a === "--qmd")    { mode = "qmd";    sawLegacyFlag = true; continue }
     if (a === "--config") { mode = "config"; sawLegacyFlag = true; continue }
@@ -1145,7 +1153,7 @@ function parseBrainAndRest(args) {
   const rest = []
   for (let i = 0; i < args.length; i++) {
     const a = args[i]
-    if (a === "--brain") { name = args[++i]; continue }
+    if (a === "--brain") { name = brainFlagValue(args, i); i++; continue }
     if (a === "--") { rest.push(...args.slice(i + 1)); break }
     rest.push(a)
   }
