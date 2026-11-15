@@ -1541,6 +1541,12 @@ async function createBrain(initialName, { agents: explicitAgents = null, copy = 
     p.log.step(`Name of the brain?\n${pc.dim(targetName)}`)
   }
 
+  // The name is both a directory component and a TOML string. Reject path
+  // separators, traversal components and characters that corrupt the config.
+  if (!targetName.trim() || targetName === "." || targetName === ".." || /[/\\"\x00-\x1f\x7f]/.test(targetName)) {
+    throw new Error("Brain name must be a single directory name without quotes or control characters.")
+  }
+
   const toDisplayPath = p => p.startsWith(homedir()) ? "~" + p.slice(homedir().length) : p
   const qmdPath = join(CSB_ROOT, targetName, ".qmd", "index.sqlite")
 
