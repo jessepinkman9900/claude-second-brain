@@ -2,6 +2,20 @@
 
 A running record of every released version of `claude-second-brain` on npm. Newest releases first. For auto-generated notes and tags, see the [GitHub releases](https://github.com/jessepinkman9900/claude-second-brain/releases) page.
 
+## v1.2.1 — 2026-11-27
+
+Maintenance release: security updates and a tokenless release pipeline. No CLI or template changes.
+
+**Security:**
+- Refreshed dependencies to clear all Dependabot alerts (`pnpm audit`: 106 → 0). `@clack/prompts` is now `^1.9.0`; transitive docs-site deps (hono, vite, mermaid, dompurify, …) resolve to patched versions, with pnpm overrides for `toml`, `katex` and `@hono/node-server`.
+- Removed the stale `package-lock.json`; the repo uses pnpm only.
+
+**Release pipeline:**
+- npm releases use [trusted publishing](https://docs.npmjs.com/trusted-publishers) (OIDC) from `release-publish.yml` with `--provenance`, so no `NPM_TOKEN` is stored in the repo. npm comes from `mise.toml` (11.21.2; trusted publishing needs 11.5.1+). v1.2.0 was the first release published this way.
+
+**CI:**
+- Docs workflows install Playwright browsers from the locked version (1.65.1).
+
 ## v1.2.0 — 2026-11-27
 
 Works with any agent, not just Claude Code, plus a faster, unattended setup and first-class Cloudflare Artifacts git tokens. Existing installs: run `csb skills` once to move global skills from `~/.claude/skills` to `~/.agents/skills` (the old copies become symlinks).
