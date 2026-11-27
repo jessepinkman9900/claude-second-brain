@@ -56,7 +56,7 @@ During the interactive flow the CLI asks:
 * **Register qmd collections after install?** — confirms running `pnpm qmd:setup` once dependencies are installed.
 * **Install skills for which agents?** — multiselect; Claude Code and any detected agent are preselected.
 
-All questions are asked up front, so the rest of setup runs unattended. Long steps show a spinner with elapsed time and the latest output line. If `pnpm` 10+ is already on your `PATH`, it is used directly; otherwise the CLI installs mise (if needed) and runs `mise install` to fetch node + pnpm first. Set `CSB_USE_MISE=1` to always use mise. The closing **Next steps** box shows how to open each agent you picked (`claude`, `codex`, `cursor .`, …).
+All questions are asked up front, so the rest of setup runs unattended. Long steps show a spinner with elapsed time and the latest output line. If `pnpm` 10+ is already on your `PATH`, it is used directly; otherwise the CLI installs mise (if needed) and runs `mise install` to fetch node + pnpm first. Set `CSB_USE_MISE=1` to always use mise. The closing **Next steps** box shows how to open each agent you picked (`claude`, `codex`, `cursor .`, …). If the GitHub or Cloudflare remote can't be created or pushed, the brain is still created locally, **Next steps** lists the fix, and the CLI exits 1.
 
 ### List brains
 

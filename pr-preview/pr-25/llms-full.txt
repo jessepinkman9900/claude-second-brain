@@ -60,7 +60,7 @@ During the interactive flow the CLI asks:
 * **Register qmd collections after install?** — confirms running `pnpm qmd:setup` once dependencies are installed.
 * **Install skills for which agents?** — multiselect; Claude Code and any detected agent are preselected.
 
-All questions are asked up front, so the rest of setup runs unattended. Long steps show a spinner with elapsed time and the latest output line. If `pnpm` 10+ is already on your `PATH`, it is used directly; otherwise the CLI installs mise (if needed) and runs `mise install` to fetch node + pnpm first. Set `CSB_USE_MISE=1` to always use mise. The closing **Next steps** box shows how to open each agent you picked (`claude`, `codex`, `cursor .`, …).
+All questions are asked up front, so the rest of setup runs unattended. Long steps show a spinner with elapsed time and the latest output line. If `pnpm` 10+ is already on your `PATH`, it is used directly; otherwise the CLI installs mise (if needed) and runs `mise install` to fetch node + pnpm first. Set `CSB_USE_MISE=1` to always use mise. The closing **Next steps** box shows how to open each agent you picked (`claude`, `codex`, `cursor .`, …). If the GitHub or Cloudflare remote can't be created or pushed, the brain is still created locally, **Next steps** lists the fix, and the CLI exits 1.
 
 ### List brains
 
@@ -239,6 +239,10 @@ The CLI will ask:
 
 * **Brain name** — what to call this brain (default: `my-brain`)
 * **Git remote** — optionally host your vault on **[GitHub](/remotes/github)** (requires `gh` CLI) or **[Cloudflare Artifacts](/remotes/cloudflare-artifacts)** (requires a Cloudflare account + wrangler)
+* **Register qmd collections after install?** — runs `pnpm qmd:setup` once dependencies are installed
+* **Install skills for which agents?** — Claude Code plus any detected agent is preselected; see [Install skills for any agent](/cli#install-skills-for-any-agent)
+
+Every question is asked up front, so the rest of setup runs unattended.
 
 Creates the brain at `~/.claude-second-brain/my-brain/`, registers it in `~/.claude-second-brain/config.toml`, runs `pnpm install` (using your system pnpm 10+, or mise to fetch node + pnpm if it's missing), registers the qmd collections, installs the skills for the agents you picked, and runs `git init`.
 
@@ -282,7 +286,7 @@ See the [CLI Reference](/cli) for `ls`, `use`, `rm`, `path`, `qmd`, `exec`, `ski
 
 A running record of every released version of `claude-second-brain` on npm. Newest releases first. For auto-generated notes and tags, see the [GitHub releases](https://github.com/jessepinkman9900/claude-second-brain/releases) page.
 
-### Unreleased
+### v1.2.0 — 2026-11-27
 
 Works with any agent, not just Claude Code, plus a faster, unattended setup and first-class Cloudflare Artifacts git tokens. Existing installs: run `csb skills` once to move global skills from `~/.claude/skills` to `~/.agents/skills` (the old copies become symlinks).
 

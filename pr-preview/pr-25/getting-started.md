@@ -23,6 +23,10 @@ The CLI will ask:
 
 * **Brain name** — what to call this brain (default: `my-brain`)
 * **Git remote** — optionally host your vault on **[GitHub](/remotes/github)** (requires `gh` CLI) or **[Cloudflare Artifacts](/remotes/cloudflare-artifacts)** (requires a Cloudflare account + wrangler)
+* **Register qmd collections after install?** — runs `pnpm qmd:setup` once dependencies are installed
+* **Install skills for which agents?** — Claude Code plus any detected agent is preselected; see [Install skills for any agent](/cli#install-skills-for-any-agent)
+
+Every question is asked up front, so the rest of setup runs unattended.
 
 Creates the brain at `~/.claude-second-brain/my-brain/`, registers it in `~/.claude-second-brain/config.toml`, runs `pnpm install` (using your system pnpm 10+, or mise to fetch node + pnpm if it's missing), registers the qmd collections, installs the skills for the agents you picked, and runs `git init`.
 
