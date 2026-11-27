@@ -46,7 +46,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright chromium (for Vocs mermaid rendering)
-        run: pnpm exec playwright install --with-deps chromium  # uses the playwright version locked in pnpm-lock.yaml
+        run: pnpm dlx playwright@1.65.1 install --with-deps chromium  # keep in sync with playwright in pnpm-lock.yaml
 
       - name: Build docs
         run: pnpm run docs:build
