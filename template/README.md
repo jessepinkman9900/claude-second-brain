@@ -147,6 +147,12 @@ claude-second-brain/
 
 Skills are slash commands Claude Code loads from `.claude/skills/[name]/SKILL.md` in this vault. The wiki ships with `/brain-ingest`, `/brain-search`, `/brain-refresh`, `/brain-rebuild`, and `/lint` pre-installed.
 
+They follow the [Agent Skills](https://agentskills.io/specification) format, so other agents can use them too. The global skills (`/brain-ingest`, `/brain-search`, `/brain-refresh`) live in `~/.agents/skills/`, with symlinks from agent-specific folders such as `~/.claude/skills/`. The vault-local skills (`/brain-rebuild`, `/lint`) are copied into `.agents/skills/` (and other agent folders) for each agent you picked at setup. To add an agent later:
+
+```bash
+npx claude-second-brain skills --agent codex,cursor
+```
+
 ### Update built-in wiki skills
 
 Pull the latest skills from the upstream template:

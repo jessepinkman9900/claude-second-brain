@@ -265,7 +265,22 @@ Every subcommand accepts `--help` for details (`csb rm --help`, `csb path --help
 
 ## Installing and updating skills
 
-Skills are slash commands Claude Code loads from `.claude/skills/[name]/SKILL.md`. `/brain-ingest`, `/brain-search`, and `/brain-refresh` install globally to `~/.claude/skills/` during setup so they work in any Claude Code session. `/brain-rebuild` and `/lint` live inside the vault at `.claude/skills/`.
+The skills follow the [Agent Skills](https://agentskills.io/specification) format, so they work in Claude Code, Codex, Cursor, GitHub Copilot, Gemini CLI, OpenCode, Windsurf, Goose and more. `/brain-ingest`, `/brain-search`, and `/brain-refresh` install globally during setup; `/brain-rebuild` and `/lint` live inside the vault.
+
+Setup asks which agents to install for (Claude Code plus any agent it detects is preselected). It uses the same layout as [`npx skills`](https://github.com/vercel-labs/skills):
+
+- Global skills are written once to `~/.agents/skills/<name>`. Codex, Cursor, Copilot, Gemini CLI, OpenCode, Amp and Cline read that folder directly.
+- Agents with their own folder get a symlink to it, e.g. `~/.claude/skills/brain-search → ~/.agents/skills/brain-search` (or `~/.codeium/windsurf/skills`, `~/.config/goose/skills`, …). If symlinks aren't available, or you pass `--copy`, the skill is copied instead.
+- In the vault, `/brain-rebuild` and `/lint` live in `.claude/skills/` and are copied into each other selected agent's project folder (`.agents/skills/`, `.windsurf/skills/`, …).
+
+```bash
+# Pick agents up front (comma-separated, or `all`); CSB_AGENTS works too
+npx claude-second-brain my-brain --agent claude-code,codex,github-copilot
+
+# Add agents later, or update skills after upgrading
+npx claude-second-brain skills --agent cursor,windsurf
+npx claude-second-brain skills --list   # supported agents and their skills dirs
+```
 
 ### Update the built-in wiki skills
 
@@ -274,6 +289,9 @@ The wiki's own skills are scaffolded at creation time. To pull in improvements, 
 ```bash
 # Install or update all 5 wiki skills from the latest template
 npx skills add https://github.com/jessepinkman9900/claude-second-brain/tree/main/template/.claude/skills -a claude-code -y
+
+# Same, for other agents (npx skills asks which agents if you omit -a)
+npx skills add https://github.com/jessepinkman9900/claude-second-brain/tree/main/template/.claude/skills -a codex -a cursor -y
 
 # Or update a specific skill
 npx skills add https://github.com/jessepinkman9900/claude-second-brain/tree/main/template/.claude/skills --skill brain-ingest -a claude-code -y

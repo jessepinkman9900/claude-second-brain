@@ -8,9 +8,9 @@ argument-hint: "No arguments needed"
 
 Tests the npm package as it behaves when published. Uses `npx` to run from the local tarball — `pnpm dlx` doesn't support local tarball paths (it tries to resolve them as scoped package names). After publishing, `pnpm dlx claude-second-brain` from the registry works fine.
 
-Multi-brain architecture: brains live at `~/.claude-second-brain/<name>/` and are registered in `~/.claude-second-brain/config.toml`. Global skills (`~/.claude/skills/brain-*`) are plain SKILL.md files with a sibling `.csb-version` sidecar. They resolve paths at call time via the `claude-second-brain path` and `claude-second-brain qmd` subcommands — no paths are baked into the skills themselves.
+Multi-brain architecture: brains live at `~/.claude-second-brain/<name>/` and are registered in `~/.claude-second-brain/config.toml`. Global skills are plain SKILL.md files with a sibling `.csb-version` sidecar, written once to `~/.agents/skills/brain-*` (the shared Agent Skills dir that Codex, Cursor, Copilot, etc. read) and symlinked from `~/.claude/skills/brain-*` and other selected agents' global dirs. They resolve paths at call time via the `claude-second-brain path` and `claude-second-brain qmd` subcommands — no paths are baked into the skills themselves.
 
-**Important:** This test mutates `~/.claude-second-brain/` and `~/.claude/skills/brain-*`. If the user has real brains registered, warn them before running — cleanup removes `config.toml` and the test brains, which does NOT delete their real brain folders but DOES remove their registry entries and overwrite their global skills.
+**Important:** This test mutates `~/.claude-second-brain/`, `~/.agents/skills/brain-*`, `~/.claude/skills/brain-*`, and (Step 9c) `~/.codeium/windsurf/skills/` and `~/.config/goose/skills/`. If the user has real brains registered, warn them before running — cleanup removes `config.toml` and the test brains, which does NOT delete their real brain folders but DOES remove their registry entries and overwrite their global skills.
 
 ## Steps
 
@@ -109,6 +109,10 @@ for skill in brain-ingest brain-search brain-refresh; do
   # No lingering tokens, no baked absolute paths
   ! grep -q "__QMD_PATH__\|__CSB_CONFIG__\|INDEX_PATH=\$QMD_INDEX\|INDEX_PATH=/" $FILE && echo "PASS: $skill clean" || echo "FAIL: $skill still has legacy substitutions"
 
+  # Claude Code's copy is a symlink to the canonical ~/.agents/skills copy
+  [ -L ~/.claude/skills/$skill ] && echo "PASS: ~/.claude/skills/$skill is a symlink" || echo "FAIL: ~/.claude/skills/$skill is not a symlink"
+  [ -f ~/.agents/skills/$skill/SKILL.md ] && echo "PASS: canonical ~/.agents/skills/$skill" || echo "FAIL: canonical ~/.agents/skills/$skill missing"
+
   # Version sidecar exists and matches package version
   [ -f "$SIDECAR" ] && echo "PASS: $skill .csb-version present" || echo "FAIL: $skill missing .csb-version"
   PKG_VER=$(node -p "require('./package.json').version")
@@ -185,6 +189,29 @@ $CSB rm --help 2>&1 | grep -q "csb rm —" && echo "PASS: csb rm --help" || echo
 $CSB path --help 2>&1 | grep -q "csb path —" && echo "PASS: csb path --help" || echo "FAIL: csb path --help fell through"
 ```
 
+### Step 9c — Verify multi-agent install (`csb skills`)
+
+```bash
+CSB="npx -y claude-second-brain-$(node -p "require('./package.json').version").tgz"
+VAULT_A=~/.claude-second-brain/test-brain-a
+
+$CSB skills --list | grep -q "github-copilot" && echo "PASS: csb skills --list" || echo "FAIL: csb skills --list"
+
+# windsurf = own dir (symlink), codex = universal (reads ~/.agents/skills)
+$CSB skills --agent windsurf,codex > /dev/null && echo "PASS: csb skills --agent windsurf,codex" || echo "FAIL: csb skills --agent windsurf,codex"
+[ -L ~/.codeium/windsurf/skills/brain-search ] && echo "PASS: windsurf symlink" || echo "FAIL: windsurf symlink missing"
+# Vault-local skills copied into the default brain for those agents
+[ -f "$VAULT_A/.agents/skills/lint/SKILL.md" ] && echo "PASS: vault .agents/skills/lint" || echo "FAIL: vault .agents/skills/lint missing"
+[ -f "$VAULT_A/.windsurf/skills/brain-rebuild/SKILL.md" ] && echo "PASS: vault .windsurf/skills/brain-rebuild" || echo "FAIL: vault .windsurf/skills/brain-rebuild missing"
+
+# --copy writes real dirs
+$CSB skills --agent goose --copy > /dev/null
+[ -f ~/.config/goose/skills/brain-search/SKILL.md ] && [ ! -L ~/.config/goose/skills/brain-search ] && echo "PASS: goose --copy" || echo "FAIL: goose --copy"
+
+# Unknown agent ids are rejected
+! $CSB skills --agent not-an-agent > /dev/null 2>&1 && echo "PASS: unknown agent rejected" || echo "FAIL: unknown agent accepted"
+```
+
 ### Step 10 — Final checklist
 
 | Item | Expected | Pass? |
@@ -196,6 +223,9 @@ $CSB path --help 2>&1 | grep -q "csb path —" && echo "PASS: csb path --help" |
 | `wiki/{index,log,overview}.md`, `sources/`, `qa/` | Present in both brains | |
 | `raw-sources/{articles,pdfs,personal}/` | Present in both brains | |
 | `.claude/skills/` — 5 subdirs | brain-ingest, brain-search, brain-refresh, brain-rebuild, lint | |
+| `~/.agents/skills/brain-{ingest,search,refresh}/` | Real dirs with SKILL.md + `.csb-version` | |
+| `~/.claude/skills/brain-{ingest,search,refresh}` | Symlinks to `~/.agents/skills/…` | |
+| `csb skills --agent windsurf,codex` | Windsurf symlinks + vault `.agents/skills/{lint,brain-rebuild}` | |
 | `scripts/qmd/{setup,reindex}.ts` | Present in both brains, DB hardcoded to `.qmd/index.sqlite` relative | |
 | `CLAUDE.md`, `mise.toml`, `package.json` | Present in both brains | |
 | `CLAUDE.md` INDEX_PATH | Relative `INDEX_PATH=.qmd/index.sqlite` (no absolute substitution) | |
@@ -216,6 +246,8 @@ rm -rf ~/.claude-second-brain/test-brain-a
 rm -rf ~/.claude-second-brain/test-brain-b
 rm -f ~/.claude-second-brain/config.toml
 rm -rf ~/.claude/skills/brain-ingest ~/.claude/skills/brain-search ~/.claude/skills/brain-refresh
+rm -rf ~/.agents/skills/brain-ingest ~/.agents/skills/brain-search ~/.agents/skills/brain-refresh
+rm -rf ~/.codeium/windsurf/skills/brain-* ~/.config/goose/skills/brain-*
 rm claude-second-brain-$(node -p "require('./package.json').version").tgz
 
 # Restore backed-up config if it existed
