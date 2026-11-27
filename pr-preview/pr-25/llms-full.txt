@@ -275,11 +275,11 @@ See the [CLI Reference](/cli) for `ls`, `use`, `rm`, `path`, `qmd`, `exec`, `ski
 
 ### Access from anywhere
 
-**Edit anywhere — Claude Code on desktop or mobile.** Claude Code's GitHub integration lets you open the repo and work from anywhere — ingest a source, run a query, or update a page from your phone.
+**Edit anywhere — your agent on desktop, web or mobile.** The vault is a plain git repo, so any agent that can clone it can work on it: run it locally, or use a cloud agent with GitHub access (Claude Code on the web and mobile, Codex cloud, Copilot coding agent, Cursor background agents, …) to ingest a source, run a query, or update a page from your phone.
 
 **Read anywhere — Obsidian desktop and mobile.** Open the repo as an Obsidian vault. The bundled `.obsidian` folder pre-configures [obsidian-git](https://github.com/Vinzent03/obsidian-git) — no setup required. Your wiki syncs automatically on every commit. For iOS: put the repo folder inside iCloud Drive — Obsidian Mobile picks it up natively.
 
-**Browse anywhere — GitHub.** It's a plain GitHub repo. View and edit files directly in the browser at any time.
+**Browse anywhere — your git host.** It's a plain git repo. On GitHub (or any host with a web UI), view and edit files directly in the browser at any time.
 
 
 ## Ship log
@@ -318,6 +318,7 @@ Works with any agent, not just Claude Code, plus a faster, unattended setup and 
 
 * `csb doctor` accepts system pnpm 10+ in place of mise and checks that the global skills in `~/.agents/skills` match the installed release.
 * README, docs and package description say "any agent" and "git" (GitHub, Cloudflare Artifacts, or any remote) instead of Claude Code and GitHub only.
+* "Claude reads it" and similar wording is now agent-neutral, and "Access from anywhere" covers any local or cloud agent and any git host.
 
 ### v1.1.0 — 2026-04-19
 
@@ -486,8 +487,8 @@ The wiki ships with a set of [Agent Skills](https://agentskills.io) that cover t
 
 ### Daily workflow
 
-* [**`/brain-ingest`**](/skills/brain-ingest) — Drop a file into `raw-sources/`. Claude summarizes the source, creates a `wiki/sources/` page, updates related topic pages, and flags contradictions.
-* [**`/brain-search`**](/skills/brain-search) — Ask anything. Claude runs hybrid search, reads the most relevant pages, and writes an answer with inline `[[wiki/page]]` citations.
+* [**`/brain-ingest`**](/skills/brain-ingest) — Drop a file into `raw-sources/`. Your agent summarizes the source, creates a `wiki/sources/` page, updates related topic pages, and flags contradictions.
+* [**`/brain-search`**](/skills/brain-search) — Ask anything. Your agent runs hybrid search, reads the most relevant pages, and writes an answer with inline `[[wiki/page]]` citations.
 * [**`/lint`**](/skills/lint) — Health-check the wiki. Surfaces orphan pages, broken links, unresolved contradictions, and data gaps.
 
 ### Maintenance
@@ -528,7 +529,7 @@ npx skills update -a claude-code
 
 Ingest a new source into the wiki.
 
-Drop a file into `raw-sources/articles/`, `raw-sources/pdfs/`, or `raw-sources/personal/`, then run `/brain-ingest`. Claude will:
+Drop a file into `raw-sources/articles/`, `raw-sources/pdfs/`, or `raw-sources/personal/`, then run `/brain-ingest`. Your agent will:
 
 1. **Read** the source in full.
 2. **Summarize** it in 3–5 bullets and ask you what matters most.
@@ -678,7 +679,7 @@ For iOS: place the repo folder inside iCloud Drive — Obsidian Mobile picks it 
 
 ## How it works
 
-Sources flow in on the left, Claude synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and git makes the whole vault editable from Obsidian and your agent on any device.
+Sources flow in on the left, your agent synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and git makes the whole vault editable from Obsidian and your agent on any device.
 
 ```mermaid
 flowchart TB
@@ -713,7 +714,7 @@ flowchart TB
   subgraph Read["Read / edit anywhere"]
     direction LR
     OB["Obsidian<br/>graph · backlinks · mobile"]
-    CC["Claude Code<br/>desktop + mobile"]
+    CC["Your agent<br/>desktop, web + mobile"]
   end
 
   User((you))
@@ -750,12 +751,12 @@ Query it anytime with `/brain-search`. Get answers with inline `[[wiki/page]]` c
 
 ```
 my-brain/
-├── CLAUDE.md              ← The schema. Claude reads this every session.
-├── raw-sources/           ← Your raw inputs. Claude never modifies these.
+├── CLAUDE.md              ← The schema. Your agent reads this every session.
+├── raw-sources/           ← Your raw inputs. The agent never modifies these.
 │   ├── articles/
 │   ├── pdfs/
 │   └── personal/
-├── wiki/                  ← Claude owns this entirely.
+├── wiki/                  ← The agent owns this entirely.
 │   ├── index.md
 │   ├── log.md
 │   ├── overview.md
@@ -767,7 +768,7 @@ my-brain/
 
 ## Wiki schema
 
-The authoritative schema lives in [CLAUDE.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/CLAUDE.md) — Claude reads it at the start of every session. This page is a readable summary.
+The authoritative schema lives in [CLAUDE.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/CLAUDE.md) — your agent reads it at the start of every session (agents that look for `AGENTS.md` are pointed to it). This page is a readable summary.
 
 ### Page types
 
@@ -812,7 +813,7 @@ my-brain/
 │   ├── articles/
 │   ├── pdfs/
 │   └── personal/
-└── wiki/                  ← Claude-owned knowledge base
+└── wiki/                  ← Agent-owned knowledge base
     ├── index.md
     ├── log.md
     ├── overview.md
@@ -823,7 +824,7 @@ my-brain/
 ### Hard rules
 
 1. Nothing in `raw-sources/` is ever modified — they are immutable raw inputs.
-2. Only `wiki/` is owned by Claude; the rest of the vault is untouched.
+2. Only `wiki/` is owned by the agent; the rest of the vault is untouched.
 3. `wiki/log.md` is append-only, never overwritten.
 4. One source summary per ingested source in `wiki/sources/` — never merged.
 5. Every wiki page has frontmatter with at least `type` and `updated`.
