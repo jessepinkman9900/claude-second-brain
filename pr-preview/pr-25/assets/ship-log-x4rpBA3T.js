@@ -1,5 +1,36 @@
-import{u as s,j as e}from"./index-DayVryv4.js";const l={title:"Ship log",description:"undefined"};function i(d){const n={a:"a",code:"code",div:"div",h1:"h1",h2:"h2",header:"header",li:"li",p:"p",strong:"strong",ul:"ul",...s(),...d.components};return e.jsxs(e.Fragment,{children:[e.jsx(n.header,{children:e.jsxs(n.h1,{id:"ship-log",children:["Ship log",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#ship-log",children:e.jsx(n.div,{"data-autolink-icon":!0})})]})}),`
+import{u as d,j as e}from"./index-D-L3Vri6.js";const l={title:"Ship log",description:"undefined"};function i(s){const n={a:"a",code:"code",div:"div",h1:"h1",h2:"h2",header:"header",li:"li",p:"p",strong:"strong",ul:"ul",...d(),...s.components};return e.jsxs(e.Fragment,{children:[e.jsx(n.header,{children:e.jsxs(n.h1,{id:"ship-log",children:["Ship log",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#ship-log",children:e.jsx(n.div,{"data-autolink-icon":!0})})]})}),`
 `,e.jsxs(n.p,{children:["A running record of every released version of ",e.jsx(n.code,{children:"claude-second-brain"})," on npm. Newest releases first. For auto-generated notes and tags, see the ",e.jsx(n.a,{href:"https://github.com/jessepinkman9900/claude-second-brain/releases",children:"GitHub releases"})," page."]}),`
+`,e.jsxs(n.h2,{id:"unreleased",children:["Unreleased",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#unreleased",children:e.jsx(n.div,{"data-autolink-icon":!0})})]}),`
+`,e.jsxs(n.p,{children:["Works with any agent, not just Claude Code, plus a faster, unattended setup and first-class Cloudflare Artifacts git tokens. Existing installs: run ",e.jsx(n.code,{children:"csb skills"})," once to move global skills from ",e.jsx(n.code,{children:"~/.claude/skills"})," to ",e.jsx(n.code,{children:"~/.agents/skills"})," (the old copies become symlinks)."]}),`
+`,e.jsx(n.strong,{children:"Agents:"}),`
+`,e.jsxs(n.ul,{children:[`
+`,e.jsxs(n.li,{children:["Skills install for any ",e.jsx(n.a,{href:"https://agentskills.io",children:"Agent Skills"})," agent, with the same layout as ",e.jsx(n.code,{children:"npx skills"}),": global skills are written once to ",e.jsx(n.code,{children:"~/.agents/skills/<name>"})," and symlinked into agent-specific dirs (",e.jsx(n.code,{children:"~/.claude/skills"}),", ",e.jsx(n.code,{children:"~/.codeium/windsurf/skills"}),", ",e.jsx(n.code,{children:"~/.config/goose/skills"}),", …). Supported: Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, OpenCode, Amp, Cline, Windsurf, Goose, Kiro CLI, Roo Code, Continue, Junie, Augment."]}),`
+`,e.jsxs(n.li,{children:["Vault-local skills (",e.jsx(n.code,{children:"brain-rebuild"}),", ",e.jsx(n.code,{children:"lint"}),") are copied into each selected agent's project skills dir (",e.jsx(n.code,{children:".agents/skills/"}),", ",e.jsx(n.code,{children:".windsurf/skills/"}),", …)."]}),`
+`,e.jsxs(n.li,{children:["New ",e.jsx(n.code,{children:"--agent, -a <ids>"})," (comma-separated or ",e.jsx(n.code,{children:"all"}),") and ",e.jsx(n.code,{children:"CSB_AGENTS"})," to pick agents; ",e.jsx(n.code,{children:"--copy"})," to copy instead of symlink. Interactive setup preselects Claude Code plus every detected agent."]}),`
+`,e.jsxs(n.li,{children:["New ",e.jsx(n.code,{children:"csb skills [--agent <ids>] [--copy] [--brain <name>]"})," to add agents or update skills later, and ",e.jsx(n.code,{children:"csb skills --list"})," to show supported agents and their skills dirs."]}),`
+`,e.jsxs(n.li,{children:["New vaults ship an ",e.jsx(n.code,{children:"AGENTS.md"})," that points Codex, Cursor, Copilot and other agents at ",e.jsx(n.code,{children:"CLAUDE.md"}),"."]}),`
+`,e.jsxs(n.li,{children:["The ",e.jsx(n.strong,{children:"Next steps"})," box shows how to open each agent you picked (",e.jsx(n.code,{children:"claude"}),", ",e.jsx(n.code,{children:"codex"}),", ",e.jsx(n.code,{children:"cursor ."}),", …)."]}),`
+`]}),`
+`,e.jsx(n.strong,{children:"Setup:"}),`
+`,e.jsxs(n.ul,{children:[`
+`,e.jsx(n.li,{children:"All prompts, including the qmd-registration question, are asked up front; the rest runs unattended."}),`
+`,e.jsx(n.li,{children:"Long steps show a live spinner with elapsed time and the latest output line."}),`
+`,e.jsxs(n.li,{children:["If ",e.jsx(n.code,{children:"pnpm"})," 10+ is on your ",e.jsx(n.code,{children:"PATH"}),", it's used directly; otherwise the CLI installs mise and fetches node + pnpm. ",e.jsx(n.code,{children:"CSB_USE_MISE=1"})," forces mise."]}),`
+`,e.jsxs(n.li,{children:["The git-remote picker shows GitHub / Cloudflare logos as Nerd Font glyphs in Ghostty, WezTerm and kitty, emoji elsewhere. Override with ",e.jsx(n.code,{children:"CSB_ICONS=nerd|emoji|none"}),"."]}),`
+`,e.jsxs(n.li,{children:["If the remote can't be created or pushed, the brain is still created locally, the problem and fix are listed in ",e.jsx(n.strong,{children:"Next steps"}),", and the CLI exits 1."]}),`
+`]}),`
+`,e.jsx(n.strong,{children:"Cloudflare Artifacts:"}),`
+`,e.jsxs(n.ul,{children:[`
+`,e.jsxs(n.li,{children:["Switched to the account-scoped REST API (",e.jsx(n.code,{children:"api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/artifacts/…"}),"); the old ",e.jsx(n.code,{children:"artifacts.cloudflare.net/v1/api"})," host is no longer used. Set ",e.jsx(n.code,{children:"CLOUDFLARE_ACCOUNT_ID"})," when your login can see more than one account."]}),`
+`,e.jsx(n.li,{children:"A deleted or inactive namespace is recreated automatically before the repo is created."}),`
+`,e.jsxs(n.li,{children:["Setup now saves a 90-day git token in the vault's ",e.jsx(n.code,{children:".git/config"})," (",e.jsx(n.code,{children:"http.<remote>.extraHeader"}),"), so ",e.jsx(n.code,{children:"git push"})," / ",e.jsx(n.code,{children:"git pull"})," and obsidian-git just work. No more 24-hour token to copy."]}),`
+`,e.jsxs(n.li,{children:["New ",e.jsx(n.code,{children:"csb git-token [<name>] [--ttl <duration>] [--read] [--print]"})," renews it (default 90 days, max 1 year), replacing the manual ",e.jsx(n.code,{children:"curl"})," renewal."]}),`
+`]}),`
+`,e.jsx(n.strong,{children:"Other:"}),`
+`,e.jsxs(n.ul,{children:[`
+`,e.jsxs(n.li,{children:[e.jsx(n.code,{children:"csb doctor"})," accepts system pnpm 10+ in place of mise and checks that the global skills in ",e.jsx(n.code,{children:"~/.agents/skills"})," match the installed release."]}),`
+`,e.jsx(n.li,{children:'README, docs and package description say "any agent" and "git" (GitHub, Cloudflare Artifacts, or any remote) instead of Claude Code and GitHub only.'}),`
+`]}),`
 `,e.jsxs(n.h2,{id:"v110--2026-04-19",children:["v1.1.0 — 2026-04-19",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#v110--2026-04-19",children:e.jsx(n.div,{"data-autolink-icon":!0})})]}),`
 `,e.jsxs(n.p,{children:["CLI UX pass. Every addition is non-breaking — the ",e.jsx(n.code,{children:"--"})," in ",e.jsx(n.code,{children:"csb qmd -- …"})," and the ",e.jsx(n.code,{children:"path --qmd"})," / ",e.jsx(n.code,{children:"--config"})," / ",e.jsx(n.code,{children:"--root"})," flag form continue to work, with a stderr deprecation notice on the flag form."]}),`
 `,e.jsx(n.strong,{children:"CLI:"}),`
@@ -147,4 +178,4 @@ import{u as s,j as e}from"./index-DayVryv4.js";const l={title:"Ship log",descrip
 `,e.jsx(n.li,{children:"First public release to npm."}),`
 `,e.jsxs(n.li,{children:["Introduced the template scaffold and the ",e.jsx(n.code,{children:"npx claude-second-brain"})," flow."]}),`
 `,e.jsxs(n.li,{children:["Added the initial README, the release workflow, and the ",e.jsx(n.code,{children:"/pack-test"})," skill."]}),`
-`]})]})}function c(d={}){const{wrapper:n}={...s(),...d.components};return n?e.jsx(n,{...d,children:e.jsx(i,{...d})}):i(d)}export{c as default,l as frontmatter};
+`]})]})}function c(s={}){const{wrapper:n}={...d(),...s.components};return n?e.jsx(n,{...s,children:e.jsx(i,{...s})}):i(s)}export{c as default,l as frontmatter};
