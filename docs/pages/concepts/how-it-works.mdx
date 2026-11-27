@@ -11,7 +11,7 @@ flowchart TB
     S3[personal/]
   end
 
-  subgraph Skills["Claude Code skills"]
+  subgraph Skills["Agent skills"]
     direction LR
     I["/brain-ingest"]
     Q["/brain-search"]

@@ -2,7 +2,7 @@
 
 **Your notes don't compound. This wiki does.**
 
-The fastest way to start your personal knowledge base powered by [Obsidian](https://obsidian.md), [Claude Code](https://claude.ai/code), [qmd](https://github.com/tobi/qmd), and GitHub.
+The fastest way to start your personal knowledge base powered by [Obsidian](https://obsidian.md), your AI coding agent ([Claude Code](https://claude.ai/code), Codex, Cursor, GitHub Copilot, and more), [qmd](https://github.com/tobi/qmd), and GitHub.
 
 ```bash
 npx claude-second-brain
@@ -21,7 +21,7 @@ You've been reading papers, articles, and books for years. Drop a source in, run
 
 ## How this is different
 
-This is not a RAG system. It's not a chatbot over your notes. It's an actively maintained, cross-linked wiki — five structured page types, YAML frontmatter, and a set of Claude Code skills that run the whole thing.
+This is not a RAG system. It's not a chatbot over your notes. It's an actively maintained, cross-linked wiki — five structured page types, YAML frontmatter, and a set of [agent skills](/skills) — usable from Claude Code, Codex, Cursor, Copilot, or any agent that supports [Agent Skills](https://agentskills.io) — that run the whole thing.
 
 The schema ([CLAUDE.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/CLAUDE.md)) is that idea file. Claude reads it every session.
 
@@ -29,10 +29,10 @@ The schema ([CLAUDE.md](https://github.com/jessepinkman9900/claude-second-brain/
 
 | Tool | Role |
 | --- | --- |
-| **Claude Code** | Reads sources, writes wiki pages, cross-links, flags contradictions |
+| **Your agent** (Claude Code, Codex, Cursor, Copilot, …) | Reads sources, writes wiki pages, cross-links, flags contradictions |
 | **qmd** | Local hybrid search (vector + BM25) across your entire wiki |
 | **Obsidian** | Graph view, backlinks, mobile reading — offline, no extra sync |
-| **GitHub** | Source of truth — version history, Claude Code anywhere, Obsidian sync |
+| **GitHub** | Source of truth — version history, your agent anywhere, Obsidian sync |
 
 Everything is pre-configured. You bring the sources.
 

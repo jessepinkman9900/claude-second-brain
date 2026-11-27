@@ -16,8 +16,8 @@ Inspired by [Andrej Karpathy's approach to LLM-powered knowledge management](htt
 # 1. Generate vector embeddings (first run downloads ~2GB of GGUF models — once per machine)
 pnpm qmd:reindex
 
-# 2. Open Claude Code
-claude
+# 2. Open your agent in this folder (Claude Code, Codex, Cursor, Copilot, …)
+claude   # or: codex, cursor ., gemini, opencode, …
 ```
 
 qmd collections are already registered by the CLI during scaffolding — `pnpm qmd:reindex` just needs to build the index.
@@ -26,7 +26,7 @@ qmd collections are already registered by the CLI during scaffolding — `pnpm q
 
 ---
 
-## Your Claude Code skills
+## Your agent skills
 
 ### Daily workflow
 
@@ -57,7 +57,7 @@ flowchart TB
     S3[personal/]
   end
 
-  subgraph Skills["Claude Code skills"]
+  subgraph Skills["Agent skills"]
     direction LR
     I["/brain-ingest"]
     Q["/brain-search"]
@@ -145,7 +145,7 @@ claude-second-brain/
 
 ## Installing and updating skills
 
-Skills are slash commands Claude Code loads from `.claude/skills/[name]/SKILL.md` in this vault. The wiki ships with `/brain-ingest`, `/brain-search`, `/brain-refresh`, `/brain-rebuild`, and `/lint` pre-installed.
+Skills are [Agent Skills](https://agentskills.io) — `SKILL.md` folders your agent loads (slash commands in Claude Code). Claude Code reads them from `.claude/skills/`; Codex, Cursor, Copilot and others read `.agents/skills/`. The wiki ships with `/brain-ingest`, `/brain-search`, `/brain-refresh`, `/brain-rebuild`, and `/lint` pre-installed.
 
 They follow the [Agent Skills](https://agentskills.io/specification) format, so other agents can use them too. The global skills (`/brain-ingest`, `/brain-search`, `/brain-refresh`) live in `~/.agents/skills/`, with symlinks from agent-specific folders such as `~/.claude/skills/`. The vault-local skills (`/brain-rebuild`, `/lint`) are copied into `.agents/skills/` (and other agent folders) for each agent you picked at setup. To add an agent later:
 
@@ -181,7 +181,7 @@ After a bulk ingest session, re-index to keep search current:
 /brain-refresh
 ```
 
-This wraps `pnpm qmd:reindex` — you can also run that command directly if you're not inside Claude Code. Pass `force` to `/brain-refresh` to re-embed every chunk (e.g. after changing the embedding model).
+This wraps `pnpm qmd:reindex` — you can also run that command directly if you're not inside an agent. Pass `force` to `/brain-refresh` to re-embed every chunk (e.g. after changing the embedding model).
 
 ---
 
