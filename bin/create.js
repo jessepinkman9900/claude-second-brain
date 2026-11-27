@@ -1257,9 +1257,9 @@ async function createBrain(initialName, { agents: explicitAgents = null, copy = 
     const provider = await p.select({
       message: "Where to host the Git remote?",
       options: [
-        { value: "github", label: "GitHub", hint: "default" },
-        { value: "cloudflare", label: "Cloudflare Artifacts" },
-        { value: "none", label: "Skip — I'll add a remote later" },
+        { value: "github", label: "🐙  GitHub", hint: "private repo via gh · default" },
+        { value: "cloudflare", label: "🟠  Cloudflare Artifacts", hint: "git remote via wrangler" },
+        { value: "none", label: "📁  Skip — I'll add a remote later", hint: "local git only" },
       ],
       initialValue: "github",
     })
