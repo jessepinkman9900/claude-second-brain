@@ -17,11 +17,11 @@ When you run `npx claude-second-brain` and select **Cloudflare Artifacts** as yo
 2. Resolves your account ID and creates a new Artifacts repo via the [Artifacts REST API](https://developers.cloudflare.com/artifacts/api/rest-api/) (`api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/artifacts/…`)
 3. Runs `git remote add origin <remote-url>`
 4. Pushes the initial commit
-5. Saves the short-lived git token (24h) in the vault's `.git/config`, so `git push` / `git pull` just work
+5. Mints a 90-day git token and saves it in the vault's `.git/config`, so `git push` / `git pull` just work
 
 ## Renewing the git token
 
-Artifacts git tokens expire (24 hours by default). When `git push` or `git pull` starts failing with an auth error, renew it:
+Artifacts git tokens expire (csb mints them for 90 days; Cloudflare allows up to 1 year). When `git push` or `git pull` starts failing with an auth error, renew it:
 
 ```bash
 csb git-token            # default brain
@@ -30,7 +30,7 @@ csb git-token my-brain   # a specific brain
 
 This mints a new repo-scoped token with your wrangler login (or `CLOUDFLARE_API_TOKEN`) and stores it for the brain's remote as `http.<remote>.extraHeader` in the vault's `.git/config` — local only, never committed. Plain `git push` / `git pull` (and obsidian-git) work again until it expires.
 
-Options: `--ttl <seconds>` for a different lifetime, `--read` for a read-only token, `--print` to print the token instead of saving it (e.g. for another machine: `git -c http.extraHeader="Authorization: Bearer $(csb git-token --print)" pull`).
+Options: `--ttl <duration>` for a different lifetime (seconds, or `12h`, `90d`, `1y`; max 1 year), `--read` for a read-only token, `--print` to print the token instead of saving it (e.g. for another machine: `git -c http.extraHeader="Authorization: Bearer $(csb git-token --print)" pull`).
 
 ## Namespace
 

@@ -679,7 +679,27 @@ function agentLaunchSteps(agents) {
 // Mint a repo-scoped Artifacts git token and store it as an http.extraHeader
 // for that remote in the brain's .git/config (local only, never committed),
 // so plain `git push` / `git pull` work until it expires.
-async function mintArtifactsGitToken({ remote, cwd, ttl = 86400, scope = "write", interactive = false }) {
+// Artifacts git tokens: minimum 60s, maximum 1 year (API limit). We default
+// to 90 days so a brain keeps syncing for a season without renewing.
+const GIT_TOKEN_TTL_DEFAULT = 90 * 86400
+const GIT_TOKEN_TTL_MAX = 365 * 86400
+
+// "90d", "12h", "30m", "1y", or plain seconds → seconds.
+function parseTtl(v) {
+  const m = String(v ?? "").trim().match(/^(\d+)\s*([smhdwy]?)$/i)
+  if (!m) return NaN
+  const mult = { "": 1, s: 1, m: 60, h: 3600, d: 86400, w: 604800, y: 31536000 }[m[2].toLowerCase()]
+  return parseInt(m[1], 10) * mult
+}
+
+function formatTtl(secs) {
+  if (secs % 31536000 === 0) return `${secs / 31536000} year${secs === 31536000 ? "" : "s"}`
+  if (secs % 86400 === 0) return `${secs / 86400} day${secs === 86400 ? "" : "s"}`
+  if (secs % 3600 === 0) return `${secs / 3600}h`
+  return `${Math.round(secs / 60)} min`
+}
+
+async function mintArtifactsGitToken({ remote, cwd, ttl = GIT_TOKEN_TTL_DEFAULT, scope = "write", interactive = false }) {
   const parsed = parseCloudflareArtifact(remote)
   if (!parsed) return { ok: false, error: `not a Cloudflare Artifacts remote: ${remote || "(none)"}` }
   const auth = await resolveCloudflareToken()
@@ -718,22 +738,25 @@ function setGitAuthHeader(cwd, remote, token) {
   return r.status === 0
 }
 
-// `csb git-token [--brain <name>] [--ttl <seconds>] [--read] [--print]`
+// `csb git-token [--brain <name>] [--ttl <duration>] [--read] [--print]`
 async function cmdGitToken(args) {
   let brainName = null
-  let ttl = 86400
+  let ttl = GIT_TOKEN_TTL_DEFAULT
   let scope = "write"
   let printOnly = false
   for (let i = 0; i < args.length; i++) {
     const a = args[i]
     if (a === "--brain") brainName = args[++i]
-    else if (a === "--ttl") ttl = parseInt(args[++i], 10)
+    else if (a === "--ttl") ttl = parseTtl(args[++i])
+    else if (a.startsWith("--ttl=")) ttl = parseTtl(a.slice(6))
     else if (a === "--read") scope = "read"
     else if (a === "--print") printOnly = true
     else if (!a.startsWith("-") && !brainName) brainName = a
     else throw new Error(`Unknown option: ${a}. Run \`csb git-token --help\`.`)
   }
-  if (!Number.isFinite(ttl) || ttl <= 0) throw new Error("--ttl must be a positive number of seconds")
+  if (!Number.isFinite(ttl) || ttl < 60 || ttl > GIT_TOKEN_TTL_MAX) {
+    throw new Error("--ttl must be between 60s and 1 year, e.g. 3600, 12h, 90d, 1y")
+  }
   const brain = await resolveBrain(brainName)
   let remote = brain.git_remote
   if (!remote) {
@@ -748,7 +771,7 @@ async function cmdGitToken(args) {
     process.stdout.write(result.token + "\n")
     return
   }
-  const until = result.expiresAt ? new Date(result.expiresAt).toLocaleString() : `${Math.round(ttl / 3600)}h from now`
+  const until = result.expiresAt ? new Date(result.expiresAt).toLocaleString() : `${formatTtl(ttl)} from now`
   console.log(`${pc.green("✓")} ${scope} token for ${pc.cyan(`${result.namespace}/${result.repo}`)} saved to ${pc.dim(`${brain.path}/.git/config`)} — git push/pull work until ${until}.`)
 }
 
@@ -981,15 +1004,15 @@ function printHelp(topic = "top") {
       `${pc.bold("csb git-token")} — renew the git token for a Cloudflare Artifacts brain`,
       "",
       "Usage:",
-      `  ${c("csb git-token [<name>] [--ttl <seconds>] [--read] [--print]")}`,
+      `  ${c("csb git-token [<name>] [--ttl <duration>] [--read] [--print]")}`,
       "",
-      "Artifacts git tokens are short-lived (24h by default). This mints a new one with",
+      "Artifacts git tokens expire (90 days by default, 1 year max). This mints a new one with",
       "your wrangler login (or CLOUDFLARE_API_TOKEN) and stores it as an http.extraHeader",
       "for the brain's remote in its .git/config, so plain `git push` / `git pull` work.",
       "",
       "Options:",
       `  ${c("--brain <name>")}   brain to renew (default: the default brain; also positional)`,
-      `  ${c("--ttl <seconds>")}  token lifetime (default 86400)`,
+      `  ${c("--ttl <duration>")}  token lifetime: seconds or 12h / 90d / 1y (default 90d, max 1y)`,
       `  ${c("--read")}           read-only token instead of write`,
       `  ${c("--print")}          print the token instead of saving it to .git/config`,
     ].join("\n")),
@@ -1716,12 +1739,19 @@ async function createBrain(initialName, { agents: explicitAgents = null, copy = 
   let cfAccountId = null
   if (remoteProvider === "cloudflare") {
     const result = await setupCloudflareRemote({ targetDir, repoName, namespace: cfNamespace, spin })
-    if (result?.repoToken) {
-      p.log.info(`Git token saved to the vault's .git/config — push/pull work for 24h; renew with ${pc.cyan("csb git-token")}`)
-    }
     gitRemote = result?.remote || ""
     cfAccountId = result?.accountId || null
-    if (result?.remote && result?.repoToken) setGitAuthHeader(targetDir, result.remote, result.repoToken)
+    if (result?.remote && result?.repoToken) {
+      // The create response carries a 24h token; swap it for a long-lived one.
+      setGitAuthHeader(targetDir, result.remote, result.repoToken)
+      const long = await mintArtifactsGitToken({ remote: result.remote, cwd: targetDir, interactive: false })
+      if (long.ok) {
+        const until = long.expiresAt ? ` (until ${new Date(long.expiresAt).toLocaleDateString()})` : ""
+        p.log.info(`Git token saved to the vault's .git/config — push/pull work for ${formatTtl(GIT_TOKEN_TTL_DEFAULT)}${until}; renew with ${pc.cyan("csb git-token")}`)
+      } else {
+        p.log.warn(`Could not mint a ${formatTtl(GIT_TOKEN_TTL_DEFAULT)} git token (${long.error}); using the 24h one. Run ${pc.cyan("csb git-token")} to get a longer one.`)
+      }
+    }
     if (!result) remoteProblem = "Cloudflare Artifact not created (see the error above)"
     else if (!result.pushed) remoteProblem = "Cloudflare Artifact created, but the initial push failed (see the error above)"
   }
@@ -1746,7 +1776,7 @@ async function createBrain(initialName, { agents: explicitAgents = null, copy = 
       ]
     : remoteProvider === "cloudflare"
     ? [
-        `${pc.cyan(`csb git-token${targetName ? ` ${targetName}` : ""}`)}  ${pc.dim("# renew the git push/pull token (expires every 24h)")}`,
+        `${pc.cyan(`csb git-token${targetName ? ` ${targetName}` : ""}`)}  ${pc.dim("# renew the git push/pull token (expires in 90 days)")}`,
       ]
     : remoteProvider === "none"
       ? [
