@@ -42,9 +42,13 @@
     "picocolors": "^1.1.1"
   },
   "license": "MIT",
+  "homepage": "https://jessepinkman9900.github.io/claude-second-brain",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jessepinkman9900/claude-second-brain"
+    "url": "git+https://github.com/jessepinkman9900/claude-second-brain.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jessepinkman9900/claude-second-brain/issues"
   },
   "devDependencies": {
     "@types/react": "^19.3.3",
