@@ -1,0 +1,221 @@
+## Ship log
+
+A running record of every released version of `claude-second-brain` on npm. Newest releases first. For auto-generated notes and tags, see the [GitHub releases](https://github.com/jessepinkman9900/claude-second-brain/releases) page.
+
+### v1.2.2 — 2026-11-27
+
+npm package metadata only. No CLI or template changes.
+
+* Added npm `keywords` matching the GitHub repo topics (`ai`, `amp`, `claude-code`, `codex`, `cursor`, `github`, `knowledge-base`, `knowledge-graph`, `knowledge-management`, `llm`, `obsidian`, `obsidian-vault`, `qmd`, `second-brain`) so the package is searchable on npmjs.com.
+* npm `homepage` now points to the [docs site](https://jessepinkman9900.github.io/claude-second-brain) instead of the GitHub README, and `bugs` links to GitHub issues.
+
+### v1.2.1 — 2026-11-27
+
+Maintenance release: security updates and a tokenless release pipeline. No CLI or template changes.
+
+**Security:**
+
+* Refreshed dependencies to clear all Dependabot alerts (`pnpm audit`: 106 → 0). `@clack/prompts` is now `^1.9.0`; transitive docs-site deps (hono, vite, mermaid, dompurify, …) resolve to patched versions, with pnpm overrides for `toml`, `katex` and `@hono/node-server`.
+* Removed the stale `package-lock.json`; the repo uses pnpm only.
+
+**Release pipeline:**
+
+* npm releases use [trusted publishing](https://docs.npmjs.com/trusted-publishers) (OIDC) from `release-publish.yml` with `--provenance`, so no `NPM_TOKEN` is stored in the repo. npm comes from `mise.toml` (11.21.2; trusted publishing needs 11.5.1+). v1.2.0 was the first release published this way.
+
+**CI:**
+
+* Docs workflows install Playwright browsers from the locked version (1.65.1).
+
+### v1.2.0 — 2026-11-27
+
+Works with any agent, not just Claude Code, plus a faster, unattended setup and first-class Cloudflare Artifacts git tokens. Existing installs: run `csb skills` once to move global skills from `~/.claude/skills` to `~/.agents/skills` (the old copies become symlinks).
+
+**Agents:**
+
+* Skills install for any [Agent Skills](https://agentskills.io) agent, with the same layout as `npx skills`: global skills are written once to `~/.agents/skills/<name>` and symlinked into agent-specific dirs (`~/.claude/skills`, `~/.codeium/windsurf/skills`, `~/.config/goose/skills`, …). Supported: Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, OpenCode, Amp, Cline, Windsurf, Goose, Kiro CLI, Roo Code, Continue, Junie, Augment.
+* Vault-local skills (`brain-rebuild`, `lint`) are copied into each selected agent's project skills dir (`.agents/skills/`, `.windsurf/skills/`, …).
+* New `--agent, -a <ids>` (comma-separated or `all`) and `CSB_AGENTS` to pick agents; `--copy` to copy instead of symlink. Interactive setup preselects Claude Code plus every detected agent.
+* New `csb skills [--agent <ids>] [--copy] [--brain <name>]` to add agents or update skills later, and `csb skills --list` to show supported agents and their skills dirs.
+* New vaults ship an `AGENTS.md` that points Codex, Cursor, Copilot and other agents at `CLAUDE.md`.
+* The **Next steps** box shows how to open each agent you picked (`claude`, `codex`, `cursor .`, …).
+
+**Setup:**
+
+* All prompts, including the qmd-registration question, are asked up front; the rest runs unattended.
+* Long steps show a live spinner with elapsed time and the latest output line.
+* If `pnpm` 10+ is on your `PATH`, it's used directly; otherwise the CLI installs mise and fetches node + pnpm. `CSB_USE_MISE=1` forces mise.
+* The git-remote picker shows GitHub / Cloudflare logos as Nerd Font glyphs in Ghostty, WezTerm and kitty, emoji elsewhere. Override with `CSB_ICONS=nerd|emoji|none`.
+* If the remote can't be created or pushed, the brain is still created locally, the problem and fix are listed in **Next steps**, and the CLI exits 1.
+
+**Cloudflare Artifacts:**
+
+* Switched to the account-scoped REST API (`api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/artifacts/…`); the old `artifacts.cloudflare.net/v1/api` host is no longer used. Set `CLOUDFLARE_ACCOUNT_ID` when your login can see more than one account.
+* A deleted or inactive namespace is recreated automatically before the repo is created.
+* Setup now saves a 90-day git token in the vault's `.git/config` (`http.<remote>.extraHeader`), so `git push` / `git pull` and obsidian-git just work. No more 24-hour token to copy.
+* New `csb git-token [<name>] [--ttl <duration>] [--read] [--print]` renews it (default 90 days, max 1 year), replacing the manual `curl` renewal.
+
+**Other:**
+
+* `csb doctor` accepts system pnpm 10+ in place of mise and checks that the global skills in `~/.agents/skills` match the installed release.
+* README, docs and package description say "any agent" and "git" (GitHub, Cloudflare Artifacts, or any remote) instead of Claude Code and GitHub only.
+* "Claude reads it" and similar wording is now agent-neutral, and "Access from anywhere" covers any local or cloud agent and any git host.
+
+### v1.1.0 — 2026-04-19
+
+CLI UX pass. Every addition is non-breaking — the `--` in `csb qmd -- …` and the `path --qmd` / `--config` / `--root` flag form continue to work, with a stderr deprecation notice on the flag form.
+
+**CLI:**
+
+* Added `csb use <name>` (aliases `default`, `switch`) to set the default brain without editing `~/.claude-second-brain/config.toml`. Runs the same header-rewrite path as `csb rm`.
+* Added `csb exec [--brain <name>] -- <cmd…>` — runs any command inside the resolved brain's directory with `INDEX_PATH` pre-set. `csb qmd` now delegates to the same helper.
+* Added `csb doctor` — checks for `gh` (+ auth), `mise`, `wrangler`, the central config, each brain's `path` and `qmd_index`, and whether the default brain resolves. Prints a `Fix:` hint under each failed check.
+* `csb path` now accepts positional subcommands: `csb path [qmd|config|root]`. The `--qmd` / `--config` / `--root` flag form still works with a stderr deprecation warning.
+* Every subcommand routes `--help` / `-h` to its own topic help. `csb help <command>` also prints per-command help. Top-level help shows the config path and current default brain.
+* `csb rm` gained `--delete-remote` and `--keep-remote` for scripting. Under `-y` with neither flag, remotes are preserved (safe default).
+* `resolveBrain()` error now points to `csb use <name>` as the fix.
+
+### v1.0.0 — 2026-04-19
+
+First major release. Brains now live at `~/.claude-second-brain/<name>/` (not the repo root), and global skills resolve paths at call time via new CLI subcommands instead of baked-in paths. Existing single-brain installs: re-run `npx claude-second-brain <name>` to migrate. Legacy `active = …` in `config.toml` is auto-rewritten to `default = …`.
+
+**CLI:**
+
+* Added `claude-second-brain path [--brain N] [--root|--qmd|--config]` and `claude-second-brain qmd [--brain N] -- …` subcommands. The global skills now resolve paths at call time via these commands instead of having absolute paths baked in at scaffold time.
+* Added `claude-second-brain rm [<name>…]` with multi-select (space to toggle) and a follow-up prompt to delete the git remote.
+* `config.toml`'s `active` field renamed to `default`. Existing configs with `active = …` are still read transparently and rewritten to `default = …` on the next write.
+* Global skills (`brain-ingest`, `brain-search`, `brain-refresh`) now ship with a `.csb-version` sidecar file. Re-running `npx claude-second-brain <name>` detects version mismatches and prompts before overwriting; `CSB_SKIP_SKILL_UPDATES=1` disables the prompt.
+* `npx claude-second-brain` now auto-registers qmd collections during scaffold — no manual `/setup` step needed afterwards.
+* Added `csb` as a bin alias. After `npm i -g claude-second-brain`, both `claude-second-brain` and `csb` are available globally.
+
+**Skills:**
+
+* Removed `/setup` and `/qmd-cli` — their responsibilities are absorbed by `create.js` (auto-registration) and `/brain-refresh` / the `csb qmd` proxy respectively.
+* Added `/update-workflows` to audit `pack-test.yml` drift against current repo state.
+* Split `/release` into `/package-release` (version bump + PR) and an orchestrator `/release` that additionally runs `/update-workflows` and `/update-docs`.
+
+**Refactors:**
+
+* Removed the `__QMD_PATH__` and `__CSB_CONFIG__` placeholder substitutions. `scripts/qmd/{setup,reindex}.ts` now compute the index path from `import.meta.url`; CLAUDE.md and vault-local skills use a relative `.qmd/index.sqlite` path.
+* `patchVault()` now only substitutes `__BRAIN_NAME__` in `template/README.md`. Global skills ship unmodified from the template.
+
+**Fixes:**
+
+* `writeConfig()` now writes `default = …` when upserting into a pre-existing empty or default-less `config.toml`. Previously a zero-byte `config.toml` blocked the field from being written and left CLI subcommands unable to resolve a default brain.
+* `pnpm qmd:setup` failures during scaffolding now surface captured stderr (last \~10 lines) instead of a generic "failed" message.
+* `template/scripts/qmd/{setup,reindex}.ts` wrap their bodies in `try/catch` that prints a tagged error with vault + db paths and exits 1, replacing silent unhandled rejections.
+* `resolveBrain()` errors now list available brain names and include a fix hint.
+
+**Docs:**
+
+* Getting-started, per-skill docs, and vocs sidebar updated to reflect the 5-skill surface (`brain-ingest`, `brain-search`, `brain-refresh`, `brain-rebuild`, `lint`).
+* Documented `rm` multi-select and remote-deletion prompts.
+* `/setup` skill reference removed from quick-start in favor of `pnpm qmd:reindex`.
+
+### v0.6.0 — 2026-04-17
+
+**Features:**
+
+* Added Cloudflare Artifacts as an alternate Git remote option during `npx claude-second-brain` setup. The CLI authenticates via wrangler, creates a repo via the Artifacts API, and pushes the initial commit automatically.
+
+**CLI UX:**
+
+* qmd index path prompt now appears before the Git remote selection.
+* Global Claude skills are installed right after `pnpm install`, before git init. Install path is shown with `~/...` notation.
+* qmd index prompt placeholder and default value display `~/...` instead of the full home directory path.
+
+**Docs:**
+
+* Added a **Git backends** section to the docs site covering GitHub and Cloudflare Artifacts setup.
+* Added `llms.txt` for LLM/AI crawler discoverability.
+* Docs site now generates `.md` files alongside HTML pages.
+
+### v0.5.1 — 2026-04-14
+
+* Maintenance release (version bump only).
+
+### v0.5.0 — 2026-04-14
+
+**Docs:**
+
+* Added a vocs-powered documentation site, deployed to GitHub Pages.
+* Aligned the `package.json` description with the README tagline.
+
+### v0.4.2 — 2026-04-14
+
+**Features:**
+
+* Added the `/brain-refresh` and `/brain-rebuild` skills for re-embedding and redesigning the qmd index.
+
+**Refactors:**
+
+* Unified every qmd path reference behind the `__QMD_PATH__` placeholder and parallelized file patching during scaffold.
+* CLI version is now read from `package.json` instead of being hardcoded.
+
+**Fixes:**
+
+* Resolved a batch of code smells and factual inconsistencies across the codebase.
+* `patchVault` now surfaces non-`ENOENT` errors instead of swallowing them.
+* Fixed a failing CI job.
+
+**Docs:**
+
+* Added a unified mermaid architecture diagram to both READMEs.
+* Removed generic skills-marketplace boilerplate.
+
+### v0.4.1 — 2026-04-14
+
+**Refactor:**
+
+* Renamed the `sources/` directory to `raw-sources/` to eliminate the naming collision with `wiki/sources/`.
+
+### v0.4.0 — 2026-04-14
+
+**Features:**
+
+* Renamed the core skills to `brain-ingest` and `brain-search`, and wired qmd path setup into scaffolding.
+* Added a GitHub repo creation prompt during `npx claude-second-brain` (with a private-repo notice and a fallback that removes the repo on failure).
+* The generated README title now matches the brain folder name.
+* Polished the CLI UX with `@clack/prompts` and now runs `mise trust` before installing dependencies.
+
+**Docs:**
+
+* Updated READMEs to reflect the new CLI prompts and skill renames.
+
+**Chore:**
+
+* Removed template skills from `.claude/skills`.
+* Changed the license badge color.
+
+### v0.3.0 — 2026-04-12
+
+* Squashed release PR ([#7](https://github.com/jessepinkman9900/claude-second-brain/pull/7)) bundling CLI refinements and template adjustments that followed the `feat/npx` series.
+
+### v0.2.3 — 2026-04-11
+
+**Features:**
+
+* Shipped the missing `.obsidian/` folder inside the template so scaffolded vaults open directly in Obsidian.
+
+**Docs:**
+
+* Added the MIT License file.
+
+### v0.2.2 — 2026-04-11
+
+**Docs:**
+
+* Added a GitHub URL to the package metadata.
+* Added the project image to the package so the npm card renders correctly.
+
+### v0.2.1 — 2026-04-11
+
+**Chore:**
+
+* Merged the release and publish steps into a single `release-publish.yml` workflow.
+* Hardened the CI pipeline.
+
+### v0.2.0 — 2026-04-11
+
+* First public release to npm.
+* Introduced the template scaffold and the `npx claude-second-brain` flow.
+* Added the initial README, the release workflow, and the `/pack-test` skill.
