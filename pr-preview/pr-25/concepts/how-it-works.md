@@ -1,6 +1,6 @@
 ## How it works
 
-Sources flow in on the left, Claude synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and GitHub makes the whole vault editable from Obsidian and Claude Code on any device.
+Sources flow in on the left, Claude synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and git makes the whole vault editable from Obsidian and your agent on any device.
 
 ```mermaid
 flowchart TB
@@ -28,7 +28,7 @@ flowchart TB
 
   QMD[("qmd.sqlite<br/>vector + BM25<br/>hybrid index")]
 
-  subgraph Remote["GitHub — source of truth"]
+  subgraph Remote["Git remote — source of truth"]
     GH[private repo]
   end
 
