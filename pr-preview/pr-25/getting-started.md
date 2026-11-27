@@ -2,7 +2,7 @@
 
 ### Requirements
 
-* [mise](https://mise.jdx.dev/) — auto-installed by the CLI if missing
+* [pnpm](https://pnpm.io) 10+ on Node 22+, or [mise](https://mise.jdx.dev/) — if pnpm isn't installed, the CLI installs mise and uses it to fetch node + pnpm
 * An AI coding agent that supports [Agent Skills](https://agentskills.io) — [Claude Code](https://claude.ai/code), Codex, Cursor, GitHub Copilot, Gemini CLI, OpenCode, Windsurf, Goose, … Setup asks which ones to install the skills for.
 * [Obsidian](https://obsidian.md/) — optional but recommended
 
