@@ -17,41 +17,20 @@ When you run `npx claude-second-brain` and select **Cloudflare Artifacts** as yo
 2. Resolves your account ID and creates a new Artifacts repo via the [Artifacts REST API](https://developers.cloudflare.com/artifacts/api/rest-api/) (`api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/artifacts/…`)
 3. Runs `git remote add origin <remote-url>`
 4. Pushes the initial commit
-5. Prints a short-lived repo token — **save it**
+5. Saves the short-lived git token (24h) in the vault's `.git/config`, so `git push` / `git pull` just work
 
-## Saving your repo token
+## Renewing the git token
 
-After setup, the CLI prints a repo token:
-
-```
-Save your Artifacts repo token — it expires and you'll need to mint a new one:
-  <token>
-```
-
-This token is used as the git credential for push and pull. It expires (default TTL: 24 hours). Save it somewhere — you'll need to mint a replacement when it expires.
-
-## Pushing and pulling after setup
-
-Repo tokens expire, so mint a fresh one before each push/pull session:
+Artifacts git tokens expire (24 hours by default). When `git push` or `git pull` starts failing with an auth error, renew it:
 
 ```bash
-# 1. Get your wrangler OAuth token
-TOKEN=$(wrangler auth token)
-
-# 2. Mint a new repo token (replace 'my-brain' and 'default' with your repo and namespace)
-# (your account ID is the subdomain of the remote: git remote get-url origin)
-curl -X POST https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/artifacts/namespaces/default/tokens \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"repo":"my-brain","scope":"write","ttl":86400}'
+csb git-token            # default brain
+csb git-token my-brain   # a specific brain
 ```
 
-The response contains the token in `result.plaintext`. Use it as a git credential:
+This mints a new repo-scoped token with your wrangler login (or `CLOUDFLARE_API_TOKEN`) and stores it for the brain's remote as `http.<remote>.extraHeader` in the vault's `.git/config` — local only, never committed. Plain `git push` / `git pull` (and obsidian-git) work again until it expires.
 
-```bash
-git -c http.extraHeader="Authorization: Bearer <token>" push origin main
-git -c http.extraHeader="Authorization: Bearer <token>" pull origin main
-```
+Options: `--ttl <seconds>` for a different lifetime, `--read` for a read-only token, `--print` to print the token instead of saving it (e.g. for another machine: `git -c http.extraHeader="Authorization: Bearer $(csb git-token --print)" pull`).
 
 ## Namespace
 
