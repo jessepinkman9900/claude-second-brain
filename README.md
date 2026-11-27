@@ -3,10 +3,10 @@
 
 **Your notes don't compound. This wiki does.**
 
-[![npm](https://img.shields.io/npm/v/claude-second-brain)](https://www.npmjs.com/package/claude-second-brain) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/jessepinkman9900/claude-second-brain)
+[![npm](https://img.shields.io/npm/v/claude-second-brain)](https://www.npmjs.com/package/claude-second-brain) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT) [![Ask DeepWiki](https://img.shields.io/badge/Ask-DeepWiki-blue)](https://deepwiki.com/jessepinkman9900/claude-second-brain)
 
 
-The fastest way to start your personal knowledge base powered by Obsidian, your AI coding agent ([Claude Code](https://claude.ai/code), Codex, Cursor, GitHub Copilot, Gemini CLI, and more), qmd, and GitHub.
+The fastest way to start your personal knowledge base powered by [Obsidian](https://obsidian.md), your AI coding agent ([Claude Code](https://claude.ai/code), Codex, Cursor, GitHub Copilot, Gemini CLI, and more), [qmd](https://github.com/tobi/qmd), and git.
 
 
 ```
@@ -14,10 +14,10 @@ npx claude-second-brain
 ```
 
 One command gives you a fully wired knowledge system:
-- [Claude](https://claude.ai/) ingests your sources and maintains a cross-linked wiki
+- Your AI agent ([Claude Code](https://claude.ai/code), Codex, Cursor, …) ingests your sources and maintains a cross-linked wiki
 - [qmd](https://github.com/tobi/qmd) powers local semantic search
 - The scaffolded folder **is your Obsidian vault** — open it directly in [Obsidian](https://obsidian.md), with [obsidian-git](https://github.com/Vinzent03/obsidian-git) pre-configured for seamless sync
-- GitHub is the source of truth — version history, anywhere access, and a backup you control
+- A git ([GitHub](https://github.com), [Cloudflare Artifacts](https://developers.cloudflare.com/artifacts/), or any remote) is the source of truth — version history, anywhere access, and a backup you control
 
 You've been reading papers, articles, and books for years. Drop a source in, run `/brain-ingest`, and Claude reads it — extracts what matters, cross-links it to everything you already know, and files it. Ask a question six months later and get cited answers, not a list of files to re-read.
 
@@ -44,7 +44,7 @@ The schema (`CLAUDE.md`) is that idea file. Claude reads it every session.
 | **Your agent** (Claude Code, Codex, Cursor, Copilot, …) | Reads sources, writes wiki pages, cross-links, flags contradictions |
 | **qmd** | Local hybrid search (vector + BM25) across your entire wiki |
 | **Obsidian** | Graph view, backlinks, mobile reading — offline, no extra sync |
-| **GitHub** | Source of truth — version history, your agent anywhere, Obsidian sync |
+| **Git** (GitHub, Cloudflare Artifacts, …) | Source of truth — version history, your agent anywhere, Obsidian sync |
 
 Everything is pre-configured. You bring the sources.
 
@@ -146,7 +146,7 @@ It's a plain GitHub repo. View and edit files directly in the browser at any tim
 
 ## How it works
 
-Sources flow in on the left, Claude synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and GitHub makes the whole vault editable from Obsidian and Claude Code on any device.
+Sources flow in on the left, Claude synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and git makes the whole vault editable from Obsidian and your agent on any device.
 
 ```mermaid
 flowchart TB
@@ -174,7 +174,7 @@ flowchart TB
 
   QMD[("qmd.sqlite<br/>vector + BM25<br/>hybrid index")]
 
-  subgraph Remote["GitHub — source of truth"]
+  subgraph Remote["Git remote — source of truth"]
     GH[private repo]
   end
 

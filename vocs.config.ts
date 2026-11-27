@@ -8,7 +8,7 @@ export default defineConfig({
   },
   title: 'claude-second-brain',
   description:
-    'The fastest way to start your personal knowledge base powered by Obsidian, your AI coding agent (Claude Code, Codex, Cursor, Copilot, and more), qmd, and GitHub.',
+    'The fastest way to start your personal knowledge base powered by Obsidian, your AI coding agent (Claude Code, Codex, Cursor, Copilot, and more), qmd, and git.',
   rootDir: 'docs',
   basePath,
   iconUrl: '/favicon.svg',
