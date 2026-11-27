@@ -177,6 +177,27 @@ function truncate(s, n = 80) {
 // Routes are account-scoped under the standard Cloudflare v4 API. (The
 // artifacts.cloudflare.net/v1/api host from the beta announcement rejects
 // wrangler OAuth tokens with 403 / code 10002.)
+// Icons for the git-remote picker. Terminals can't draw SVG inside a prompt
+// that redraws on every keypress, so the real logos come from Nerd Font
+// glyphs: Ghostty, WezTerm and kitty bundle them, so they're on by default
+// there. Anywhere else (iTerm2, Terminal.app, …) we fall back to emoji unless
+// CSB_ICONS=nerd says a Nerd Font is installed. CSB_ICONS=emoji|none override.
+function iconStyle() {
+  const forced = process.env.CSB_ICONS?.trim().toLowerCase()
+  if (forced === "nerd" || forced === "emoji" || forced === "none") return forced
+  const term = process.env.TERM_PROGRAM?.toLowerCase() || ""
+  if (term === "ghostty" || term === "wezterm" || process.env.KITTY_WINDOW_ID || process.env.TERM === "xterm-kitty") return "nerd"
+  return "emoji"
+}
+const CF_ORANGE = (s) => (pc.isColorSupported ? `\x1b[38;2;243;128;32m${s}\x1b[39m` : s)
+const REMOTE_ICONS = {
+  // nf-fa-github, nf-dev-cloudflare, nf-oct-file_directory. Each glyph is one
+  // cell wide, so pad with a space to line up with the two-cell emoji.
+  nerd: { github: "\uf09b ", cloudflare: CF_ORANGE("\ue792") + " ", none: pc.dim("\uf413") + " " },
+  emoji: { github: "🐙", cloudflare: "⛅", none: "📁" },
+  none: { github: "  ", cloudflare: "  ", none: "  " },
+}[iconStyle()]
+
 const CF_API = "https://api.cloudflare.com/client/v4"
 function artifactsBase(accountId, namespace) {
   return `${CF_API}/accounts/${accountId}/artifacts/namespaces/${namespace}`
@@ -207,13 +228,13 @@ async function ensureArtifactsNamespace({ accountId, namespace, token }) {
     } catch (err) {
       return { ok: false, error: `network error: ${err.message}` }
     }
-    if (res.ok) return { ok: true }
+    if (res.ok) return { ok: true, created: true }
     let msg = "unknown error"
     try { msg = JSON.parse(body)?.errors?.[0]?.message || msg } catch {}
     lastError = `HTTP ${res.status}: ${msg}`
     if (res.status === 401 || res.status === 403) return { ok: false, error: lastError }
     // Already exists → fine, the repo-create retry loop handles activation lag.
-    if (/already exists/i.test(msg)) return { ok: true }
+    if (/already exists/i.test(msg)) return { ok: true, created: false }
     // 409 = activation or deletion in progress; anything else, back off and retry.
     await sleep(Math.min(1000 * 2 ** attempt, 8000))
   }
@@ -375,6 +396,8 @@ async function setupCloudflareRemote({ targetDir, repoName, namespace, spin }) {
         ].join("\n"))
         return null
       }
+      spin.stop(`Cloudflare namespace ${ns.created ? "created" : "reactivated"}: ${namespace}`)
+      spin.start(`Creating Cloudflare Artifact ${pc.dim(repoName)}`)
       for (let attempt = 0; attempt < 8; attempt++) {
         spin.message(`Creating Cloudflare Artifact ${pc.dim(repoName)}`)
         ;({ res, rawBody } = await createRepo())
@@ -1497,9 +1520,9 @@ async function createBrain(initialName, { agents: explicitAgents = null, copy = 
     const provider = await p.select({
       message: "Where to host the Git remote?",
       options: [
-        { value: "github", label: "🐱  GitHub", hint: "private repo via gh · default" },
-        { value: "cloudflare", label: "⛅  Cloudflare Artifacts", hint: "git remote via wrangler" },
-        { value: "none", label: "📁  Skip — I'll add a remote later", hint: "local git only" },
+        { value: "github", label: `${REMOTE_ICONS.github}  GitHub`, hint: "private repo via gh · default" },
+        { value: "cloudflare", label: `${REMOTE_ICONS.cloudflare}  Cloudflare Artifacts`, hint: "git remote via wrangler" },
+        { value: "none", label: `${REMOTE_ICONS.none}  Skip — I'll add a remote later`, hint: "local git only" },
       ],
       initialValue: "github",
     })
