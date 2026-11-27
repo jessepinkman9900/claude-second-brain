@@ -46,7 +46,7 @@ jobs:
 
       - name: Install Playwright chromium (for Vocs mermaid rendering)
         if: github.event.action != 'closed'
-        run: pnpm dlx playwright install --with-deps chromium
+        run: pnpm dlx playwright@1.59.1 install --with-deps chromium  # keep in sync with playwright in pnpm-lock.yaml
 
       - name: Build docs
         if: github.event.action != 'closed'
