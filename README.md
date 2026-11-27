@@ -19,7 +19,7 @@ One command gives you a fully wired knowledge system:
 - The scaffolded folder **is your Obsidian vault** — open it directly in [Obsidian](https://obsidian.md), with [obsidian-git](https://github.com/Vinzent03/obsidian-git) pre-configured for seamless sync
 - A git ([GitHub](https://github.com), [Cloudflare Artifacts](https://developers.cloudflare.com/artifacts/), or any remote) is the source of truth — version history, anywhere access, and a backup you control
 
-You've been reading papers, articles, and books for years. Drop a source in, run `/brain-ingest`, and your agent reads it — extracts what matters, cross-links it to everything you already know, and files it. Ask a question six months later and get cited answers, not a list of files to re-read.
+You've been reading papers, articles, and books for years. Drop a source in, run [`/brain-ingest`](https://jessepinkman9900.github.io/claude-second-brain/skills/brain-ingest), and your agent reads it — extracts what matters, cross-links it to everything you already know, and files it. Ask a question six months later and get cited answers, not a list of files to re-read.
 
 > **Inspired by [Andrej Karpathy's approach to LLM-powered knowledge management](https://x.com/karpathy/status/2040470801506541998?s=20)** — share an "idea file" with an LLM agent and let it build and maintain your knowledge base.
 
@@ -103,23 +103,23 @@ The wiki ships with a set of slash commands that cover the full workflow. No man
 
 ### Daily workflow
 
-**`/brain-ingest`** — Drop a file into `raw-sources/articles/`, `raw-sources/pdfs/`, or `raw-sources/personal/`. Run `/brain-ingest`. Your agent summarizes the source, asks what matters most to you, creates a `wiki/sources/` page, updates or creates related topic pages, flags any contradictions with existing knowledge, and logs everything.
+**[`/brain-ingest`](https://jessepinkman9900.github.io/claude-second-brain/skills/brain-ingest)** — Drop a file into `raw-sources/articles/`, `raw-sources/pdfs/`, or `raw-sources/personal/`. Run `/brain-ingest`. Your agent summarizes the source, asks what matters most to you, creates a `wiki/sources/` page, updates or creates related topic pages, flags any contradictions with existing knowledge, and logs everything.
 
-**`/brain-search`** — Ask anything about what you know. Your agent runs hybrid semantic search across the wiki, reads the most relevant pages, and writes an answer with inline `[[wiki/page]]` citations. If the answer synthesizes multiple pages in a novel way, it offers to file it as a permanent `wiki/qa/` entry.
+**[`/brain-search`](https://jessepinkman9900.github.io/claude-second-brain/skills/brain-search)** — Ask anything about what you know. Your agent runs hybrid semantic search across the wiki, reads the most relevant pages, and writes an answer with inline `[[wiki/page]]` citations. If the answer synthesizes multiple pages in a novel way, it offers to file it as a permanent `wiki/qa/` entry.
 
-**`/lint`** — Health-check the wiki. Surfaces orphan pages, broken links, unresolved contradictions, and data gaps. Reports findings and applies fixes where possible.
+**[`/lint`](https://jessepinkman9900.github.io/claude-second-brain/skills/lint)** — Health-check the wiki. Surfaces orphan pages, broken links, unresolved contradictions, and data gaps. Reports findings and applies fixes where possible.
 
 ### Maintenance
 
-**`/brain-refresh`** — Re-scan the vault for new or changed files and regenerate vector embeddings. Run after a bulk ingest session or manual edits. Pass `force` to re-embed every chunk (e.g. after changing the embedding model).
+**[`/brain-refresh`](https://jessepinkman9900.github.io/claude-second-brain/skills/brain-refresh)** — Re-scan the vault for new or changed files and regenerate vector embeddings. Run after a bulk ingest session or manual edits. Pass `force` to re-embed every chunk (e.g. after changing the embedding model).
 
-**`/brain-rebuild`** — **Destructive.** Redesigns the qmd schema: analyzes the wiki, proposes new collections and contexts, waits for your approval, then patches `scripts/qmd/setup.ts`, drops the old index, and rebuilds embeddings from scratch. Use only when the current structure no longer fits how you search.
+**[`/brain-rebuild`](https://jessepinkman9900.github.io/claude-second-brain/skills/brain-rebuild)** — **Destructive.** Redesigns the qmd schema: analyzes the wiki, proposes new collections and contexts, waits for your approval, then patches `scripts/qmd/setup.ts`, drops the old index, and rebuilds embeddings from scratch. Use only when the current structure no longer fits how you search.
 
 ---
 
 ## Works with any agent
 
-The wiki skills follow the open [Agent Skills](https://agentskills.io/specification) format, so the same `/brain-ingest`, `/brain-search`, `/brain-refresh`, `/brain-rebuild` and `/lint` work in every agent that supports skills. The CLI installs them for the agents you pick:
+The wiki skills follow the open [Agent Skills](https://agentskills.io/specification) format, so the same [`/brain-ingest`](https://jessepinkman9900.github.io/claude-second-brain/skills/brain-ingest), [`/brain-search`](https://jessepinkman9900.github.io/claude-second-brain/skills/brain-search), [`/brain-refresh`](https://jessepinkman9900.github.io/claude-second-brain/skills/brain-refresh), [`/brain-rebuild`](https://jessepinkman9900.github.io/claude-second-brain/skills/brain-rebuild) and [`/lint`](https://jessepinkman9900.github.io/claude-second-brain/skills/lint) work in every agent that supports skills. The CLI installs them for the agents you pick:
 
 | Agent | Global skills dir | Vault skills dir |
 |---|---|---|
