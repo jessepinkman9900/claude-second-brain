@@ -286,6 +286,24 @@ See the [CLI Reference](/cli) for `ls`, `use`, `rm`, `path`, `qmd`, `exec`, `ski
 
 A running record of every released version of `claude-second-brain` on npm. Newest releases first. For auto-generated notes and tags, see the [GitHub releases](https://github.com/jessepinkman9900/claude-second-brain/releases) page.
 
+### v1.2.3 — 2026-11-27
+
+Bug fixes for CLI argument handling, plus a test suite.
+
+**Fixes:**
+
+* Brain names are validated before scaffolding. Names that are empty, `.` / `..`, or contain path separators, quotes or control characters are rejected, so a name can no longer escape `~/.claude-second-brain/` or corrupt `config.toml`.
+* `--brain` now requires a value in `path`, `qmd`, `exec`, `skills` and `git-token`. Previously a bare `--brain` silently fell back to the default brain (so `csb git-token --brain` renewed the wrong brain's token).
+* `csb exec … -- <cmd> --help` and `csb qmd … -- … --help` now pass `--help` through to the command after `--` instead of printing csb's own help.
+
+**Tests and CI:**
+
+* New `pnpm test` (`node --test tests/*.test.js`) covering brain-name validation, `--brain` parsing and help pass-through; a Test workflow runs it on pull requests and `main`.
+
+**Docs:**
+
+* README and docs home link `/brain-ingest`, `/brain-search`, `/brain-refresh`, `/brain-rebuild` and `/lint` to their docs pages.
+
 ### v1.2.2 — 2026-11-27
 
 npm package metadata only. No CLI or template changes.
