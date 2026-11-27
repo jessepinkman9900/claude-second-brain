@@ -43,7 +43,7 @@ Options:
 - `--agent, -a <ids>` — agents to install skills for, comma-separated or `all`. Also read from `CSB_AGENTS`. Without it, the CLI prompts (interactive) or uses Claude Code plus every detected agent (non-interactive).
 - `--copy` — copy skills into each agent's folder instead of symlinking. See [Install skills for any agent](#install-skills-for-any-agent).
 
-Creates the brain at `~/.claude-second-brain/<name>/`, runs `mise install`, `pnpm install`, `pnpm qmd:setup`, `git init`, and registers it in `~/.claude-second-brain/config.toml`. The first brain created is set as the default.
+Creates the brain at `~/.claude-second-brain/<name>/`, runs `pnpm install`, `pnpm qmd:setup`, `git init`, and registers it in `~/.claude-second-brain/config.toml`. The first brain created is set as the default.
 
 During the interactive flow the CLI asks:
 
@@ -51,8 +51,10 @@ During the interactive flow the CLI asks:
 - **Git remote** — `GitHub`, `Cloudflare Artifacts`, or `Skip`. See [GitHub](/remotes/github) and [Cloudflare Artifacts](/remotes/cloudflare-artifacts).
 - **Repo name** — only shown when a remote is selected; defaults to the brain name.
 - **Artifacts namespace** — only shown for Cloudflare; defaults to `default`.
-- **Register qmd collections now?** — confirms running `pnpm qmd:setup`.
+- **Register qmd collections after install?** — confirms running `pnpm qmd:setup` once dependencies are installed.
 - **Install skills for which agents?** — multiselect; Claude Code and any detected agent are preselected.
+
+All questions are asked up front, so the rest of setup runs unattended. Long steps show a spinner with elapsed time and the latest output line. If `pnpm` 10+ is already on your `PATH`, it is used directly; otherwise the CLI installs mise (if needed) and runs `mise install` to fetch node + pnpm first. Set `CSB_USE_MISE=1` to always use mise. The closing **Next steps** box shows how to open each agent you picked (`claude`, `codex`, `cursor .`, …).
 
 ## List brains
 
@@ -184,7 +186,7 @@ csb doctor
 
 Checks for:
 
-- Installed tools: `gh` (+ auth status), `mise`, `wrangler` (optional).
+- Installed tools: `gh` (+ auth status), `mise` or `pnpm` 10+, `wrangler` (optional).
 - A parseable `~/.claude-second-brain/config.toml`.
 - At least one registered brain.
 - A resolvable default brain.

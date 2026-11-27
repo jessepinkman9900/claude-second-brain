@@ -27,95 +27,111 @@ export const CANONICAL_GLOBAL_DIR = join(home, ".agents", "skills")
 export const DEFAULT_AGENT = "claude-code"
 
 // `globalSkillsDir: null` = the agent reads ~/.agents/skills globally.
+// `launch` is shown in the post-setup "Next steps": a CLI command, or an app to open the vault in.
 export const AGENTS = {
   "claude-code": {
     displayName: "Claude Code",
     skillsDir: ".claude/skills",
     globalSkillsDir: join(claudeHome, "skills"),
+    launch: { cmd: "claude" },
     detect: () => existsSync(claudeHome),
   },
   codex: {
     displayName: "Codex",
     skillsDir: ".agents/skills",
     globalSkillsDir: null,
+    launch: { cmd: "codex" },
     detect: () => existsSync(codexHome) || existsSync("/etc/codex"),
   },
   cursor: {
     displayName: "Cursor",
     skillsDir: ".agents/skills",
     globalSkillsDir: null,
+    launch: { cmd: "cursor ." },
     detect: () => existsSync(join(home, ".cursor")),
   },
   "gemini-cli": {
     displayName: "Gemini CLI",
     skillsDir: ".agents/skills",
     globalSkillsDir: null,
+    launch: { cmd: "gemini" },
     detect: () => existsSync(join(home, ".gemini")),
   },
   "github-copilot": {
     displayName: "GitHub Copilot",
     skillsDir: ".agents/skills",
     globalSkillsDir: null,
+    launch: { cmd: "copilot" },
     detect: () => existsSync(join(home, ".copilot")),
   },
   opencode: {
     displayName: "OpenCode",
     skillsDir: ".agents/skills",
     globalSkillsDir: null,
+    launch: { cmd: "opencode" },
     detect: () => existsSync(join(configHome, "opencode")),
   },
   amp: {
     displayName: "Amp",
     skillsDir: ".agents/skills",
     globalSkillsDir: null,
+    launch: { cmd: "amp" },
     detect: () => existsSync(join(configHome, "amp")),
   },
   cline: {
     displayName: "Cline",
     skillsDir: ".agents/skills",
     globalSkillsDir: null,
+    launch: { app: "VS Code" },
     detect: () => existsSync(join(home, ".cline")),
   },
   windsurf: {
     displayName: "Windsurf",
     skillsDir: ".windsurf/skills",
     globalSkillsDir: join(home, ".codeium/windsurf/skills"),
+    launch: { cmd: "windsurf ." },
     detect: () => existsSync(join(home, ".codeium/windsurf")),
   },
   goose: {
     displayName: "Goose",
     skillsDir: ".goose/skills",
     globalSkillsDir: join(configHome, "goose/skills"),
+    launch: { cmd: "goose session" },
     detect: () => existsSync(join(configHome, "goose")),
   },
   "kiro-cli": {
     displayName: "Kiro CLI",
     skillsDir: ".kiro/skills",
     globalSkillsDir: join(home, ".kiro/skills"),
+    launch: { cmd: "kiro-cli" },
     detect: () => existsSync(join(home, ".kiro")),
   },
   roo: {
     displayName: "Roo Code",
     skillsDir: ".roo/skills",
     globalSkillsDir: join(home, ".roo/skills"),
+    launch: { app: "VS Code" },
     detect: () => existsSync(join(home, ".roo")),
   },
   continue: {
     displayName: "Continue",
     skillsDir: ".continue/skills",
     globalSkillsDir: join(home, ".continue/skills"),
+    launch: { app: "VS Code" },
     detect: () => existsSync(join(home, ".continue")),
   },
   junie: {
     displayName: "Junie",
     skillsDir: ".junie/skills",
     globalSkillsDir: join(home, ".junie/skills"),
+    launch: { app: "a JetBrains IDE" },
     detect: () => existsSync(join(home, ".junie")),
   },
   augment: {
     displayName: "Augment",
     skillsDir: ".augment/skills",
     globalSkillsDir: join(home, ".augment/skills"),
+    launch: { cmd: "auggie" },
     detect: () => existsSync(join(home, ".augment")),
   },
 }
