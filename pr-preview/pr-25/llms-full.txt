@@ -47,6 +47,7 @@ Options:
 
 * `--agent, -a <ids>` — agents to install skills for, comma-separated or `all`. Also read from `CSB_AGENTS`. Without it, the CLI prompts (interactive) or uses Claude Code plus every detected agent (non-interactive).
 * `--copy` — copy skills into each agent's folder instead of symlinking. See [Install skills for any agent](#install-skills-for-any-agent).
+* `CSB_ICONS=nerd|emoji|none` — icons in the git-remote picker. Real GitHub / Cloudflare logos (Nerd Font glyphs) are on by default in Ghostty, WezTerm and kitty; set `CSB_ICONS=nerd` in other terminals if you use a Nerd Font. Otherwise emoji.
 
 Creates the brain at `~/.claude-second-brain/<name>/`, runs `pnpm install`, `pnpm qmd:setup`, `git init`, and registers it in `~/.claude-second-brain/config.toml`. The first brain created is set as the default.
 
