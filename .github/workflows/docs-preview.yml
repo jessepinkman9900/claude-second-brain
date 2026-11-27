@@ -22,7 +22,7 @@ concurrency:
 jobs:
   preview:
     name: Build and deploy PR preview
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # Playwright 1.59 (locked, used by Vocs mermaid) has no chromium for ubuntu 26.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
