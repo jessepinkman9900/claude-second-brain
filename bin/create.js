@@ -3,7 +3,7 @@ import { cp, rename, access, readFile, writeFile, mkdir, rm } from "fs/promises"
 import { readFileSync, readdirSync } from "fs"
 import { join, dirname } from "path"
 import { fileURLToPath } from "url"
-import { spawnSync } from "child_process"
+import { spawn, spawnSync } from "child_process"
 import { homedir } from "os"
 import * as p from "@clack/prompts"
 import pc from "picocolors"
@@ -41,6 +41,62 @@ function tailForError({ stdout, stderr }, lines = 10) {
   const trimmed = (source || "").trim()
   if (!trimmed) return ""
   return trimmed.split("\n").slice(-lines).join("\n")
+}
+
+// Async variant for long-running steps: doesn't block the event loop, so the
+// spinner keeps animating. `onLine` receives each non-empty output line.
+function runAsync(cmd, cwd, { onLine } = {}) {
+  return new Promise(resolve => {
+    let stdout = ""
+    let stderr = ""
+    let child
+    try {
+      child = spawn(cmd[0], cmd.slice(1), { cwd, stdio: ["ignore", "pipe", "pipe"] })
+    } catch (err) {
+      resolve({ ok: false, stdout, stderr: err.message })
+      return
+    }
+    const feed = chunk => {
+      if (!onLine) return
+      for (const line of chunk.split(/\r?\n|\r/)) {
+        const clean = stripAnsi(line).trim()
+        if (clean) onLine(clean)
+      }
+    }
+    child.stdout.on("data", d => { const t = d.toString(); stdout += t; feed(t) })
+    child.stderr.on("data", d => { const t = d.toString(); stderr += t; feed(t) })
+    child.on("error", err => resolve({ ok: false, stdout, stderr: stderr + err.message }))
+    child.on("close", code => resolve({ ok: code === 0, stdout, stderr }))
+  })
+}
+
+// Run a long step under the spinner, showing elapsed time and the latest
+// line of output so it's obvious the CLI isn't stuck.
+async function runStep(spin, label, cmd, cwd) {
+  const started = Date.now()
+  let last = ""
+  const render = () => {
+    const secs = Math.round((Date.now() - started) / 1000)
+    const detail = last ? `  ${pc.dim(truncate(last, 60))}` : ""
+    spin.message(`${label} ${pc.dim(`(${secs}s)`)}${detail}`)
+  }
+  spin.start(label)
+  const timer = setInterval(render, 1000)
+  try {
+    const res = await runAsync(cmd, cwd, { onLine: l => { last = l } })
+    return { ...res, seconds: Math.round((Date.now() - started) / 1000) }
+  } finally {
+    clearInterval(timer)
+  }
+}
+
+// Use the pnpm already on PATH when it's recent enough (the CLI itself runs on
+// Node >= 22), so a fresh scaffold doesn't download node + pnpm through mise.
+function systemPnpmUsable() {
+  const r = spawnSync("pnpm", ["--version"], { stdio: "pipe", encoding: "utf8" })
+  if (r.status !== 0) return false
+  const major = parseInt((r.stdout || "").trim().split(".")[0], 10)
+  return major >= 10 && parseInt(process.versions.node.split(".")[0], 10) >= 22
 }
 
 // Interactive commands (e.g. gh auth login) — must inherit stdio; call outside spinner
@@ -436,6 +492,18 @@ function summarizeAgentInstall(agents, links, toDisplayPath) {
       : toDisplayPath(dirname(own[0]?.path || ""))
     return `  ${AGENTS[id].displayName.padEnd(15)} ${pc.dim(`${where}${mode === "canonical" ? "" : ` (${mode})`}`)}`
   }).join("\n")
+}
+
+// "Next steps" lines for the agents the user picked: how to open each one in
+// the vault. Agents without a CLI get an "open this folder in …" hint.
+function agentLaunchSteps(agents) {
+  const lines = agents.map(id => {
+    const { launch, displayName } = AGENTS[id]
+    return launch?.cmd
+      ? `${pc.cyan(launch.cmd.padEnd(16))}  open ${displayName} and start ingesting sources`
+      : `${pc.dim("# ")}open this folder in ${launch?.app || displayName}${displayName !== launch?.app && launch?.app ? ` (${displayName})` : ""}`
+  })
+  return lines.length ? lines : [`${pc.cyan("claude".padEnd(16))}  open Claude Code and start ingesting sources`]
 }
 
 function globalSkillSummary({ installed, skipped }) {
@@ -836,7 +904,9 @@ async function cmdDoctor() {
   }
   lines.push(commandExists("mise")
     ? ok("mise installed")
-    : (failures++, fail("mise not installed — required for scaffolded vaults", "npm install -g @jdxcode/mise")))
+    : systemPnpmUsable()
+      ? ok("mise not installed — using system node + pnpm instead")
+      : (failures++, fail("neither mise nor pnpm >= 10 installed — one is required for scaffolded vaults", "npm install -g pnpm  |  npm install -g @jdxcode/mise")))
   lines.push(commandExists("wrangler") || commandExists("npx")
     ? ok(commandExists("wrangler") ? "wrangler installed" : "wrangler available via npx (optional — for Cloudflare Artifacts)")
     : (warnings++, warn("wrangler not installed — required only for Cloudflare Artifacts remotes", "npm install -g wrangler")))
@@ -1217,6 +1287,17 @@ async function createBrain(initialName, { agents: explicitAgents = null, copy = 
     }
   }
 
+  // Ask every question before the slow steps, so setup can run unattended.
+  let doQmdSetup = true
+  if (isInteractive) {
+    const ok = await p.confirm({
+      message: "Register qmd collections after install? (wiki + raw-sources)",
+      initialValue: true,
+    })
+    if (p.isCancel(ok)) { p.cancel("Setup cancelled."); process.exit(0) }
+    doQmdSetup = ok
+  }
+
   const agents = await resolveAgents({ explicit: explicitAgents, isInteractive, prompts: p })
   if (!agents) { p.cancel("Setup cancelled."); process.exit(0) }
   if (!isInteractive || explicitAgents) {
@@ -1256,44 +1337,43 @@ async function createBrain(initialName, { agents: explicitAgents = null, copy = 
   await patchVault(targetDir, targetName)
   spin.stop("README patched")
 
-  // Install mise if not present
-  if (!commandExists("mise")) {
-    spin.start("Installing mise")
-    const ok = run(["npm", "install", "-g", "@jdxcode/mise"])
-    if (ok) spin.stop("mise installed")
-    else spin.stop("Failed to install mise — run: npm install -g @jdxcode/mise", 1)
+  // Toolchain: reuse a system pnpm (>= 10) when there is one; otherwise let
+  // mise install node + pnpm from the vault's mise.toml.
+  const useSystemPnpm = process.env.CSB_USE_MISE !== "1" && systemPnpmUsable()
+  const pnpmCmd = useSystemPnpm ? ["pnpm"] : ["mise", "exec", "--", "pnpm"]
+  const fmt = secs => pc.dim(`(${secs}s)`)
+
+  if (useSystemPnpm) {
+    p.log.step(`Using system node ${process.versions.node} + pnpm ${pc.dim("(set CSB_USE_MISE=1 to use mise instead)")}`)
+  } else {
+    if (!commandExists("mise")) {
+      const r = await runStep(spin, "Installing mise", ["npm", "install", "-g", "@jdxcode/mise"])
+      if (r.ok) spin.stop(`mise installed ${fmt(r.seconds)}`)
+      else spin.stop("Failed to install mise — run: npm install -g @jdxcode/mise", 1)
+    }
+    run(["mise", "trust"], targetDir)
+    const r = await runStep(spin, "Installing node + pnpm via mise", ["mise", "install"], targetDir)
+    if (r.ok) spin.stop(`node + pnpm installed ${fmt(r.seconds)}`)
+    else spin.stop("mise install failed — run it manually inside your vault", 1)
   }
 
-  // Run mise install inside the new vault to install node + pnpm
-  spin.start("Installing node + pnpm via mise")
-  run(["mise", "trust"], targetDir)
-  const miseOk = run(["mise", "install"], targetDir)
-  if (miseOk) spin.stop("node + pnpm installed")
-  else spin.stop("mise install failed — run it manually inside your vault", 1)
-
   // Install vault dependencies via pnpm
-  spin.start("Installing vault dependencies")
-  const pnpmOk = run(["mise", "exec", "--", "pnpm", "install"], targetDir)
-  if (pnpmOk) spin.stop("dependencies installed")
-  else spin.stop("pnpm install failed — run it manually inside your vault", 1)
+  const install = await runStep(spin, "Installing vault dependencies", [...pnpmCmd, "install", "--prefer-offline"], targetDir)
+  const pnpmOk = install.ok
+  if (pnpmOk) spin.stop(`dependencies installed ${fmt(install.seconds)}`)
+  else {
+    spin.stop("pnpm install failed — run it manually inside your vault", 1)
+    const tail = tailForError(install)
+    if (tail) p.log.warn(`pnpm install output:\n${tail}`)
+  }
 
   // Register qmd collections + contexts. Skip reindex — first reindex downloads
   // ~2GB of GGUF models; user runs it explicitly when ready.
   if (pnpmOk) {
-    let doQmdSetup = true
-    if (isInteractive) {
-      const ok = await p.confirm({
-        message: "Register qmd collections now? (wiki + raw-sources)",
-        initialValue: true,
-      })
-      if (p.isCancel(ok)) { p.cancel("Setup cancelled."); process.exit(0) }
-      doQmdSetup = ok
-    }
     if (doQmdSetup) {
-      spin.start("Registering qmd collections (wiki, raw-sources)")
-      const qmdRes = runCapture(["mise", "exec", "--", "pnpm", "qmd:setup"], targetDir)
+      const qmdRes = await runStep(spin, "Registering qmd collections (wiki, raw-sources)", [...pnpmCmd, "qmd:setup"], targetDir)
       if (qmdRes.ok) {
-        spin.stop("qmd collections registered")
+        spin.stop(`qmd collections registered ${fmt(qmdRes.seconds)}`)
       } else {
         spin.stop("pnpm qmd:setup failed — run it manually inside your vault", 1)
         const tail = tailForError(qmdRes)
@@ -1396,7 +1476,7 @@ async function createBrain(initialName, { agents: explicitAgents = null, copy = 
   const nextSteps = [
     `${pc.cyan(`cd ${brainDisplayPath}`)}`,
     `${pc.cyan("pnpm qmd:reindex")}  ${pc.dim("# first run downloads ~2GB of embedding models")}`,
-    `${pc.cyan("claude")}            open Claude Code and start ingesting sources`,
+    ...agentLaunchSteps(agents),
     ...remoteSteps,
   ].join("\n")
 
