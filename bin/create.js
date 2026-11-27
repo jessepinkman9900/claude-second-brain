@@ -155,6 +155,50 @@ function truncate(s, n = 80) {
 // End-to-end Cloudflare Artifacts setup: auth, create repo, set remote, push.
 // Every failure logs the exact step, exit codes, stderr, and HTTP bodies so the
 // user can see where in the flow the break happened.
+// Artifacts REST API: https://developers.cloudflare.com/artifacts/api/rest-api/
+// Routes are account-scoped under the standard Cloudflare v4 API. (The
+// artifacts.cloudflare.net/v1/api host from the beta announcement rejects
+// wrangler OAuth tokens with 403 / code 10002.)
+const CF_API = "https://api.cloudflare.com/client/v4"
+function artifactsBase(accountId, namespace) {
+  return `${CF_API}/accounts/${accountId}/artifacts/namespaces/${namespace}`
+}
+
+// Account ID from a repo remote like https://<ACCOUNT_ID>.artifacts.cloudflare.net/git/<ns>/<repo>.git
+function accountIdFromRemote(url) {
+  const m = (url || "").match(/^https?:\/\/([0-9a-f]{32})\.artifacts\.cloudflare\.net\//i)
+  return m ? m[1] : null
+}
+
+// Resolve the Cloudflare account to create the repo in:
+// CLOUDFLARE_ACCOUNT_ID, else the token's only account, else ask.
+async function resolveCloudflareAccountId(token, { interactive = false } = {}) {
+  const fromEnv = process.env.CLOUDFLARE_ACCOUNT_ID?.trim()
+  if (fromEnv) return { id: fromEnv }
+  let data
+  try {
+    const res = await fetch(`${CF_API}/accounts?per_page=50`, { headers: { Authorization: `Bearer ${token}` } })
+    data = await res.json()
+    if (!res.ok || !data?.success) {
+      return { error: `listing accounts failed (HTTP ${res.status}): ${data?.errors?.[0]?.message || "unknown error"}` }
+    }
+  } catch (err) {
+    return { error: `listing accounts failed: ${err.message}` }
+  }
+  const accounts = data.result || []
+  if (accounts.length === 0) return { error: "this token can't see any Cloudflare accounts" }
+  if (accounts.length === 1) return { id: accounts[0].id, name: accounts[0].name }
+  if (!interactive) {
+    return { error: `token can access ${accounts.length} accounts — set CLOUDFLARE_ACCOUNT_ID to pick one` }
+  }
+  const picked = await p.select({
+    message: "Which Cloudflare account?",
+    options: accounts.map(a => ({ value: a.id, label: a.name, hint: a.id })),
+  })
+  if (p.isCancel(picked)) return { error: "no account selected" }
+  return { id: picked, name: accounts.find(a => a.id === picked)?.name }
+}
+
 async function setupCloudflareRemote({ targetDir, repoName, namespace, spin }) {
   // Honor an existing API token as a shortcut — skip wrangler entirely.
   let cfApiToken = process.env.CLOUDFLARE_API_TOKEN
@@ -234,7 +278,12 @@ async function setupCloudflareRemote({ targetDir, repoName, namespace, spin }) {
 
   p.log.info(`Using token from ${tokenSource} (length ${cfApiToken.length}, prefix ${cfApiToken.slice(0, 8)}…)`)
 
-  const baseUrl = `https://artifacts.cloudflare.net/v1/api/namespaces/${namespace}`
+  const account = await resolveCloudflareAccountId(cfApiToken, { interactive: Boolean(process.stdin.isTTY) })
+  if (!account.id) {
+    p.log.warn(`Could not determine your Cloudflare account: ${account.error}`)
+    return null
+  }
+  const baseUrl = artifactsBase(account.id, namespace)
   spin.start(`Creating Cloudflare Artifact ${pc.dim(repoName)} at ${pc.dim(baseUrl)}`)
 
   let res
@@ -267,6 +316,14 @@ async function setupCloudflareRemote({ targetDir, repoName, namespace, spin }) {
     const errMsg = createData?.errors?.[0]?.message || createData?.message || "unknown error"
     spin.stop(`Artifacts API failed (HTTP ${res.status}): ${errMsg}`, 1)
     p.log.warn(`full response: ${truncate(rawBody, 400)}`)
+    if (res.status === 401 || res.status === 403) {
+      p.log.warn([
+        "Check that:",
+        `  • Artifacts is enabled for account ${account.name ? `"${account.name}" ` : ""}(${account.id}) — it needs the Workers Paid plan`,
+        "  • your token has Artifacts > Edit (API token) or the artifacts:write scope (wrangler login)",
+        "  • CLOUDFLARE_ACCOUNT_ID points at the right account, if you set it",
+      ].join("\n"))
+    }
     return null
   }
 
@@ -296,12 +353,12 @@ async function setupCloudflareRemote({ targetDir, repoName, namespace, spin }) {
     const stdout = pushResult.stdout?.toString().trim()
     if (stderr) p.log.warn(`git stderr: ${truncate(stderr, 400)}`)
     if (stdout) p.log.warn(`git stdout: ${truncate(stdout, 400)}`)
-    return { repoToken, remote }
+    return { repoToken, remote, accountId: account.id, pushed: false }
   }
 
   spin.stop(`Cloudflare Artifact created: ${pc.cyan(repoName)}`)
   p.log.info(`Remote: ${pc.dim(remote)}`)
-  return { repoToken, remote }
+  return { repoToken, remote, accountId: account.id, pushed: true }
 }
 
 function parseGithubRepo(url) {
@@ -312,10 +369,11 @@ function parseGithubRepo(url) {
 
 function parseCloudflareArtifact(url) {
   if (!url || !/artifacts\.cloudflare/.test(url)) return null
+  const accountId = accountIdFromRemote(url)
   const explicit = url.match(/namespaces\/([^/]+)\/repos\/([^/.]+)/)
-  if (explicit) return { namespace: explicit[1], repo: explicit[2] }
+  if (explicit) return { namespace: explicit[1], repo: explicit[2], accountId }
   const parts = url.replace(/\.git$/, "").split("/").filter(Boolean)
-  if (parts.length >= 2) return { namespace: parts[parts.length - 2], repo: parts[parts.length - 1] }
+  if (parts.length >= 2) return { namespace: parts[parts.length - 2], repo: parts[parts.length - 1], accountId }
   return null
 }
 
@@ -341,11 +399,16 @@ function deleteGithubRepo(slug) {
   return { ok: true }
 }
 
-async function deleteCloudflareArtifact({ namespace, repo }) {
+async function deleteCloudflareArtifact({ namespace, repo, accountId }) {
   const auth = await resolveCloudflareToken()
   if (!auth) return { ok: false, error: "no Cloudflare API token (set CLOUDFLARE_API_TOKEN or run `wrangler login`)" }
+  if (!accountId) {
+    const account = await resolveCloudflareAccountId(auth.token, { interactive: Boolean(process.stdin.isTTY) })
+    if (!account.id) return { ok: false, error: account.error }
+    accountId = account.id
+  }
   try {
-    const res = await fetch(`https://artifacts.cloudflare.net/v1/api/namespaces/${namespace}/repos/${repo}`, {
+    const res = await fetch(`${artifactsBase(accountId, namespace)}/repos/${repo}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${auth.token}` },
     })
@@ -1156,7 +1219,7 @@ async function removeBrain(names, { yes = false, remoteMode = "ask" } = {}) {
         spin.stop(`Removed Cloudflare Artifact ${pc.dim(`${decision.namespace}/${decision.repo}`)}`)
       } else {
         spin.stop(`Failed to delete Cloudflare Artifact for ${name}: ${result.error}`, 1)
-        p.log.warn(`Delete it manually:\n  ${pc.cyan(`TOKEN=$(wrangler auth token)`)}\n  ${pc.cyan(`curl -X DELETE https://artifacts.cloudflare.net/v1/api/namespaces/${decision.namespace}/repos/${decision.repo} \\`)}\n  ${pc.cyan(`  -H "Authorization: Bearer $TOKEN"`)}`)
+        p.log.warn(`Delete it manually:\n  ${pc.cyan(`TOKEN=$(wrangler auth token)`)}\n  ${pc.cyan(`curl -X DELETE https://api.cloudflare.com/client/v4/accounts/${decision.accountId || "<ACCOUNT_ID>"}/artifacts/namespaces/${decision.namespace}/repos/${decision.repo} \\`)}\n  ${pc.cyan(`  -H "Authorization: Bearer $TOKEN"`)}`)
       }
     }
   }
@@ -1407,10 +1470,15 @@ async function createBrain(initialName, { agents: explicitAgents = null, copy = 
     spin.stop("git init failed — run it manually inside your vault", 1)
   }
 
+  // Remote setup outcome, surfaced in Next steps / outro instead of a silent
+  // success-looking finish. null = no remote requested.
+  let remoteProblem = null
+
   // GitHub repo (optional)
   if (remoteProvider === "github") {
     if (!commandExists("gh")) {
       p.log.warn(`gh CLI not found — install from https://cli.github.com, then run:\n  gh repo create ${repoName} --private --source=. --remote=origin --push`)
+      remoteProblem = "GitHub repo not created (gh CLI not found)"
     } else {
       const authCheck = spawnSync("gh", ["auth", "status"], { stdio: "pipe" })
       let loggedIn = authCheck.status === 0
@@ -1430,7 +1498,10 @@ async function createBrain(initialName, { agents: explicitAgents = null, copy = 
           spin.stop(`GitHub repo created (private): ${pc.cyan(repoName)}`)
         } else {
           spin.stop(`gh repo create failed — run: gh repo create ${repoName} --private --source=. --remote=origin --push`, 1)
+          remoteProblem = "GitHub repo not created (gh repo create failed)"
         }
+      } else {
+        remoteProblem = "GitHub repo not created (not logged in to gh)"
       }
     }
   }
@@ -1442,12 +1513,16 @@ async function createBrain(initialName, { agents: explicitAgents = null, copy = 
         return r.status === 0 ? r.stdout.toString().trim() : ""
       })()
     : ""
+  let cfAccountId = null
   if (remoteProvider === "cloudflare") {
     const result = await setupCloudflareRemote({ targetDir, repoName, namespace: cfNamespace, spin })
     if (result?.repoToken) {
       p.log.warn(`Save your Artifacts repo token — it expires and you'll need to mint a new one:\n  ${result.repoToken}`)
     }
     gitRemote = result?.remote || ""
+    cfAccountId = result?.accountId || null
+    if (!result) remoteProblem = "Cloudflare Artifact not created (see the error above)"
+    else if (!result.pushed) remoteProblem = "Cloudflare Artifact created, but the initial push failed (see the error above)"
   }
 
   // Write central config
@@ -1457,14 +1532,25 @@ async function createBrain(initialName, { agents: explicitAgents = null, copy = 
 
   // Next steps
   const brainDisplayPath = toDisplayPath(targetDir)
-  const remoteSteps = remoteProvider === "cloudflare"
+  const remoteSteps = remoteProblem
+    ? [
+        `${pc.yellow("⚠")}  ${pc.yellow(remoteProblem)}`,
+        ...(remoteProvider === "github"
+          ? [`${pc.cyan(`gh repo create ${repoName} --private --source=. --remote=origin --push`)}  retry`]
+          : [
+              `${pc.dim("# fix the error above, then delete this brain and re-run, or add any git remote:")}`,
+              `${pc.cyan(`csb rm ${targetName} && csb ${targetName}`)}`,
+            ]),
+        `${pc.cyan("git remote add origin <url> && git push -u origin main")}  any other remote`,
+      ]
+    : remoteProvider === "cloudflare"
     ? [
         `${pc.dim("# Mint a fresh git push/pull token when the current one expires:")}`,
         `${pc.cyan(`TOKEN=$(wrangler auth token)`)}`,
-        `${pc.cyan(`curl -X POST https://artifacts.cloudflare.net/v1/api/namespaces/${cfNamespace}/tokens \\`)}`,
+        `${pc.cyan(`curl -X POST https://api.cloudflare.com/client/v4/accounts/${cfAccountId}/artifacts/namespaces/${cfNamespace}/tokens \\`)}`,
         `${pc.cyan(`  -H "Authorization: Bearer $TOKEN" \\`)}`,
         `${pc.cyan(`  -H "Content-Type: application/json" \\`)}`,
-        `${pc.cyan(`  -d '{"repo":"${repoName}","scope":"write","ttl":86400}'`)}`,
+        `${pc.cyan(`  -d '{"repo":"${repoName}","scope":"write","ttl":86400}'`)}  ${pc.dim("# token is in .result.plaintext")}`,
       ]
     : remoteProvider === "none"
       ? [
@@ -1481,7 +1567,12 @@ async function createBrain(initialName, { agents: explicitAgents = null, copy = 
   ].join("\n")
 
   p.note(nextSteps, "Next steps")
-  p.outro("Happy knowledge building!")
+  if (remoteProblem) {
+    p.outro(pc.yellow(`Brain created, but the git remote isn't set up: ${remoteProblem}.`))
+    process.exitCode = 1
+  } else {
+    p.outro("Happy knowledge building!")
+  }
 }
 
 const SUBCOMMANDS = new Set([
