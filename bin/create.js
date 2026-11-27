@@ -191,11 +191,13 @@ function iconStyle() {
 }
 const CF_ORANGE = (s) => (pc.isColorSupported ? `\x1b[38;2;243;128;32m${s}\x1b[39m` : s)
 const REMOTE_ICONS = {
-  // nf-fa-github, nf-dev-cloudflare, nf-oct-file_directory. Each glyph is one
-  // cell wide, so pad with a space to line up with the two-cell emoji.
-  nerd: { github: "\uf09b ", cloudflare: CF_ORANGE("\ue792") + " ", none: pc.dim("\uf413") + " " },
-  emoji: { github: "🐙", cloudflare: "⛅", none: "📁" },
-  none: { github: "  ", cloudflare: "  ", none: "  " },
+  // nf-fa-github, nf-fa-cloud (filled, in Cloudflare orange — the
+  // nf-dev-cloudflare glyph renders tiny), nf-oct-file_directory.
+  // Each entry includes its trailing gap: Nerd glyphs are drawn ~1.5 cells
+  // wide so one space reads right; emoji are 2 cells and want two.
+  nerd: { github: "\uf09b ", cloudflare: CF_ORANGE("\uf0c2") + " ", none: "\uf413 " },
+  emoji: { github: "🐙  ", cloudflare: "⛅  ", none: "📁  " },
+  none: { github: "", cloudflare: "", none: "" },
 }[iconStyle()]
 
 const CF_API = "https://api.cloudflare.com/client/v4"
@@ -1543,9 +1545,9 @@ async function createBrain(initialName, { agents: explicitAgents = null, copy = 
     const provider = await p.select({
       message: "Where to host the Git remote?",
       options: [
-        { value: "github", label: `${REMOTE_ICONS.github}  GitHub`, hint: "private repo via gh · default" },
-        { value: "cloudflare", label: `${REMOTE_ICONS.cloudflare}  Cloudflare Artifacts`, hint: "git remote via wrangler" },
-        { value: "none", label: `${REMOTE_ICONS.none}  Skip — I'll add a remote later`, hint: "local git only" },
+        { value: "github", label: `${REMOTE_ICONS.github}GitHub`, hint: "private repo via gh · default" },
+        { value: "cloudflare", label: `${REMOTE_ICONS.cloudflare}Cloudflare Artifacts`, hint: "git remote via wrangler" },
+        { value: "none", label: `${REMOTE_ICONS.none}Skip — I'll add a remote later`, hint: "local git only" },
       ],
       initialValue: "github",
     })
