@@ -748,7 +748,7 @@ async function cmdGitToken(args) {
   let printOnly = false
   for (let i = 0; i < args.length; i++) {
     const a = args[i]
-    if (a === "--brain") brainName = args[++i]
+    if (a === "--brain") { brainName = brainFlagValue(args, i); i++ }
     else if (a === "--ttl") ttl = parseTtl(args[++i])
     else if (a.startsWith("--ttl=")) ttl = parseTtl(a.slice(6))
     else if (a === "--read") scope = "read"
@@ -806,7 +806,7 @@ async function cmdSkills(args) {
 
   let brainName = null
   for (let i = 0; i < rest.length; i++) {
-    if (rest[i] === "--brain") brainName = rest[++i]
+    if (rest[i] === "--brain") { brainName = brainFlagValue(rest, i); i++ }
   }
 
   const isInteractive = Boolean(process.stdin.isTTY)
@@ -861,8 +861,10 @@ function parseConfig(content) {
   return { defaultBrain: defaultMatch ? defaultMatch[1] : null, brains, header }
 }
 
-function hasHelpFlag(args) {
-  return args.some(a => a === "--help" || a === "-h")
+function hasHelpFlag(args, forwardAfterSeparator = false) {
+  const separator = forwardAfterSeparator ? args.indexOf("--") : -1
+  const ownArgs = separator === -1 ? args : args.slice(0, separator)
+  return ownArgs.some(a => a === "--help" || a === "-h")
 }
 
 async function readConfigStatus() {
@@ -1108,6 +1110,14 @@ async function cmdUse(args) {
   }
 }
 
+function brainFlagValue(args, index) {
+  const value = args[index + 1]
+  if (!value || value.startsWith("-")) {
+    throw new Error("--brain requires a brain name.")
+  }
+  return value
+}
+
 async function cmdPath(args) {
   // Canonical:  csb path [qmd|config|root] [--brain <name>]
   // Deprecated: csb path --qmd | --config | --root
@@ -1116,7 +1126,7 @@ async function cmdPath(args) {
   let sawLegacyFlag = false
   for (let i = 0; i < args.length; i++) {
     const a = args[i]
-    if (a === "--brain") { name = args[++i]; continue }
+    if (a === "--brain") { name = brainFlagValue(args, i); i++; continue }
     if (a === "--root")   { mode = "root";   sawLegacyFlag = true; continue }
     if (a === "--qmd")    { mode = "qmd";    sawLegacyFlag = true; continue }
     if (a === "--config") { mode = "config"; sawLegacyFlag = true; continue }
@@ -1143,7 +1153,7 @@ function parseBrainAndRest(args) {
   const rest = []
   for (let i = 0; i < args.length; i++) {
     const a = args[i]
-    if (a === "--brain") { name = args[++i]; continue }
+    if (a === "--brain") { name = brainFlagValue(args, i); i++; continue }
     if (a === "--") { rest.push(...args.slice(i + 1)); break }
     rest.push(a)
   }
@@ -1541,6 +1551,12 @@ async function createBrain(initialName, { agents: explicitAgents = null, copy = 
     p.log.step(`Name of the brain?\n${pc.dim(targetName)}`)
   }
 
+  // The name is both a directory component and a TOML string. Reject path
+  // separators, traversal components and characters that corrupt the config.
+  if (!targetName.trim() || targetName === "." || targetName === ".." || /[/\\"\x00-\x1f\x7f]/.test(targetName)) {
+    throw new Error("Brain name must be a single directory name without quotes or control characters.")
+  }
+
   const toDisplayPath = p => p.startsWith(homedir()) ? "~" + p.slice(homedir().length) : p
   const qmdPath = join(CSB_ROOT, targetName, ".qmd", "index.sqlite")
 
@@ -1833,7 +1849,7 @@ async function main() {
   }
 
   // Per-subcommand --help / -h — intercept before any prompts run.
-  if (SUBCOMMANDS.has(cmd) && hasHelpFlag(rest)) {
+  if (SUBCOMMANDS.has(cmd) && hasHelpFlag(rest, cmd === "exec" || cmd === "qmd")) {
     const topicMap = { list: "ls", remove: "rm", default: "use", switch: "use" }
     await printHelp(topicMap[cmd] || cmd)
     return
