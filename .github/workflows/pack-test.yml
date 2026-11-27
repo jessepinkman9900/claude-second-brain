@@ -68,6 +68,7 @@ jobs:
           check "scripts/qmd/reindex.ts"                   "$VAULT/scripts/qmd/reindex.ts"
           check "package.json"                             "$VAULT/package.json"
           check "CLAUDE.md"                                "$VAULT/CLAUDE.md"
+          check "AGENTS.md (points non-Claude agents at CLAUDE.md)" "$VAULT/AGENTS.md"
           check "mise.toml"                                "$VAULT/mise.toml"
           check ".qmd/index.sqlite (qmd:setup succeeded)"  "$VAULT/.qmd/index.sqlite"
           check "~/.claude-second-brain/config.toml"            "$HOME/.claude-second-brain/config.toml"

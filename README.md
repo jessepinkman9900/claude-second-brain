@@ -6,7 +6,7 @@
 [![npm](https://img.shields.io/npm/v/claude-second-brain)](https://www.npmjs.com/package/claude-second-brain) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/jessepinkman9900/claude-second-brain)
 
 
-The fastest way to start your personal knowledge base powered by Obsidian, Claude Code, qmd, and GitHub.
+The fastest way to start your personal knowledge base powered by Obsidian, your AI coding agent ([Claude Code](https://claude.ai/code), Codex, Cursor, GitHub Copilot, Gemini CLI, and more), qmd, and GitHub.
 
 
 ```
@@ -30,7 +30,7 @@ You've been reading papers, articles, and books for years. Drop a source in, run
 
 ## How this is different
 
-This is not a RAG system. It's not a chatbot over your notes. It's an actively maintained, cross-linked wiki — five structured page types, YAML frontmatter, and a set of Claude Code skills that run the whole thing.
+This is not a RAG system. It's not a chatbot over your notes. It's an actively maintained, cross-linked wiki — five structured page types, YAML frontmatter, and a set of agent skills that run the whole thing — in Claude Code, Codex, Cursor, Copilot, or any agent that supports [Agent Skills](https://agentskills.io).
 
 
 The schema (`CLAUDE.md`) is that idea file. Claude reads it every session.
@@ -41,10 +41,10 @@ The schema (`CLAUDE.md`) is that idea file. Claude reads it every session.
 
 | Tool | Role |
 |---|---|
-| **Claude Code** | Reads sources, writes wiki pages, cross-links, flags contradictions |
+| **Your agent** (Claude Code, Codex, Cursor, Copilot, …) | Reads sources, writes wiki pages, cross-links, flags contradictions |
 | **qmd** | Local hybrid search (vector + BM25) across your entire wiki |
 | **Obsidian** | Graph view, backlinks, mobile reading — offline, no extra sync |
-| **GitHub** | Source of truth — version history, Claude Code anywhere, Obsidian sync |
+| **GitHub** | Source of truth — version history, your agent anywhere, Obsidian sync |
 
 Everything is pre-configured. You bring the sources.
 
@@ -95,7 +95,7 @@ Open `~/.claude-second-brain/my-brain/` as a vault in Obsidian — the folder is
 
 ---
 
-## Claude Code skills included
+## Agent skills included
 
 The wiki ships with a set of slash commands that cover the full workflow. No manual prompting, no copy-pasting.
 
@@ -112,6 +112,22 @@ The wiki ships with a set of slash commands that cover the full workflow. No man
 **`/brain-refresh`** — Re-scan the vault for new or changed files and regenerate vector embeddings. Run after a bulk ingest session or manual edits. Pass `force` to re-embed every chunk (e.g. after changing the embedding model).
 
 **`/brain-rebuild`** — **Destructive.** Redesigns the qmd schema: analyzes the wiki, proposes new collections and contexts, waits for your approval, then patches `scripts/qmd/setup.ts`, drops the old index, and rebuilds embeddings from scratch. Use only when the current structure no longer fits how you search.
+
+---
+
+## Works with any agent
+
+The wiki skills follow the open [Agent Skills](https://agentskills.io/specification) format, so the same `/brain-ingest`, `/brain-search`, `/brain-refresh`, `/brain-rebuild` and `/lint` work in every agent that supports skills. The CLI installs them for the agents you pick:
+
+| Agent | Global skills dir | Vault skills dir |
+|---|---|---|
+| Claude Code | `~/.claude/skills` (symlink) | `.claude/skills` |
+| Codex, Cursor, GitHub Copilot, Gemini CLI, OpenCode, Amp, Cline | `~/.agents/skills` | `.agents/skills` |
+| Windsurf | `~/.codeium/windsurf/skills` (symlink) | `.windsurf/skills` |
+| Goose | `~/.config/goose/skills` (symlink) | `.goose/skills` |
+| Kiro CLI, Roo Code, Continue, Junie, Augment | `~/.<agent>/skills` (symlink) | `.<agent>/skills` |
+
+The vault's operating instructions live in `CLAUDE.md`, with an `AGENTS.md` that points agents which read that file (Codex, Cursor, Copilot, …) to it. Using an agent that isn't listed? Copy the skill folders from `~/.agents/skills` into its skills directory.
 
 ---
 
@@ -141,7 +157,7 @@ flowchart TB
     S3[personal/]
   end
 
-  subgraph Skills["Claude Code skills"]
+  subgraph Skills["Agent skills"]
     direction LR
     I["/brain-ingest"]
     Q["/brain-search"]
@@ -309,14 +325,14 @@ npx skills update -a claude-code
 
 - [ ] GitHub Actions to invoke `/brain-refresh` on a schedule
 - [ ] GitHub agentic workflows — auto-ingest on push, scheduled lint, auto-summary on new sources
-- [ ] More Claude Code skills (source discovery, topic clustering)
+- [ ] More wiki skills (source discovery, topic clustering)
 
 ---
 
 ## Requirements
 
 - [mise](https://mise.jdx.dev/) — auto-installed by the CLI if missing
-- [Claude Code](https://claude.ai/code) — the CLI that runs the wiki
+- An AI coding agent that supports [Agent Skills](https://agentskills.io) — [Claude Code](https://claude.ai/code), Codex, Cursor, GitHub Copilot, Gemini CLI, OpenCode, Windsurf, Goose, …
 - [Obsidian](https://obsidian.md/) — optional but recommended
 
 ---
