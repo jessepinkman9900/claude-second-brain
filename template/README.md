@@ -4,7 +4,7 @@ built using [claude-second-brain](https://github.com/jessepinkman9900/claude-sec
 
 **Your notes don't compound. This wiki does.**
 
-Drop in a source. Claude reads it, extracts what matters, cross-links it to everything you already know, and files it. Query it six months later and get cited answers — not a list of files to re-read.
+Drop in a source. Your agent reads it, extracts what matters, cross-links it to everything you already know, and files it. Query it six months later and get cited answers — not a list of files to re-read.
 
 Inspired by [Andrej Karpathy's approach to LLM-powered knowledge management](https://x.com/karpathy/status/2040470801506541998?s=20).
 
@@ -30,9 +30,9 @@ qmd collections are already registered by the CLI during scaffolding — `pnpm q
 
 ### Daily workflow
 
-**`/brain-ingest`** — Add a file to `raw-sources/articles/`, `raw-sources/pdfs/`, or `raw-sources/personal/`, then run `/brain-ingest`. Claude summarizes the source, asks what aspects matter most, updates related wiki pages, flags contradictions, and logs everything.
+**`/brain-ingest`** — Add a file to `raw-sources/articles/`, `raw-sources/pdfs/`, or `raw-sources/personal/`, then run `/brain-ingest`. Your agent summarizes the source, asks what aspects matter most, updates related wiki pages, flags contradictions, and logs everything.
 
-**`/brain-search`** — Ask anything: `what do I know about [topic]?` Claude searches the wiki semantically and returns a cited answer. If it synthesizes multiple pages in a useful way, it offers to file it as a permanent `wiki/qa/` entry.
+**`/brain-search`** — Ask anything: `what do I know about [topic]?` Your agent searches the wiki semantically and returns a cited answer. If it synthesizes multiple pages in a useful way, it offers to file it as a permanent `wiki/qa/` entry.
 
 **`/lint`** — Health-check the wiki. Finds orphan pages, broken links, unresolved contradictions, and data gaps. Reports findings and fixes what it can.
 
@@ -46,7 +46,7 @@ qmd collections are already registered by the CLI during scaffolding — `pnpm q
 
 ## How it works
 
-Sources flow in on the left, Claude synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and git makes the whole vault editable from Obsidian and your agent on any device.
+Sources flow in on the left, your agent synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and git makes the whole vault editable from Obsidian and your agent on any device.
 
 ```mermaid
 flowchart TB
@@ -81,7 +81,7 @@ flowchart TB
   subgraph Read["Read / edit anywhere"]
     direction LR
     OB["Obsidian<br/>graph · backlinks · mobile"]
-    CC["Claude Code<br/>desktop + mobile"]
+    CC["Your agent<br/>desktop, web + mobile"]
   end
 
   User((you))
@@ -127,12 +127,12 @@ All pages cross-link with Obsidian `[[wikilinks]]`. Contradictions are flagged w
 
 ```
 claude-second-brain/
-├── CLAUDE.md              ← The schema. Claude reads this every session.
-├── raw-sources/           ← Your raw inputs. Claude never modifies these.
+├── CLAUDE.md              ← The schema. Your agent reads this every session.
+├── raw-sources/           ← Your raw inputs. The agent never modifies these.
 │   ├── articles/          ← Web articles saved as markdown
 │   ├── pdfs/              ← PDFs or extracted text
 │   └── personal/          ← Brain dumps, rough notes
-├── wiki/                  ← Claude owns this entirely.
+├── wiki/                  ← The agent owns this entirely.
 │   ├── index.md           ← Master index
 │   ├── log.md             ← Append-only activity log
 │   ├── overview.md        ← Evolving synthesis
