@@ -2,6 +2,35 @@
 
 A running record of every released version of `claude-second-brain` on npm. Newest releases first. For auto-generated notes and tags, see the [GitHub releases](https://github.com/jessepinkman9900/claude-second-brain/releases) page.
 
+## Unreleased
+
+Works with any agent, not just Claude Code, plus a faster, unattended setup and first-class Cloudflare Artifacts git tokens. Existing installs: run `csb skills` once to move global skills from `~/.claude/skills` to `~/.agents/skills` (the old copies become symlinks).
+
+**Agents:**
+- Skills install for any [Agent Skills](https://agentskills.io) agent, with the same layout as `npx skills`: global skills are written once to `~/.agents/skills/<name>` and symlinked into agent-specific dirs (`~/.claude/skills`, `~/.codeium/windsurf/skills`, `~/.config/goose/skills`, …). Supported: Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, OpenCode, Amp, Cline, Windsurf, Goose, Kiro CLI, Roo Code, Continue, Junie, Augment.
+- Vault-local skills (`brain-rebuild`, `lint`) are copied into each selected agent's project skills dir (`.agents/skills/`, `.windsurf/skills/`, …).
+- New `--agent, -a <ids>` (comma-separated or `all`) and `CSB_AGENTS` to pick agents; `--copy` to copy instead of symlink. Interactive setup preselects Claude Code plus every detected agent.
+- New `csb skills [--agent <ids>] [--copy] [--brain <name>]` to add agents or update skills later, and `csb skills --list` to show supported agents and their skills dirs.
+- New vaults ship an `AGENTS.md` that points Codex, Cursor, Copilot and other agents at `CLAUDE.md`.
+- The **Next steps** box shows how to open each agent you picked (`claude`, `codex`, `cursor .`, …).
+
+**Setup:**
+- All prompts, including the qmd-registration question, are asked up front; the rest runs unattended.
+- Long steps show a live spinner with elapsed time and the latest output line.
+- If `pnpm` 10+ is on your `PATH`, it's used directly; otherwise the CLI installs mise and fetches node + pnpm. `CSB_USE_MISE=1` forces mise.
+- The git-remote picker shows GitHub / Cloudflare logos as Nerd Font glyphs in Ghostty, WezTerm and kitty, emoji elsewhere. Override with `CSB_ICONS=nerd|emoji|none`.
+- If the remote can't be created or pushed, the brain is still created locally, the problem and fix are listed in **Next steps**, and the CLI exits 1.
+
+**Cloudflare Artifacts:**
+- Switched to the account-scoped REST API (`api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/artifacts/…`); the old `artifacts.cloudflare.net/v1/api` host is no longer used. Set `CLOUDFLARE_ACCOUNT_ID` when your login can see more than one account.
+- A deleted or inactive namespace is recreated automatically before the repo is created.
+- Setup now saves a 90-day git token in the vault's `.git/config` (`http.<remote>.extraHeader`), so `git push` / `git pull` and obsidian-git just work. No more 24-hour token to copy.
+- New `csb git-token [<name>] [--ttl <duration>] [--read] [--print]` renews it (default 90 days, max 1 year), replacing the manual `curl` renewal.
+
+**Other:**
+- `csb doctor` accepts system pnpm 10+ in place of mise and checks that the global skills in `~/.agents/skills` match the installed release.
+- README, docs and package description say "any agent" and "git" (GitHub, Cloudflare Artifacts, or any remote) instead of Claude Code and GitHub only.
+
 ## v1.1.0 — 2026-04-19
 
 CLI UX pass. Every addition is non-breaking — the `--` in `csb qmd -- …` and the `path --qmd` / `--config` / `--root` flag form continue to work, with a stderr deprecation notice on the flag form.

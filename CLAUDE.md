@@ -240,8 +240,8 @@ Whenever you **add, remove, or rename a supported agent** in `bin/agents.js`, up
 
 Whenever you **add, remove, or rename a skill** under `template/.claude/skills/`, you MUST update the following in the same change:
 
-1. **`README.md`** (root) — the "Claude Code skills included" section and the "Installing and updating skills" block. Bump the skill count ("N wiki skills") in the install commands.
-2. **`template/README.md`** — the "Your Claude Code skills" section and the "Installing and updating skills" block. Bump the skill count.
+1. **`README.md`** (root) — the "Agent skills included" section and the "Installing and updating skills" block. Bump the skill count ("N wiki skills") in the install commands.
+2. **`template/README.md`** — the "Your agent skills" section and the "Installing and updating skills" block. Bump the skill count.
 3. **`bin/create.js`** — the `GLOBAL_SKILLS` array (top of the file) if the skill should be installed globally (canonical copy in `~/.agents/skills/`, symlinked into each selected agent's global dir such as `~/.claude/skills/` — see `bin/agents.js`). Every other template skill is vault-local and is copied into each selected agent's project skills dir automatically. `brain-ingest`, `brain-search`, `brain-refresh` are global today; `brain-rebuild`, `lint`, `setup` are vault-local.
 4. **`.github/workflows/pack-test.yml`** — add a `check` line for the new vault-local skill directory, and if the skill is global, add `check` lines for `$HOME/.claude/skills/<name>/SKILL.md` and `$HOME/.claude/skills/<name>/.csb-version` (and extend the `~/.agents/skills` loop), plus `grep_check` lines for `claude-second-brain path` and `claude-second-brain qmd` (global skills use the CLI proxy, not a baked INDEX_PATH).
 5. **`.claude/skills/pack-test/SKILL.md`** — update the expected-skills comment, the `ls` and `grep` commands in Step 3, the checklist table (including the "N subdirs" count), and the cleanup / overwrite-warning note in Step 4.
