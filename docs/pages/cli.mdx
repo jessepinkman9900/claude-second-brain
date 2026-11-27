@@ -16,6 +16,7 @@ All examples below use `csb`; substitute `npx claude-second-brain` if you haven'
 | `csb path [qmd\|config\|root]` | Print a path for the default (or named) brain. |
 | `csb qmd [flags] <qmd args…>` | Run `qmd` against the default (or named) brain. |
 | `csb exec [flags] -- <cmd…>` | Run a command inside the default (or named) brain's directory. |
+| `csb skills [--agent <ids>]` | Install or update the wiki skills for any agent (Claude Code, Codex, Cursor, Copilot, …). |
 | `csb doctor` | Verify your setup and suggest fixes. |
 | `csb help [<command>]` | Show usage for a command. |
 
@@ -34,7 +35,13 @@ csb qmd --help
 ```bash
 csb                     # interactive — prompts for name + remote
 csb my-brain            # skip the name prompt
+csb my-brain --agent claude-code,codex   # pick agents up front
 ```
+
+Options:
+
+- `--agent, -a <ids>` — agents to install skills for, comma-separated or `all`. Also read from `CSB_AGENTS`. Without it, the CLI prompts (interactive) or uses Claude Code plus every detected agent (non-interactive).
+- `--copy` — copy skills into each agent's folder instead of symlinking. See [Install skills for any agent](#install-skills-for-any-agent).
 
 Creates the brain at `~/.claude-second-brain/<name>/`, runs `mise install`, `pnpm install`, `pnpm qmd:setup`, `git init`, and registers it in `~/.claude-second-brain/config.toml`. The first brain created is set as the default.
 
@@ -45,6 +52,7 @@ During the interactive flow the CLI asks:
 - **Repo name** — only shown when a remote is selected; defaults to the brain name.
 - **Artifacts namespace** — only shown for Cloudflare; defaults to `default`.
 - **Register qmd collections now?** — confirms running `pnpm qmd:setup`.
+- **Install skills for which agents?** — multiselect; Claude Code and any detected agent are preselected.
 
 ## List brains
 
@@ -151,6 +159,23 @@ Flags:
 - `--brain <name>` — target a specific brain instead of the default.
 - `--` — required separator before the command to run.
 
+## Install skills for any agent
+
+```bash
+csb skills                          # prompt for agents, install/update skills
+csb skills --agent codex,cursor     # non-interactive
+csb skills --agent all --copy       # every supported agent, real copies
+csb skills --list                   # supported agents + where they read skills
+```
+
+The skills follow the [Agent Skills](https://agentskills.io/specification) format and are installed with the same layout as [`npx skills`](https://github.com/vercel-labs/skills):
+
+- **Global skills** (`brain-ingest`, `brain-search`, `brain-refresh`) are written once to `~/.agents/skills/<name>`, with a `.csb-version` marker. Codex, Cursor, GitHub Copilot, Gemini CLI, OpenCode, Amp and Cline read `~/.agents/skills` directly.
+- Agents with their own folder get a **symlink** to the shared copy: `~/.claude/skills` (Claude Code, honours `CLAUDE_CONFIG_DIR`), `~/.codeium/windsurf/skills`, `~/.config/goose/skills`, `~/.kiro/skills`, `~/.roo/skills`, `~/.continue/skills`, `~/.junie/skills`, `~/.augment/skills`. If a symlink can't be created, or with `--copy`, the skill is copied instead.
+- **Vault-local skills** (`brain-rebuild`, `lint`) stay in the vault's `.claude/skills/` and are copied — never symlinked, since the vault is a git repo — into each other selected agent's project folder (`.agents/skills/`, `.windsurf/skills/`, …) of the default brain, or the one named with `--brain`. Commit them to sync.
+
+Agents are detected by their config folder (e.g. `~/.codex`, `~/.cursor`, `~/.copilot`). Upgrading from a release that installed only to `~/.claude/skills`: run `csb skills` once — existing copies there are replaced with symlinks to `~/.agents/skills`.
+
 ## Verify your setup
 
 ```bash
@@ -164,6 +189,7 @@ Checks for:
 - At least one registered brain.
 - A resolvable default brain.
 - For each brain: the `path` directory exists; the `qmd_index` file exists.
+- Each global skill is installed in `~/.agents/skills` at this release's version.
 
 Each failed or warning check prints a `Fix:` hint with the exact command to run. Exits non-zero on failures.
 

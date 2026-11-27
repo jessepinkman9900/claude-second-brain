@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 import { cp, rename, access, readFile, writeFile, mkdir, rm } from "fs/promises"
-import { readFileSync } from "fs"
+import { readFileSync, readdirSync } from "fs"
 import { join, dirname } from "path"
 import { fileURLToPath } from "url"
 import { spawnSync } from "child_process"
 import { homedir } from "os"
 import * as p from "@clack/prompts"
 import pc from "picocolors"
+import {
+  AGENTS, AGENT_IDS, CANONICAL_GLOBAL_DIR, detectAgents,
+  installProjectSkills, linkGlobalSkill, parseAgentFlags, resolveAgents, writeCanonicalSkill,
+} from "./agents.js"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const TEMPLATE = join(__dirname, "../template")
@@ -300,6 +304,11 @@ async function deleteCloudflareArtifact({ namespace, repo }) {
 }
 
 const GLOBAL_SKILLS = ["brain-ingest", "brain-search", "brain-refresh"]
+// Vault-local skills: every template skill that isn't global.
+const LOCAL_SKILLS = readdirSync(join(TEMPLATE, ".claude", "skills"), { withFileTypes: true })
+  .filter(d => d.isDirectory() && !GLOBAL_SKILLS.includes(d.name))
+  .map(d => d.name)
+const CANONICAL_PROJECT_DIR_LABEL = ".agents/skills (project) and ~/.agents/skills (global)"
 
 async function readSkillVersion(skillDir) {
   try {
@@ -310,6 +319,14 @@ async function readSkillVersion(skillDir) {
   }
 }
 
+// Installed version of a global skill: the canonical ~/.agents/skills copy,
+// falling back to a legacy ~/.claude/skills copy from releases before
+// multi-agent install.
+async function readInstalledGlobalVersion(name) {
+  return (await readSkillVersion(join(CANONICAL_GLOBAL_DIR, name)))
+    || (await readSkillVersion(join(homedir(), ".claude", "skills", name)))
+}
+
 // Decide whether to (re)install each global skill. Returns a map name→"install"|"skip".
 // Interactive mismatch prompts once per run with update-all / skip-all / ask-per-skill.
 async function planGlobalSkillInstall({ isInteractive }) {
@@ -317,12 +334,13 @@ async function planGlobalSkillInstall({ isInteractive }) {
   const mismatches = []
 
   for (const name of GLOBAL_SKILLS) {
-    const destDir = join(homedir(), ".claude", "skills", name)
-    const installed = await readSkillVersion(destDir)
+    const installed = await readInstalledGlobalVersion(name)
+    const hasCanonical = await readSkillVersion(join(CANONICAL_GLOBAL_DIR, name))
     if (!installed) {
       decisions[name] = "install"
     } else if (installed === version) {
-      decisions[name] = "skip"
+      // Same version but only a legacy copy exists: migrate to the canonical dir.
+      decisions[name] = hasCanonical ? "skip" : "install"
     } else {
       mismatches.push({ name, installed })
     }
@@ -366,40 +384,119 @@ async function planGlobalSkillInstall({ isInteractive }) {
   return decisions
 }
 
-async function installGlobalSkills({ isInteractive }) {
-  const globalSkillsDir = join(homedir(), ".claude", "skills")
+// Install the global skills for each selected agent, the way `npx skills` does:
+// one real copy in ~/.agents/skills/<name>, then a symlink (or copy, with
+// --copy or when symlinks fail) in every agent's own global skills dir.
+// Universal agents (Codex, Cursor, Copilot, …) read ~/.agents/skills directly.
+async function installGlobalSkills({ isInteractive, agents, copy = false }) {
   const decisions = await planGlobalSkillInstall({ isInteractive })
 
   const installed = []
   const skipped = []
   const sameVersion = []
+  const links = []
 
-  await Promise.all(GLOBAL_SKILLS.map(async name => {
-    const destDir = join(globalSkillsDir, name)
+  for (const name of GLOBAL_SKILLS) {
     const decision = decisions[name]
+    const canonical = join(CANONICAL_GLOBAL_DIR, name)
 
     if (decision === "skip") {
       // Differentiate "already at this version" from "user declined update" for logging.
-      const current = await readSkillVersion(destDir)
+      const current = await readInstalledGlobalVersion(name)
       if (current === version) sameVersion.push(name)
       else skipped.push(name)
-      return
+      // A declined update with only a legacy copy: leave everything untouched.
+      if (!(await readSkillVersion(canonical))) continue
+    } else {
+      const content = await readFile(join(TEMPLATE, ".claude/skills", name, "SKILL.md"), "utf8")
+      await writeCanonicalSkill(name, {
+        "SKILL.md": content,
+        ".csb-version": JSON.stringify({ version, installed: new Date().toISOString() }, null, 2) + "\n",
+      })
+      installed.push(name)
     }
 
-    const srcFile = join(TEMPLATE, ".claude/skills", name, "SKILL.md")
-    const content = await readFile(srcFile, "utf8")
+    // (Re)link for every selected agent — idempotent, so newly added agents
+    // pick up skills even when the canonical copy is already current.
+    for (const id of agents) {
+      links.push({ name, ...(await linkGlobalSkill(id, name, { copy })) })
+    }
+  }
 
-    await mkdir(destDir, { recursive: true })
-    await writeFile(join(destDir, "SKILL.md"), content, "utf8")
-    await writeFile(
-      join(destDir, ".csb-version"),
-      JSON.stringify({ version, installed: new Date().toISOString() }, null, 2) + "\n",
-      "utf8",
-    )
-    installed.push(name)
-  }))
+  return { installed, skipped, sameVersion, links }
+}
 
-  return { installed, skipped, sameVersion }
+function summarizeAgentInstall(agents, links, toDisplayPath) {
+  return agents.map(id => {
+    const own = links.filter(l => l.agent === id)
+    const mode = own.some(l => l.mode === "copy") ? "copy"
+      : own.some(l => l.mode === "symlink") ? "symlink" : "canonical"
+    const where = mode === "canonical"
+      ? toDisplayPath(CANONICAL_GLOBAL_DIR)
+      : toDisplayPath(dirname(own[0]?.path || ""))
+    return `  ${AGENTS[id].displayName.padEnd(15)} ${pc.dim(`${where}${mode === "canonical" ? "" : ` (${mode})`}`)}`
+  }).join("\n")
+}
+
+function globalSkillSummary({ installed, skipped }) {
+  return [
+    installed.length > 0 ? `installed ${installed.length}` : null,
+    skipped.length > 0 ? `kept ${skipped.length}` : null,
+  ].filter(Boolean).join(", ") || "already up to date"
+}
+
+// `csb skills [--agent <ids>] [--copy] [--brain <name>] [--list]`
+// Install / update the global skills for more agents without creating a brain,
+// and copy the vault-local skills into the brain for agents that need them.
+async function cmdSkills(args) {
+  const { agents: explicit, copy, rest } = parseAgentFlags(args)
+  const toDisplayPath = p => p && p.startsWith(homedir()) ? "~" + p.slice(homedir().length) : p
+
+  if (rest.includes("--list") || rest[0] === "ls" || rest[0] === "list") {
+    const detected = detectAgents()
+    const lines = AGENT_IDS.map(id => {
+      const a = AGENTS[id]
+      const global = a.globalSkillsDir ? toDisplayPath(a.globalSkillsDir) : `${toDisplayPath(CANONICAL_GLOBAL_DIR)} (shared)`
+      const mark = detected.includes(id) ? pc.green("●") : pc.dim("○")
+      return `${mark} ${id.padEnd(15)} ${pc.dim(`project: ${a.skillsDir.padEnd(17)} global: ${global}`)}`
+    })
+    console.log(lines.join("\n"))
+    console.log(pc.dim(`\n● detected on this machine. Universal agents read ${CANONICAL_PROJECT_DIR_LABEL} directly.`))
+    return
+  }
+
+  let brainName = null
+  for (let i = 0; i < rest.length; i++) {
+    if (rest[i] === "--brain") brainName = rest[++i]
+  }
+
+  const isInteractive = Boolean(process.stdin.isTTY)
+  p.intro(`${pc.bgCyan(pc.black(" csb skills "))} v${version}`)
+  const agents = await resolveAgents({ explicit, isInteractive, prompts: p })
+  if (!agents) { p.cancel("Cancelled."); process.exit(0) }
+
+  const spin = p.spinner()
+  spin.start("Installing global skills")
+  const result = await installGlobalSkills({ isInteractive, agents, copy })
+  spin.stop(`Global skills ${globalSkillSummary(result)}`)
+  p.log.message(summarizeAgentInstall(agents, result.links, toDisplayPath))
+
+  let brain = null
+  try { brain = await resolveBrain(brainName) } catch (err) {
+    if (brainName) throw err
+  }
+  if (brain) {
+    try {
+      await access(join(brain.path, ".claude", "skills"))
+      const dirs = await installProjectSkills(brain.path, join(brain.path, ".claude", "skills"), LOCAL_SKILLS, agents)
+      if (dirs.length > 0) {
+        p.log.step(`Vault skills for ${pc.cyan(brain.name)} copied to ${dirs.map(d => pc.dim(d)).join(", ")} — commit them in the vault to sync.`)
+      }
+    } catch {
+      p.log.warn(`No .claude/skills in ${toDisplayPath(brain.path)} — skipped vault skills.`)
+    }
+  }
+  p.outro("done")
 }
 
 function parseConfig(content) {
@@ -456,8 +553,13 @@ function printHelp(topic = "top") {
         `  ${c("csb path [qmd|config|root]")}       print a path (default: root)`,
         `  ${c("csb qmd [--brain N] <qmd args…>")}  run qmd against the resolved brain`,
         `  ${c("csb exec [--brain N] -- <cmd…>")}   run a command inside the resolved brain`,
+        `  ${c("csb skills [--agent <ids>]")}       install/update skills for more agents`,
         `  ${c("csb doctor")}                       verify your setup and suggest fixes`,
         `  ${c("csb help [<command>]")}             show help for a command`,
+        "",
+        "Create options:",
+        `  ${c("--agent <ids>")}   agents to install skills for (comma-separated, or \`all\`)`,
+        `  ${c("--copy")}          copy skills into each agent dir instead of symlinking`,
         "",
         "Examples:",
         `  ${c('csb qmd query -c wiki "distributed systems"')}`,
@@ -538,6 +640,27 @@ function printHelp(topic = "top") {
       "",
       "Prints each registered brain with its path, creation date, and remote.",
       "The default brain is shown in bold with a `*` marker.",
+    ].join("\n")),
+    skills: () => console.log([
+      `${pc.bold("csb skills")} — install or update the wiki skills for any agent`,
+      "",
+      "Usage:",
+      `  ${c("csb skills [--agent <ids>] [--copy] [--brain <name>]")}`,
+      `  ${c("csb skills --list")}   list supported agents and their skills dirs`,
+      "",
+      "Global skills (brain-ingest, brain-search, brain-refresh) are written once to",
+      `${pc.dim("~/.agents/skills/<name>")} and symlinked into each agent's own global skills dir`,
+      `(e.g. ${pc.dim("~/.claude/skills")}). Codex, Cursor, Copilot, Gemini CLI, OpenCode, Amp and Cline`,
+      `read ${pc.dim("~/.agents/skills")} directly. Vault-local skills (lint, brain-rebuild) are copied`,
+      "into the default brain's per-agent skills dir (e.g. .agents/skills).",
+      "",
+      "Options:",
+      `  ${c("--agent, -a <ids>")}  agents to install for, comma-separated, or \`all\``,
+      `                      ${pc.dim(`(default: claude-code + detected; env: CSB_AGENTS)`)}`,
+      `  ${c("--copy")}             copy instead of symlink`,
+      `  ${c("--brain <name>")}     brain whose vault-local skills to update (default brain otherwise)`,
+      "",
+      `Agents: ${pc.dim(AGENT_IDS.join(", "))}`,
     ].join("\n")),
     doctor: () => console.log([
       `${pc.bold("csb doctor")} — verify your setup and suggest fixes`,
@@ -772,6 +895,26 @@ async function cmdDoctor() {
           lines.push(warn(`qmd index missing: ${toDisplayPath(b.qmd_index)}`, `csb exec --brain ${b.name} -- pnpm qmd:reindex`))
         }
       }
+    }
+  }
+
+  // Global skills
+  lines.push("")
+  lines.push(pc.bold("Skills"))
+  for (const name of GLOBAL_SKILLS) {
+    const canonical = join(CANONICAL_GLOBAL_DIR, name)
+    const v = await readSkillVersion(canonical)
+    if (!v) {
+      const legacy = await readSkillVersion(join(homedir(), ".claude", "skills", name))
+      warnings++
+      lines.push(legacy
+        ? warn(`${name} only in ~/.claude/skills (v${legacy}) — other agents can't see it`, "csb skills")
+        : warn(`${name} not installed in ${toDisplayPath(CANONICAL_GLOBAL_DIR)}`, "csb skills"))
+    } else if (v !== version) {
+      warnings++
+      lines.push(warn(`${name} is v${v} (this release is v${version})`, "csb skills"))
+    } else {
+      lines.push(ok(`${name} v${v} ${pc.dim(toDisplayPath(canonical))}`))
     }
   }
 
@@ -1016,7 +1159,7 @@ async function writeConfig(brainName, brainPath, qmdPath, gitRemote) {
   await writeFile(CSB_CONFIG, [header, ...otherBrains, entry].join("\n").trimEnd() + "\n", "utf8")
 }
 
-async function createBrain(initialName) {
+async function createBrain(initialName, { agents: explicitAgents = null, copy = false } = {}) {
   const isInteractive = Boolean(process.stdin.isTTY)
 
   p.intro(`${pc.bgCyan(pc.black(" claude-second-brain "))} v${version}`)
@@ -1072,6 +1215,12 @@ async function createBrain(initialName) {
       if (p.isCancel(ns)) { p.cancel("Setup cancelled."); process.exit(0) }
       cfNamespace = ns
     }
+  }
+
+  const agents = await resolveAgents({ explicit: explicitAgents, isInteractive, prompts: p })
+  if (!agents) { p.cancel("Setup cancelled."); process.exit(0) }
+  if (!isInteractive || explicitAgents) {
+    p.log.step(`Install skills for which agents?\n${pc.dim(agents.map(id => AGENTS[id].displayName).join(", "))}`)
   }
 
   await mkdir(CSB_ROOT, { recursive: true })
@@ -1155,16 +1304,17 @@ async function createBrain(initialName) {
     }
   }
 
+  // Vault-local skills for agents that don't read .claude/skills
+  const projectDirs = await installProjectSkills(targetDir, join(targetDir, ".claude", "skills"), LOCAL_SKILLS, agents)
+  if (projectDirs.length > 0) {
+    p.log.step(`Vault skills copied to ${projectDirs.map(d => pc.dim(d)).join(", ")}`)
+  }
+
   // Install global skills (version-aware — prompts to update when versions differ)
-  spin.start("Installing global Claude skills")
-  const skillResult = await installGlobalSkills({ isInteractive })
-  const installedCount = skillResult.installed.length
-  const skippedCount = skillResult.skipped.length
-  const summary = [
-    installedCount > 0 ? `installed ${installedCount}` : null,
-    skippedCount > 0 ? `kept ${skippedCount}` : null,
-  ].filter(Boolean).join(", ") || "already up to date"
-  spin.stop(`Global skills ${summary} → ${pc.dim(toDisplayPath(join(homedir(), ".claude", "skills")))}`)
+  spin.start("Installing global skills")
+  const skillResult = await installGlobalSkills({ isInteractive, agents, copy })
+  spin.stop(`Global skills ${globalSkillSummary(skillResult)}`)
+  p.log.message(summarizeAgentInstall(agents, skillResult.links, toDisplayPath))
 
   // Git init
   spin.start("Initializing git repo")
@@ -1263,6 +1413,7 @@ const SUBCOMMANDS = new Set([
   "exec",
   "use", "default", "switch",
   "doctor",
+  "skills",
 ])
 
 async function main() {
@@ -1318,7 +1469,16 @@ async function main() {
     await cmdDoctor()
     return
   }
-  await createBrain(cmd)
+  if (cmd === "skills") {
+    await cmdSkills(rest)
+    return
+  }
+  // `csb [<name>] [--agent <ids>] [--copy]`
+  const createArgs = cmd === undefined ? rest : [cmd, ...rest]
+  const { agents, copy, rest: positional } = parseAgentFlags(createArgs)
+  const unknownFlag = positional.find(a => a.startsWith("-"))
+  if (unknownFlag) throw new Error(`Unknown option: ${unknownFlag}. Run \`csb help\`.`)
+  await createBrain(positional[0], { agents, copy })
 }
 
 main().catch(err => {

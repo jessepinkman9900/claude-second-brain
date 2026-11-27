@@ -77,6 +77,16 @@ jobs:
           check "~/.claude/skills/brain-ingest/.csb-version"    "$HOME/.claude/skills/brain-ingest/.csb-version"
           check "~/.claude/skills/brain-search/.csb-version"    "$HOME/.claude/skills/brain-search/.csb-version"
           check "~/.claude/skills/brain-refresh/.csb-version"   "$HOME/.claude/skills/brain-refresh/.csb-version"
+          # Multi-agent layout: canonical copy in ~/.agents/skills, Claude Code symlinks to it
+          for skill in brain-ingest brain-search brain-refresh; do
+            check "~/.agents/skills/$skill/SKILL.md"       "$HOME/.agents/skills/$skill/SKILL.md"
+            check "~/.agents/skills/$skill/.csb-version"   "$HOME/.agents/skills/$skill/.csb-version"
+            if [ -L "$HOME/.claude/skills/$skill" ]; then
+              echo "PASS: ~/.claude/skills/$skill is a symlink"
+            else
+              echo "FAIL: ~/.claude/skills/$skill is not a symlink"; fail=1
+            fi
+          done
 
           grep_check() {
             local label="$1"
@@ -157,6 +167,29 @@ jobs:
             echo "FAIL: csb doctor exited non-zero on fresh scaffold"; fail=1
           fi
 
+          # `csb skills` installs for more agents: windsurf (symlink), goose (--copy),
+          # codex (universal: reads ~/.agents/skills; vault-local skills copied to .agents/skills)
+          if $CSB skills --agent windsurf,codex > /dev/null 2>&1; then
+            echo "PASS: csb skills --agent windsurf,codex"
+          else
+            echo "FAIL: csb skills --agent windsurf,codex exited non-zero"; fail=1
+          fi
+          check "~/.codeium/windsurf/skills/brain-search/SKILL.md"  "$HOME/.codeium/windsurf/skills/brain-search/SKILL.md"
+          check "vault .agents/skills/lint"                         "$VAULT/.agents/skills/lint/SKILL.md"
+          check "vault .agents/skills/brain-rebuild"                "$VAULT/.agents/skills/brain-rebuild/SKILL.md"
+          check "vault .windsurf/skills/lint"                       "$VAULT/.windsurf/skills/lint/SKILL.md"
+          $CSB skills --agent goose --copy > /dev/null 2>&1 || { echo "FAIL: csb skills --agent goose --copy"; fail=1; }
+          if [ -f "$HOME/.config/goose/skills/brain-search/SKILL.md" ] && [ ! -L "$HOME/.config/goose/skills/brain-search" ]; then
+            echo "PASS: --copy writes a real dir for goose"
+          else
+            echo "FAIL: --copy did not write a real dir at ~/.config/goose/skills/brain-search"; fail=1
+          fi
+          if $CSB skills --agent not-an-agent > /dev/null 2>&1; then
+            echo "FAIL: csb skills accepted an unknown agent"; fail=1
+          else
+            echo "PASS: csb skills rejects unknown agents"
+          fi
+
           if [ "$fail" -ne 0 ]; then
             echo ""
             echo "One or more checks failed."
@@ -171,6 +204,7 @@ jobs:
         run: |
           rm -rf "$HOME/.claude-second-brain/test-vault"
           rm -f "$HOME/.claude-second-brain/config.toml"
+          rm -rf "$HOME/.codeium/windsurf/skills" "$HOME/.config/goose/skills"
           VERSION=$(node -p "require('./package.json').version")
           rm -f "claude-second-brain-${VERSION}.tgz"
           gh repo delete test-vault --yes 2>/dev/null || true
