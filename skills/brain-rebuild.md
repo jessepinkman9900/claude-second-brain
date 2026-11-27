@@ -11,4 +11,4 @@ What it does:
 3. **Waits for your approval** before any destructive action.
 4. Patches `scripts/qmd/setup.ts`, drops the old index, and rebuilds embeddings from scratch.
 
-Scope: vault-local, installed at `.claude/skills/brain-rebuild/SKILL.md`. Source: [template/.claude/skills/brain-rebuild/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-rebuild/SKILL.md).
+Scope: vault-local, installed at `.claude/skills/brain-rebuild/SKILL.md` and copied into each other selected agent's project skills dir (e.g. `.agents/skills/brain-rebuild`). Source: [template/.claude/skills/brain-rebuild/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-rebuild/SKILL.md).

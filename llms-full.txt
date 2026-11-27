@@ -1,6 +1,6 @@
 # claude-second-brain
 
-> The fastest way to start your personal knowledge base powered by Obsidian, Claude Code, qmd, and GitHub.
+> The fastest way to start your personal knowledge base powered by Obsidian, your AI coding agent (Claude Code, Codex, Cursor, Copilot, and more), qmd, and git.
 
 ## CLI Reference
 
@@ -10,18 +10,20 @@ All examples below use `csb`; substitute `npx claude-second-brain` if you haven'
 
 ### Commands
 
-| Command                        | Description                                                              |
-| ------------------------------ | ------------------------------------------------------------------------ |
-| `csb`                          | Create a new brain (interactive).                                        |
-| `csb <name>`                   | Create a new brain named `<name>`, skipping the name prompt.             |
-| `csb ls`                       | List all registered brains. The default brain is marked with `*`.        |
-| `csb use <name>`               | Set the default brain.                                                   |
-| `csb rm [<name>…]`             | Delete one or more brains. Interactive multi-select if no name is given. |
-| `csb path [qmd\|config\|root]` | Print a path for the default (or named) brain.                           |
-| `csb qmd [flags] <qmd args…>`  | Run `qmd` against the default (or named) brain.                          |
-| `csb exec [flags] -- <cmd…>`   | Run a command inside the default (or named) brain's directory.           |
-| `csb doctor`                   | Verify your setup and suggest fixes.                                     |
-| `csb help [<command>]`         | Show usage for a command.                                                |
+| Command                        | Description                                                                                      |
+| ------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `csb`                          | Create a new brain (interactive).                                                                |
+| `csb <name>`                   | Create a new brain named `<name>`, skipping the name prompt.                                     |
+| `csb ls`                       | List all registered brains. The default brain is marked with `*`.                                |
+| `csb use <name>`               | Set the default brain.                                                                           |
+| `csb rm [<name>…]`             | Delete one or more brains. Interactive multi-select if no name is given.                         |
+| `csb path [qmd\|config\|root]` | Print a path for the default (or named) brain.                                                   |
+| `csb qmd [flags] <qmd args…>`  | Run `qmd` against the default (or named) brain.                                                  |
+| `csb exec [flags] -- <cmd…>`   | Run a command inside the default (or named) brain's directory.                                   |
+| `csb skills [--agent <ids>]`   | Install or update the wiki skills for any agent (Claude Code, Codex, Cursor, Copilot, …).        |
+| `csb git-token [<name>]`       | Renew the git push/pull token for a [Cloudflare Artifacts](/remotes/cloudflare-artifacts) brain. |
+| `csb doctor`                   | Verify your setup and suggest fixes.                                                             |
+| `csb help [<command>]`         | Show usage for a command.                                                                        |
 
 `ls` is also available as `list`; `rm` as `remove`; `use` as `default` or `switch`.
 
@@ -38,9 +40,16 @@ csb qmd --help
 ```bash
 csb                     # interactive — prompts for name + remote
 csb my-brain            # skip the name prompt
+csb my-brain --agent claude-code,codex   # pick agents up front
 ```
 
-Creates the brain at `~/.claude-second-brain/<name>/`, runs `mise install`, `pnpm install`, `pnpm qmd:setup`, `git init`, and registers it in `~/.claude-second-brain/config.toml`. The first brain created is set as the default.
+Options:
+
+* `--agent, -a <ids>` — agents to install skills for, comma-separated or `all`. Also read from `CSB_AGENTS`. Without it, the CLI prompts (interactive) or uses Claude Code plus every detected agent (non-interactive).
+* `--copy` — copy skills into each agent's folder instead of symlinking. See [Install skills for any agent](#install-skills-for-any-agent).
+* `CSB_ICONS=nerd|emoji|none` — icons in the git-remote picker. Real GitHub / Cloudflare logos (Nerd Font glyphs) are on by default in Ghostty, WezTerm and kitty; set `CSB_ICONS=nerd` in other terminals if you use a Nerd Font. Otherwise emoji.
+
+Creates the brain at `~/.claude-second-brain/<name>/`, runs `pnpm install`, `pnpm qmd:setup`, `git init`, and registers it in `~/.claude-second-brain/config.toml`. The first brain created is set as the default.
 
 During the interactive flow the CLI asks:
 
@@ -48,7 +57,10 @@ During the interactive flow the CLI asks:
 * **Git remote** — `GitHub`, `Cloudflare Artifacts`, or `Skip`. See [GitHub](/remotes/github) and [Cloudflare Artifacts](/remotes/cloudflare-artifacts).
 * **Repo name** — only shown when a remote is selected; defaults to the brain name.
 * **Artifacts namespace** — only shown for Cloudflare; defaults to `default`.
-* **Register qmd collections now?** — confirms running `pnpm qmd:setup`.
+* **Register qmd collections after install?** — confirms running `pnpm qmd:setup` once dependencies are installed.
+* **Install skills for which agents?** — multiselect; Claude Code and any detected agent are preselected.
+
+All questions are asked up front, so the rest of setup runs unattended. Long steps show a spinner with elapsed time and the latest output line. If `pnpm` 10+ is already on your `PATH`, it is used directly; otherwise the CLI installs mise (if needed) and runs `mise install` to fetch node + pnpm first. Set `CSB_USE_MISE=1` to always use mise. The closing **Next steps** box shows how to open each agent you picked (`claude`, `codex`, `cursor .`, …). If the GitHub or Cloudflare remote can't be created or pushed, the brain is still created locally, **Next steps** lists the fix, and the CLI exits 1.
 
 ### List brains
 
@@ -155,6 +167,31 @@ Flags:
 * `--brain <name>` — target a specific brain instead of the default.
 * `--` — required separator before the command to run.
 
+### Install skills for any agent
+
+```bash
+csb skills                          # prompt for agents, install/update skills
+csb skills --agent codex,cursor     # non-interactive
+csb skills --agent all --copy       # every supported agent, real copies
+csb skills --list                   # supported agents + where they read skills
+```
+
+The skills follow the [Agent Skills](https://agentskills.io/specification) format and are installed with the same layout as [`npx skills`](https://github.com/vercel-labs/skills):
+
+* **Global skills** (`brain-ingest`, `brain-search`, `brain-refresh`) are written once to `~/.agents/skills/<name>`, with a `.csb-version` marker. Codex, Cursor, GitHub Copilot, Gemini CLI, OpenCode, Amp and Cline read `~/.agents/skills` directly.
+* Agents with their own folder get a **symlink** to the shared copy: `~/.claude/skills` (Claude Code, honours `CLAUDE_CONFIG_DIR`), `~/.codeium/windsurf/skills`, `~/.config/goose/skills`, `~/.kiro/skills`, `~/.roo/skills`, `~/.continue/skills`, `~/.junie/skills`, `~/.augment/skills`. If a symlink can't be created, or with `--copy`, the skill is copied instead.
+* **Vault-local skills** (`brain-rebuild`, `lint`) stay in the vault's `.claude/skills/` and are copied — never symlinked, since the vault is a git repo — into each other selected agent's project folder (`.agents/skills/`, `.windsurf/skills/`, …) of the default brain, or the one named with `--brain`. Commit them to sync.
+
+Agents are detected by their config folder (e.g. `~/.codex`, `~/.cursor`, `~/.copilot`). Upgrading from a release that installed only to `~/.claude/skills`: run `csb skills` once — existing copies there are replaced with symlinks to `~/.agents/skills`.
+
+### Renew a Cloudflare Artifacts git token
+
+```bash
+csb git-token [<name>] [--ttl <duration>] [--read] [--print]
+```
+
+Mints a new repo-scoped Artifacts token (90 days by default; `--ttl 12h|30d|1y`, max 1 year) and saves it as `http.<remote>.extraHeader` in the brain's `.git/config`, so `git push` / `git pull` work again. `--print` prints the token instead. See [Cloudflare Artifacts](/remotes/cloudflare-artifacts#renewing-the-git-token).
+
 ### Verify your setup
 
 ```bash
@@ -163,11 +200,12 @@ csb doctor
 
 Checks for:
 
-* Installed tools: `gh` (+ auth status), `mise`, `wrangler` (optional).
+* Installed tools: `gh` (+ auth status), `mise` or `pnpm` 10+, `wrangler` (optional).
 * A parseable `~/.claude-second-brain/config.toml`.
 * At least one registered brain.
 * A resolvable default brain.
 * For each brain: the `path` directory exists; the `qmd_index` file exists.
+* Each global skill is installed in `~/.agents/skills` at this release's version.
 
 Each failed or warning check prints a `Fix:` hint with the exact command to run. Exits non-zero on failures.
 
@@ -180,8 +218,8 @@ Every command exits non-zero on failure (invalid brain name, missing config, fai
 
 ### Requirements
 
-* [mise](https://mise.jdx.dev/) — auto-installed by the CLI if missing
-* [Claude Code](https://claude.ai/code) — the CLI that runs the wiki
+* [pnpm](https://pnpm.io) 10+ on Node 22+, or [mise](https://mise.jdx.dev/) — if pnpm isn't installed, the CLI installs mise and uses it to fetch node + pnpm
+* An AI coding agent that supports [Agent Skills](https://agentskills.io) — [Claude Code](https://claude.ai/code), Codex, Cursor, GitHub Copilot, Gemini CLI, OpenCode, Windsurf, Goose, … Setup asks which ones to install the skills for.
 * [Obsidian](https://obsidian.md/) — optional but recommended
 
 ### Step 1 — Scaffold
@@ -201,8 +239,12 @@ The CLI will ask:
 
 * **Brain name** — what to call this brain (default: `my-brain`)
 * **Git remote** — optionally host your vault on **[GitHub](/remotes/github)** (requires `gh` CLI) or **[Cloudflare Artifacts](/remotes/cloudflare-artifacts)** (requires a Cloudflare account + wrangler)
+* **Register qmd collections after install?** — runs `pnpm qmd:setup` once dependencies are installed
+* **Install skills for which agents?** — Claude Code plus any detected agent is preselected; see [Install skills for any agent](/cli#install-skills-for-any-agent)
 
-Creates the brain at `~/.claude-second-brain/my-brain/`, registers it in `~/.claude-second-brain/config.toml`, installs `mise` + `node` + `pnpm`, runs `pnpm install`, and `git init`.
+Every question is asked up front, so the rest of setup runs unattended.
+
+Creates the brain at `~/.claude-second-brain/my-brain/`, registers it in `~/.claude-second-brain/config.toml`, runs `pnpm install` (using your system pnpm 10+, or mise to fetch node + pnpm if it's missing), registers the qmd collections, installs the skills for the agents you picked, and runs `git init`.
 
 ### Step 2 — Generate vector embeddings
 
@@ -229,20 +271,54 @@ Open `~/.claude-second-brain/my-brain/` as a vault in Obsidian — the folder is
 
 Run `npx claude-second-brain` (or `csb` if installed globally) again to create additional brains. Each gets its own folder under `~/.claude-second-brain/` and its own isolated qmd index. The global skills (`/brain-ingest`, `/brain-search`, `/brain-refresh`) always operate on the **default brain** in `~/.claude-second-brain/config.toml`. The first brain created is set as the default automatically.
 
-See the [CLI Reference](/cli) for `ls`, `use`, `rm`, `path`, `qmd`, `exec`, and `doctor` subcommands that manage and target specific brains.
+See the [CLI Reference](/cli) for `ls`, `use`, `rm`, `path`, `qmd`, `exec`, `skills`, `git-token`, and `doctor` subcommands that manage and target specific brains.
 
 ### Access from anywhere
 
-**Edit anywhere — Claude Code on desktop or mobile.** Claude Code's GitHub integration lets you open the repo and work from anywhere — ingest a source, run a query, or update a page from your phone.
+**Edit anywhere — your agent on desktop, web or mobile.** The vault is a plain git repo, so any agent that can clone it can work on it: run it locally, or use a cloud agent with GitHub access (Claude Code on the web and mobile, Codex cloud, Copilot coding agent, Cursor background agents, …) to ingest a source, run a query, or update a page from your phone.
 
 **Read anywhere — Obsidian desktop and mobile.** Open the repo as an Obsidian vault. The bundled `.obsidian` folder pre-configures [obsidian-git](https://github.com/Vinzent03/obsidian-git) — no setup required. Your wiki syncs automatically on every commit. For iOS: put the repo folder inside iCloud Drive — Obsidian Mobile picks it up natively.
 
-**Browse anywhere — GitHub.** It's a plain GitHub repo. View and edit files directly in the browser at any time.
+**Browse anywhere — your git host.** It's a plain git repo. On GitHub (or any host with a web UI), view and edit files directly in the browser at any time.
 
 
 ## Ship log
 
 A running record of every released version of `claude-second-brain` on npm. Newest releases first. For auto-generated notes and tags, see the [GitHub releases](https://github.com/jessepinkman9900/claude-second-brain/releases) page.
+
+### v1.2.0 — 2026-11-27
+
+Works with any agent, not just Claude Code, plus a faster, unattended setup and first-class Cloudflare Artifacts git tokens. Existing installs: run `csb skills` once to move global skills from `~/.claude/skills` to `~/.agents/skills` (the old copies become symlinks).
+
+**Agents:**
+
+* Skills install for any [Agent Skills](https://agentskills.io) agent, with the same layout as `npx skills`: global skills are written once to `~/.agents/skills/<name>` and symlinked into agent-specific dirs (`~/.claude/skills`, `~/.codeium/windsurf/skills`, `~/.config/goose/skills`, …). Supported: Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, OpenCode, Amp, Cline, Windsurf, Goose, Kiro CLI, Roo Code, Continue, Junie, Augment.
+* Vault-local skills (`brain-rebuild`, `lint`) are copied into each selected agent's project skills dir (`.agents/skills/`, `.windsurf/skills/`, …).
+* New `--agent, -a <ids>` (comma-separated or `all`) and `CSB_AGENTS` to pick agents; `--copy` to copy instead of symlink. Interactive setup preselects Claude Code plus every detected agent.
+* New `csb skills [--agent <ids>] [--copy] [--brain <name>]` to add agents or update skills later, and `csb skills --list` to show supported agents and their skills dirs.
+* New vaults ship an `AGENTS.md` that points Codex, Cursor, Copilot and other agents at `CLAUDE.md`.
+* The **Next steps** box shows how to open each agent you picked (`claude`, `codex`, `cursor .`, …).
+
+**Setup:**
+
+* All prompts, including the qmd-registration question, are asked up front; the rest runs unattended.
+* Long steps show a live spinner with elapsed time and the latest output line.
+* If `pnpm` 10+ is on your `PATH`, it's used directly; otherwise the CLI installs mise and fetches node + pnpm. `CSB_USE_MISE=1` forces mise.
+* The git-remote picker shows GitHub / Cloudflare logos as Nerd Font glyphs in Ghostty, WezTerm and kitty, emoji elsewhere. Override with `CSB_ICONS=nerd|emoji|none`.
+* If the remote can't be created or pushed, the brain is still created locally, the problem and fix are listed in **Next steps**, and the CLI exits 1.
+
+**Cloudflare Artifacts:**
+
+* Switched to the account-scoped REST API (`api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/artifacts/…`); the old `artifacts.cloudflare.net/v1/api` host is no longer used. Set `CLOUDFLARE_ACCOUNT_ID` when your login can see more than one account.
+* A deleted or inactive namespace is recreated automatically before the repo is created.
+* Setup now saves a 90-day git token in the vault's `.git/config` (`http.<remote>.extraHeader`), so `git push` / `git pull` and obsidian-git just work. No more 24-hour token to copy.
+* New `csb git-token [<name>] [--ttl <duration>] [--read] [--print]` renews it (default 90 days, max 1 year), replacing the manual `curl` renewal.
+
+**Other:**
+
+* `csb doctor` accepts system pnpm 10+ in place of mise and checks that the global skills in `~/.agents/skills` match the installed release.
+* README, docs and package description say "any agent" and "git" (GitHub, Cloudflare Artifacts, or any remote) instead of Claude Code and GitHub only.
+* "Claude reads it" and similar wording is now agent-neutral, and "Access from anywhere" covers any local or cloud agent and any git host.
 
 ### v1.1.0 — 2026-04-19
 
@@ -407,12 +483,12 @@ First major release. Brains now live at `~/.claude-second-brain/<name>/` (not th
 
 ## Skills
 
-The wiki ships with a set of Claude Code slash commands that cover the full workflow. No manual prompting, no copy-pasting.
+The wiki ships with a set of [Agent Skills](https://agentskills.io) that cover the full workflow, and they work in any agent that supports skills: Claude Code, Codex, Cursor, GitHub Copilot, Gemini CLI, OpenCode, Windsurf, Goose and more. No manual prompting, no copy-pasting.
 
 ### Daily workflow
 
-* [**`/brain-ingest`**](/skills/brain-ingest) — Drop a file into `raw-sources/`. Claude summarizes the source, creates a `wiki/sources/` page, updates related topic pages, and flags contradictions.
-* [**`/brain-search`**](/skills/brain-search) — Ask anything. Claude runs hybrid search, reads the most relevant pages, and writes an answer with inline `[[wiki/page]]` citations.
+* [**`/brain-ingest`**](/skills/brain-ingest) — Drop a file into `raw-sources/`. Your agent summarizes the source, creates a `wiki/sources/` page, updates related topic pages, and flags contradictions.
+* [**`/brain-search`**](/skills/brain-search) — Ask anything. Your agent runs hybrid search, reads the most relevant pages, and writes an answer with inline `[[wiki/page]]` citations.
 * [**`/lint`**](/skills/lint) — Health-check the wiki. Surfaces orphan pages, broken links, unresolved contradictions, and data gaps.
 
 ### Maintenance
@@ -422,7 +498,15 @@ The wiki ships with a set of Claude Code slash commands that cover the full work
 
 ### Install or update skills
 
-`/brain-ingest`, `/brain-search`, and `/brain-refresh` install globally to `~/.claude/skills/` during setup so they work in any Claude Code session. `/brain-rebuild` and `/lint` live inside the vault at `.claude/skills/`.
+The skills follow the [Agent Skills](https://agentskills.io/specification) format, so they work in Claude Code, Codex, Cursor, GitHub Copilot, Gemini CLI, OpenCode, Windsurf, Goose and more. `/brain-ingest`, `/brain-search`, and `/brain-refresh` install globally during setup — once to `~/.agents/skills/`, with symlinks from agent-specific folders like `~/.claude/skills/`. `/brain-rebuild` and `/lint` live inside the vault at `.claude/skills/` and are copied to `.agents/skills/` and other agents' folders for the agents you pick.
+
+To install for more agents later, or after upgrading the CLI:
+
+```bash
+npx claude-second-brain skills --agent codex,cursor,github-copilot
+```
+
+See [Install skills for any agent](/cli#install-skills-for-any-agent) for the full layout.
 
 To pull in improvements from the latest template:
 
@@ -445,7 +529,7 @@ npx skills update -a claude-code
 
 Ingest a new source into the wiki.
 
-Drop a file into `raw-sources/articles/`, `raw-sources/pdfs/`, or `raw-sources/personal/`, then run `/brain-ingest`. Claude will:
+Drop a file into `raw-sources/articles/`, `raw-sources/pdfs/`, or `raw-sources/personal/`, then run `/brain-ingest`. Your agent will:
 
 1. **Read** the source in full.
 2. **Summarize** it in 3–5 bullets and ask you what matters most.
@@ -454,7 +538,7 @@ Drop a file into `raw-sources/articles/`, `raw-sources/pdfs/`, or `raw-sources/p
 5. **Flag contradictions** with `[!WARNING]` callouts on any page where the new source disagrees with existing claims.
 6. **Log** the ingest in `wiki/log.md`.
 
-Scope: global skill, installed at `~/.claude/skills/brain-ingest/SKILL.md`. Paths resolve at call time via `npx claude-second-brain path` and `npx claude-second-brain qmd` — both read `~/.claude-second-brain/config.toml` to find the default brain. Source: [template/.claude/skills/brain-ingest/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-ingest/SKILL.md).
+Scope: global skill, installed once at `~/.agents/skills/brain-ingest/SKILL.md` and symlinked into each selected agent's global skills dir (e.g. `~/.claude/skills/brain-ingest`). Paths resolve at call time via `npx claude-second-brain path` and `npx claude-second-brain qmd` — both read `~/.claude-second-brain/config.toml` to find the default brain. Source: [template/.claude/skills/brain-ingest/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-ingest/SKILL.md).
 
 
 ## /brain-rebuild
@@ -470,7 +554,7 @@ What it does:
 3. **Waits for your approval** before any destructive action.
 4. Patches `scripts/qmd/setup.ts`, drops the old index, and rebuilds embeddings from scratch.
 
-Scope: vault-local, installed at `.claude/skills/brain-rebuild/SKILL.md`. Source: [template/.claude/skills/brain-rebuild/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-rebuild/SKILL.md).
+Scope: vault-local, installed at `.claude/skills/brain-rebuild/SKILL.md` and copied into each other selected agent's project skills dir (e.g. `.agents/skills/brain-rebuild`). Source: [template/.claude/skills/brain-rebuild/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-rebuild/SKILL.md).
 
 
 ## /brain-refresh
@@ -481,7 +565,7 @@ Re-scans all collections for new or changed files and regenerates vector embeddi
 
 Pass `force` to re-embed every chunk — useful after changing the embedding model.
 
-Scope: global skill, installed at `~/.claude/skills/brain-refresh/SKILL.md`. Paths resolve at call time via `npx claude-second-brain path` and `npx claude-second-brain qmd` — both read `~/.claude-second-brain/config.toml` to find the default brain. Source: [template/.claude/skills/brain-refresh/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-refresh/SKILL.md).
+Scope: global skill, installed once at `~/.agents/skills/brain-refresh/SKILL.md` and symlinked into each selected agent's global skills dir (e.g. `~/.claude/skills/brain-refresh`). Paths resolve at call time via `npx claude-second-brain path` and `npx claude-second-brain qmd` — both read `~/.claude-second-brain/config.toml` to find the default brain. Source: [template/.claude/skills/brain-refresh/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-refresh/SKILL.md).
 
 
 ## /brain-search
@@ -492,7 +576,7 @@ Runs hybrid search (vector + BM25) across the entire wiki, reads the 2–5 most 
 
 If the answer pulls together multiple pages in a novel way, it offers to file it as a permanent `wiki/qa/[slug].md` entry — so the synthesis compounds next time.
 
-Scope: global skill, installed at `~/.claude/skills/brain-search/SKILL.md`. Paths resolve at call time via `npx claude-second-brain path` and `npx claude-second-brain qmd` — both read `~/.claude-second-brain/config.toml` to find the default brain. Source: [template/.claude/skills/brain-search/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-search/SKILL.md).
+Scope: global skill, installed once at `~/.agents/skills/brain-search/SKILL.md` and symlinked into each selected agent's global skills dir (e.g. `~/.claude/skills/brain-search`). Paths resolve at call time via `npx claude-second-brain path` and `npx claude-second-brain qmd` — both read `~/.claude-second-brain/config.toml` to find the default brain. Source: [template/.claude/skills/brain-search/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/brain-search/SKILL.md).
 
 
 ## /lint
@@ -510,7 +594,7 @@ Reports on:
 
 Applies fixes where safe and flags everything else for your review. Appends a summary to `wiki/log.md`.
 
-Scope: vault-local, installed at `.claude/skills/lint/SKILL.md`. Source: [template/.claude/skills/lint/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/lint/SKILL.md).
+Scope: vault-local, installed at `.claude/skills/lint/SKILL.md` and copied into each other selected agent's project skills dir (e.g. `.agents/skills/lint`). Source: [template/.claude/skills/lint/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/lint/SKILL.md).
 
 
 ## Cloudflare Artifacts remote
@@ -519,7 +603,9 @@ Scope: vault-local, installed at `.claude/skills/lint/SKILL.md`. Source: [templa
 
 ### Prerequisites
 
-* A [Cloudflare account](https://dash.cloudflare.com/sign-up)
+* A [Cloudflare account](https://dash.cloudflare.com/sign-up) on the **Workers Paid** plan (required for Artifacts)
+* Either `wrangler login` (the CLI runs it for you and requests `artifacts:write`), or `CLOUDFLARE_API_TOKEN` set to an [API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/) with **Artifacts › Read** and **Artifacts › Edit**
+* If your login can see more than one account, set `CLOUDFLARE_ACCOUNT_ID` (or pick it when prompted)
 * `wrangler` CLI — if not installed, the setup wizard falls back to `npx wrangler` automatically
 
 ### Setup (automatic)
@@ -527,47 +613,31 @@ Scope: vault-local, installed at `.claude/skills/lint/SKILL.md`. Source: [templa
 When you run `npx claude-second-brain` and select **Cloudflare Artifacts** as your remote, the CLI handles everything:
 
 1. Checks wrangler auth (logs you in and requests the `artifacts:write` scope if needed)
-2. Creates a new Artifacts repo via the Cloudflare API
+2. Resolves your account ID and creates a new Artifacts repo via the [Artifacts REST API](https://developers.cloudflare.com/artifacts/api/rest-api/) (`api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/artifacts/…`)
 3. Runs `git remote add origin <remote-url>`
 4. Pushes the initial commit
-5. Prints a short-lived repo token — **save it**
+5. Mints a 90-day git token and saves it in the vault's `.git/config`, so `git push` / `git pull` just work
 
-### Saving your repo token
+### Renewing the git token
 
-After setup, the CLI prints a repo token:
-
-```
-Save your Artifacts repo token — it expires and you'll need to mint a new one:
-  <token>
-```
-
-This token is used as the git credential for push and pull. It expires (default TTL: 24 hours). Save it somewhere — you'll need to mint a replacement when it expires.
-
-### Pushing and pulling after setup
-
-Repo tokens expire, so mint a fresh one before each push/pull session:
+Artifacts git tokens expire (csb mints them for 90 days; Cloudflare allows up to 1 year). When `git push` or `git pull` starts failing with an auth error, renew it:
 
 ```bash
-# 1. Get your wrangler OAuth token
-TOKEN=$(wrangler auth token)
-
-# 2. Mint a new repo token (replace 'my-brain' and 'default' with your repo and namespace)
-curl -X POST https://artifacts.cloudflare.net/v1/api/namespaces/default/tokens \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"repo":"my-brain","scope":"write","ttl":86400}'
+csb git-token            # default brain
+csb git-token my-brain   # a specific brain
 ```
 
-The response contains a `token` field. Use it as a git credential:
+This mints a new repo-scoped token with your wrangler login (or `CLOUDFLARE_API_TOKEN`) and stores it for the brain's remote as `http.<remote>.extraHeader` in the vault's `.git/config` — local only, never committed. Plain `git push` / `git pull` (and obsidian-git) work again until it expires.
 
-```bash
-git -c http.extraHeader="Authorization: Bearer <token>" push origin main
-git -c http.extraHeader="Authorization: Bearer <token>" pull origin main
-```
+Options: `--ttl <duration>` for a different lifetime (seconds, or `12h`, `90d`, `1y`; max 1 year), `--read` for a read-only token, `--print` to print the token instead of saving it (e.g. for another machine: `git -c http.extraHeader="Authorization: Bearer $(csb git-token --print)" pull`).
 
 ### Namespace
 
 During setup, the CLI asks for an **Artifacts namespace** (default: `default`). Namespaces scope repos within your Cloudflare account — useful if you manage multiple projects. For personal use, the default is fine.
+
+### If setup fails
+
+If the repo can't be created or the first push fails, the CLI still creates the brain locally but says so in a warning, lists the fix in **Next steps**, and exits non-zero. A `403` / `Authentication error` usually means Artifacts isn't enabled on the account (Workers Paid plan), the token is missing the Artifacts permission, or `CLOUDFLARE_ACCOUNT_ID` points at another account. A `404` / `Namespace is not active` means the namespace was deleted; the CLI recreates it and retries automatically, and if that still fails, wait a minute (deletion can take a moment to finish) or pick another namespace. Fix it, then `csb rm <name>` and re-run, or add any other git remote by hand.
 
 
 ## GitHub remote
@@ -609,7 +679,7 @@ For iOS: place the repo folder inside iCloud Drive — Obsidian Mobile picks it 
 
 ## How it works
 
-Sources flow in on the left, Claude synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and GitHub makes the whole vault editable from Obsidian and Claude Code on any device.
+Sources flow in on the left, your agent synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and git makes the whole vault editable from Obsidian and your agent on any device.
 
 ```mermaid
 flowchart TB
@@ -620,7 +690,7 @@ flowchart TB
     S3[personal/]
   end
 
-  subgraph Skills["Claude Code skills"]
+  subgraph Skills["Agent skills"]
     direction LR
     I["/brain-ingest"]
     Q["/brain-search"]
@@ -637,14 +707,14 @@ flowchart TB
 
   QMD[("qmd.sqlite<br/>vector + BM25<br/>hybrid index")]
 
-  subgraph Remote["GitHub — source of truth"]
+  subgraph Remote["Git remote — source of truth"]
     GH[private repo]
   end
 
   subgraph Read["Read / edit anywhere"]
     direction LR
     OB["Obsidian<br/>graph · backlinks · mobile"]
-    CC["Claude Code<br/>desktop + mobile"]
+    CC["Your agent<br/>desktop, web + mobile"]
   end
 
   User((you))
@@ -681,12 +751,12 @@ Query it anytime with `/brain-search`. Get answers with inline `[[wiki/page]]` c
 
 ```
 my-brain/
-├── CLAUDE.md              ← The schema. Claude reads this every session.
-├── raw-sources/           ← Your raw inputs. Claude never modifies these.
+├── CLAUDE.md              ← The schema. Your agent reads this every session.
+├── raw-sources/           ← Your raw inputs. The agent never modifies these.
 │   ├── articles/
 │   ├── pdfs/
 │   └── personal/
-├── wiki/                  ← Claude owns this entirely.
+├── wiki/                  ← The agent owns this entirely.
 │   ├── index.md
 │   ├── log.md
 │   ├── overview.md
@@ -698,7 +768,7 @@ my-brain/
 
 ## Wiki schema
 
-The authoritative schema lives in [CLAUDE.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/CLAUDE.md) — Claude reads it at the start of every session. This page is a readable summary.
+The authoritative schema lives in [CLAUDE.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/CLAUDE.md) — your agent reads it at the start of every session (agents that look for `AGENTS.md` are pointed to it). This page is a readable summary.
 
 ### Page types
 
@@ -743,7 +813,7 @@ my-brain/
 │   ├── articles/
 │   ├── pdfs/
 │   └── personal/
-└── wiki/                  ← Claude-owned knowledge base
+└── wiki/                  ← Agent-owned knowledge base
     ├── index.md
     ├── log.md
     ├── overview.md
@@ -754,7 +824,7 @@ my-brain/
 ### Hard rules
 
 1. Nothing in `raw-sources/` is ever modified — they are immutable raw inputs.
-2. Only `wiki/` is owned by Claude; the rest of the vault is untouched.
+2. Only `wiki/` is owned by the agent; the rest of the vault is untouched.
 3. `wiki/log.md` is append-only, never overwritten.
 4. One source summary per ingested source in `wiki/sources/` — never merged.
 5. Every wiki page has frontmatter with at least `type` and `updated`.

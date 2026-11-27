@@ -2,8 +2,8 @@
 
 ### Requirements
 
-* [mise](https://mise.jdx.dev/) — auto-installed by the CLI if missing
-* [Claude Code](https://claude.ai/code) — the CLI that runs the wiki
+* [pnpm](https://pnpm.io) 10+ on Node 22+, or [mise](https://mise.jdx.dev/) — if pnpm isn't installed, the CLI installs mise and uses it to fetch node + pnpm
+* An AI coding agent that supports [Agent Skills](https://agentskills.io) — [Claude Code](https://claude.ai/code), Codex, Cursor, GitHub Copilot, Gemini CLI, OpenCode, Windsurf, Goose, … Setup asks which ones to install the skills for.
 * [Obsidian](https://obsidian.md/) — optional but recommended
 
 ### Step 1 — Scaffold
@@ -23,8 +23,12 @@ The CLI will ask:
 
 * **Brain name** — what to call this brain (default: `my-brain`)
 * **Git remote** — optionally host your vault on **[GitHub](/remotes/github)** (requires `gh` CLI) or **[Cloudflare Artifacts](/remotes/cloudflare-artifacts)** (requires a Cloudflare account + wrangler)
+* **Register qmd collections after install?** — runs `pnpm qmd:setup` once dependencies are installed
+* **Install skills for which agents?** — Claude Code plus any detected agent is preselected; see [Install skills for any agent](/cli#install-skills-for-any-agent)
 
-Creates the brain at `~/.claude-second-brain/my-brain/`, registers it in `~/.claude-second-brain/config.toml`, installs `mise` + `node` + `pnpm`, runs `pnpm install`, and `git init`.
+Every question is asked up front, so the rest of setup runs unattended.
+
+Creates the brain at `~/.claude-second-brain/my-brain/`, registers it in `~/.claude-second-brain/config.toml`, runs `pnpm install` (using your system pnpm 10+, or mise to fetch node + pnpm if it's missing), registers the qmd collections, installs the skills for the agents you picked, and runs `git init`.
 
 ### Step 2 — Generate vector embeddings
 
@@ -51,12 +55,12 @@ Open `~/.claude-second-brain/my-brain/` as a vault in Obsidian — the folder is
 
 Run `npx claude-second-brain` (or `csb` if installed globally) again to create additional brains. Each gets its own folder under `~/.claude-second-brain/` and its own isolated qmd index. The global skills (`/brain-ingest`, `/brain-search`, `/brain-refresh`) always operate on the **default brain** in `~/.claude-second-brain/config.toml`. The first brain created is set as the default automatically.
 
-See the [CLI Reference](/cli) for `ls`, `use`, `rm`, `path`, `qmd`, `exec`, and `doctor` subcommands that manage and target specific brains.
+See the [CLI Reference](/cli) for `ls`, `use`, `rm`, `path`, `qmd`, `exec`, `skills`, `git-token`, and `doctor` subcommands that manage and target specific brains.
 
 ### Access from anywhere
 
-**Edit anywhere — Claude Code on desktop or mobile.** Claude Code's GitHub integration lets you open the repo and work from anywhere — ingest a source, run a query, or update a page from your phone.
+**Edit anywhere — your agent on desktop, web or mobile.** The vault is a plain git repo, so any agent that can clone it can work on it: run it locally, or use a cloud agent with GitHub access (Claude Code on the web and mobile, Codex cloud, Copilot coding agent, Cursor background agents, …) to ingest a source, run a query, or update a page from your phone.
 
 **Read anywhere — Obsidian desktop and mobile.** Open the repo as an Obsidian vault. The bundled `.obsidian` folder pre-configures [obsidian-git](https://github.com/Vinzent03/obsidian-git) — no setup required. Your wiki syncs automatically on every commit. For iOS: put the repo folder inside iCloud Drive — Obsidian Mobile picks it up natively.
 
-**Browse anywhere — GitHub.** It's a plain GitHub repo. View and edit files directly in the browser at any time.
+**Browse anywhere — your git host.** It's a plain git repo. On GitHub (or any host with a web UI), view and edit files directly in the browser at any time.

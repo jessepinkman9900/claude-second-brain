@@ -6,18 +6,20 @@ All examples below use `csb`; substitute `npx claude-second-brain` if you haven'
 
 ### Commands
 
-| Command                        | Description                                                              |
-| ------------------------------ | ------------------------------------------------------------------------ |
-| `csb`                          | Create a new brain (interactive).                                        |
-| `csb <name>`                   | Create a new brain named `<name>`, skipping the name prompt.             |
-| `csb ls`                       | List all registered brains. The default brain is marked with `*`.        |
-| `csb use <name>`               | Set the default brain.                                                   |
-| `csb rm [<name>…]`             | Delete one or more brains. Interactive multi-select if no name is given. |
-| `csb path [qmd\|config\|root]` | Print a path for the default (or named) brain.                           |
-| `csb qmd [flags] <qmd args…>`  | Run `qmd` against the default (or named) brain.                          |
-| `csb exec [flags] -- <cmd…>`   | Run a command inside the default (or named) brain's directory.           |
-| `csb doctor`                   | Verify your setup and suggest fixes.                                     |
-| `csb help [<command>]`         | Show usage for a command.                                                |
+| Command                        | Description                                                                                      |
+| ------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `csb`                          | Create a new brain (interactive).                                                                |
+| `csb <name>`                   | Create a new brain named `<name>`, skipping the name prompt.                                     |
+| `csb ls`                       | List all registered brains. The default brain is marked with `*`.                                |
+| `csb use <name>`               | Set the default brain.                                                                           |
+| `csb rm [<name>…]`             | Delete one or more brains. Interactive multi-select if no name is given.                         |
+| `csb path [qmd\|config\|root]` | Print a path for the default (or named) brain.                                                   |
+| `csb qmd [flags] <qmd args…>`  | Run `qmd` against the default (or named) brain.                                                  |
+| `csb exec [flags] -- <cmd…>`   | Run a command inside the default (or named) brain's directory.                                   |
+| `csb skills [--agent <ids>]`   | Install or update the wiki skills for any agent (Claude Code, Codex, Cursor, Copilot, …).        |
+| `csb git-token [<name>]`       | Renew the git push/pull token for a [Cloudflare Artifacts](/remotes/cloudflare-artifacts) brain. |
+| `csb doctor`                   | Verify your setup and suggest fixes.                                                             |
+| `csb help [<command>]`         | Show usage for a command.                                                                        |
 
 `ls` is also available as `list`; `rm` as `remove`; `use` as `default` or `switch`.
 
@@ -34,9 +36,16 @@ csb qmd --help
 ```bash
 csb                     # interactive — prompts for name + remote
 csb my-brain            # skip the name prompt
+csb my-brain --agent claude-code,codex   # pick agents up front
 ```
 
-Creates the brain at `~/.claude-second-brain/<name>/`, runs `mise install`, `pnpm install`, `pnpm qmd:setup`, `git init`, and registers it in `~/.claude-second-brain/config.toml`. The first brain created is set as the default.
+Options:
+
+* `--agent, -a <ids>` — agents to install skills for, comma-separated or `all`. Also read from `CSB_AGENTS`. Without it, the CLI prompts (interactive) or uses Claude Code plus every detected agent (non-interactive).
+* `--copy` — copy skills into each agent's folder instead of symlinking. See [Install skills for any agent](#install-skills-for-any-agent).
+* `CSB_ICONS=nerd|emoji|none` — icons in the git-remote picker. Real GitHub / Cloudflare logos (Nerd Font glyphs) are on by default in Ghostty, WezTerm and kitty; set `CSB_ICONS=nerd` in other terminals if you use a Nerd Font. Otherwise emoji.
+
+Creates the brain at `~/.claude-second-brain/<name>/`, runs `pnpm install`, `pnpm qmd:setup`, `git init`, and registers it in `~/.claude-second-brain/config.toml`. The first brain created is set as the default.
 
 During the interactive flow the CLI asks:
 
@@ -44,7 +53,10 @@ During the interactive flow the CLI asks:
 * **Git remote** — `GitHub`, `Cloudflare Artifacts`, or `Skip`. See [GitHub](/remotes/github) and [Cloudflare Artifacts](/remotes/cloudflare-artifacts).
 * **Repo name** — only shown when a remote is selected; defaults to the brain name.
 * **Artifacts namespace** — only shown for Cloudflare; defaults to `default`.
-* **Register qmd collections now?** — confirms running `pnpm qmd:setup`.
+* **Register qmd collections after install?** — confirms running `pnpm qmd:setup` once dependencies are installed.
+* **Install skills for which agents?** — multiselect; Claude Code and any detected agent are preselected.
+
+All questions are asked up front, so the rest of setup runs unattended. Long steps show a spinner with elapsed time and the latest output line. If `pnpm` 10+ is already on your `PATH`, it is used directly; otherwise the CLI installs mise (if needed) and runs `mise install` to fetch node + pnpm first. Set `CSB_USE_MISE=1` to always use mise. The closing **Next steps** box shows how to open each agent you picked (`claude`, `codex`, `cursor .`, …). If the GitHub or Cloudflare remote can't be created or pushed, the brain is still created locally, **Next steps** lists the fix, and the CLI exits 1.
 
 ### List brains
 
@@ -151,6 +163,31 @@ Flags:
 * `--brain <name>` — target a specific brain instead of the default.
 * `--` — required separator before the command to run.
 
+### Install skills for any agent
+
+```bash
+csb skills                          # prompt for agents, install/update skills
+csb skills --agent codex,cursor     # non-interactive
+csb skills --agent all --copy       # every supported agent, real copies
+csb skills --list                   # supported agents + where they read skills
+```
+
+The skills follow the [Agent Skills](https://agentskills.io/specification) format and are installed with the same layout as [`npx skills`](https://github.com/vercel-labs/skills):
+
+* **Global skills** (`brain-ingest`, `brain-search`, `brain-refresh`) are written once to `~/.agents/skills/<name>`, with a `.csb-version` marker. Codex, Cursor, GitHub Copilot, Gemini CLI, OpenCode, Amp and Cline read `~/.agents/skills` directly.
+* Agents with their own folder get a **symlink** to the shared copy: `~/.claude/skills` (Claude Code, honours `CLAUDE_CONFIG_DIR`), `~/.codeium/windsurf/skills`, `~/.config/goose/skills`, `~/.kiro/skills`, `~/.roo/skills`, `~/.continue/skills`, `~/.junie/skills`, `~/.augment/skills`. If a symlink can't be created, or with `--copy`, the skill is copied instead.
+* **Vault-local skills** (`brain-rebuild`, `lint`) stay in the vault's `.claude/skills/` and are copied — never symlinked, since the vault is a git repo — into each other selected agent's project folder (`.agents/skills/`, `.windsurf/skills/`, …) of the default brain, or the one named with `--brain`. Commit them to sync.
+
+Agents are detected by their config folder (e.g. `~/.codex`, `~/.cursor`, `~/.copilot`). Upgrading from a release that installed only to `~/.claude/skills`: run `csb skills` once — existing copies there are replaced with symlinks to `~/.agents/skills`.
+
+### Renew a Cloudflare Artifacts git token
+
+```bash
+csb git-token [<name>] [--ttl <duration>] [--read] [--print]
+```
+
+Mints a new repo-scoped Artifacts token (90 days by default; `--ttl 12h|30d|1y`, max 1 year) and saves it as `http.<remote>.extraHeader` in the brain's `.git/config`, so `git push` / `git pull` work again. `--print` prints the token instead. See [Cloudflare Artifacts](/remotes/cloudflare-artifacts#renewing-the-git-token).
+
 ### Verify your setup
 
 ```bash
@@ -159,11 +196,12 @@ csb doctor
 
 Checks for:
 
-* Installed tools: `gh` (+ auth status), `mise`, `wrangler` (optional).
+* Installed tools: `gh` (+ auth status), `mise` or `pnpm` 10+, `wrangler` (optional).
 * A parseable `~/.claude-second-brain/config.toml`.
 * At least one registered brain.
 * A resolvable default brain.
 * For each brain: the `path` directory exists; the `qmd_index` file exists.
+* Each global skill is installed in `~/.agents/skills` at this release's version.
 
 Each failed or warning check prints a `Fix:` hint with the exact command to run. Exits non-zero on failures.
 

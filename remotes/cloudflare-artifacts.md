@@ -4,7 +4,9 @@
 
 ### Prerequisites
 
-* A [Cloudflare account](https://dash.cloudflare.com/sign-up)
+* A [Cloudflare account](https://dash.cloudflare.com/sign-up) on the **Workers Paid** plan (required for Artifacts)
+* Either `wrangler login` (the CLI runs it for you and requests `artifacts:write`), or `CLOUDFLARE_API_TOKEN` set to an [API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/) with **Artifacts › Read** and **Artifacts › Edit**
+* If your login can see more than one account, set `CLOUDFLARE_ACCOUNT_ID` (or pick it when prompted)
 * `wrangler` CLI — if not installed, the setup wizard falls back to `npx wrangler` automatically
 
 ### Setup (automatic)
@@ -12,44 +14,28 @@
 When you run `npx claude-second-brain` and select **Cloudflare Artifacts** as your remote, the CLI handles everything:
 
 1. Checks wrangler auth (logs you in and requests the `artifacts:write` scope if needed)
-2. Creates a new Artifacts repo via the Cloudflare API
+2. Resolves your account ID and creates a new Artifacts repo via the [Artifacts REST API](https://developers.cloudflare.com/artifacts/api/rest-api/) (`api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/artifacts/…`)
 3. Runs `git remote add origin <remote-url>`
 4. Pushes the initial commit
-5. Prints a short-lived repo token — **save it**
+5. Mints a 90-day git token and saves it in the vault's `.git/config`, so `git push` / `git pull` just work
 
-### Saving your repo token
+### Renewing the git token
 
-After setup, the CLI prints a repo token:
-
-```
-Save your Artifacts repo token — it expires and you'll need to mint a new one:
-  <token>
-```
-
-This token is used as the git credential for push and pull. It expires (default TTL: 24 hours). Save it somewhere — you'll need to mint a replacement when it expires.
-
-### Pushing and pulling after setup
-
-Repo tokens expire, so mint a fresh one before each push/pull session:
+Artifacts git tokens expire (csb mints them for 90 days; Cloudflare allows up to 1 year). When `git push` or `git pull` starts failing with an auth error, renew it:
 
 ```bash
-# 1. Get your wrangler OAuth token
-TOKEN=$(wrangler auth token)
-
-# 2. Mint a new repo token (replace 'my-brain' and 'default' with your repo and namespace)
-curl -X POST https://artifacts.cloudflare.net/v1/api/namespaces/default/tokens \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"repo":"my-brain","scope":"write","ttl":86400}'
+csb git-token            # default brain
+csb git-token my-brain   # a specific brain
 ```
 
-The response contains a `token` field. Use it as a git credential:
+This mints a new repo-scoped token with your wrangler login (or `CLOUDFLARE_API_TOKEN`) and stores it for the brain's remote as `http.<remote>.extraHeader` in the vault's `.git/config` — local only, never committed. Plain `git push` / `git pull` (and obsidian-git) work again until it expires.
 
-```bash
-git -c http.extraHeader="Authorization: Bearer <token>" push origin main
-git -c http.extraHeader="Authorization: Bearer <token>" pull origin main
-```
+Options: `--ttl <duration>` for a different lifetime (seconds, or `12h`, `90d`, `1y`; max 1 year), `--read` for a read-only token, `--print` to print the token instead of saving it (e.g. for another machine: `git -c http.extraHeader="Authorization: Bearer $(csb git-token --print)" pull`).
 
 ### Namespace
 
 During setup, the CLI asks for an **Artifacts namespace** (default: `default`). Namespaces scope repos within your Cloudflare account — useful if you manage multiple projects. For personal use, the default is fine.
+
+### If setup fails
+
+If the repo can't be created or the first push fails, the CLI still creates the brain locally but says so in a warning, lists the fix in **Next steps**, and exits non-zero. A `403` / `Authentication error` usually means Artifacts isn't enabled on the account (Workers Paid plan), the token is missing the Artifacts permission, or `CLOUDFLARE_ACCOUNT_ID` points at another account. A `404` / `Namespace is not active` means the namespace was deleted; the CLI recreates it and retries automatically, and if that still fails, wait a minute (deletion can take a moment to finish) or pick another namespace. Fix it, then `csb rm <name>` and re-run, or add any other git remote by hand.

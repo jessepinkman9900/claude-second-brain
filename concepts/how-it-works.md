@@ -1,6 +1,6 @@
 ## How it works
 
-Sources flow in on the left, Claude synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and GitHub makes the whole vault editable from Obsidian and Claude Code on any device.
+Sources flow in on the left, your agent synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and git makes the whole vault editable from Obsidian and your agent on any device.
 
 ```mermaid
 flowchart TB
@@ -11,7 +11,7 @@ flowchart TB
     S3[personal/]
   end
 
-  subgraph Skills["Claude Code skills"]
+  subgraph Skills["Agent skills"]
     direction LR
     I["/brain-ingest"]
     Q["/brain-search"]
@@ -28,14 +28,14 @@ flowchart TB
 
   QMD[("qmd.sqlite<br/>vector + BM25<br/>hybrid index")]
 
-  subgraph Remote["GitHub — source of truth"]
+  subgraph Remote["Git remote — source of truth"]
     GH[private repo]
   end
 
   subgraph Read["Read / edit anywhere"]
     direction LR
     OB["Obsidian<br/>graph · backlinks · mobile"]
-    CC["Claude Code<br/>desktop + mobile"]
+    CC["Your agent<br/>desktop, web + mobile"]
   end
 
   User((you))
@@ -72,12 +72,12 @@ Query it anytime with `/brain-search`. Get answers with inline `[[wiki/page]]` c
 
 ```
 my-brain/
-├── CLAUDE.md              ← The schema. Claude reads this every session.
-├── raw-sources/           ← Your raw inputs. Claude never modifies these.
+├── CLAUDE.md              ← The schema. Your agent reads this every session.
+├── raw-sources/           ← Your raw inputs. The agent never modifies these.
 │   ├── articles/
 │   ├── pdfs/
 │   └── personal/
-├── wiki/                  ← Claude owns this entirely.
+├── wiki/                  ← The agent owns this entirely.
 │   ├── index.md
 │   ├── log.md
 │   ├── overview.md

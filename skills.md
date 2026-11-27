@@ -1,11 +1,11 @@
 ## Skills
 
-The wiki ships with a set of Claude Code slash commands that cover the full workflow. No manual prompting, no copy-pasting.
+The wiki ships with a set of [Agent Skills](https://agentskills.io) that cover the full workflow, and they work in any agent that supports skills: Claude Code, Codex, Cursor, GitHub Copilot, Gemini CLI, OpenCode, Windsurf, Goose and more. No manual prompting, no copy-pasting.
 
 ### Daily workflow
 
-* [**`/brain-ingest`**](/skills/brain-ingest) — Drop a file into `raw-sources/`. Claude summarizes the source, creates a `wiki/sources/` page, updates related topic pages, and flags contradictions.
-* [**`/brain-search`**](/skills/brain-search) — Ask anything. Claude runs hybrid search, reads the most relevant pages, and writes an answer with inline `[[wiki/page]]` citations.
+* [**`/brain-ingest`**](/skills/brain-ingest) — Drop a file into `raw-sources/`. Your agent summarizes the source, creates a `wiki/sources/` page, updates related topic pages, and flags contradictions.
+* [**`/brain-search`**](/skills/brain-search) — Ask anything. Your agent runs hybrid search, reads the most relevant pages, and writes an answer with inline `[[wiki/page]]` citations.
 * [**`/lint`**](/skills/lint) — Health-check the wiki. Surfaces orphan pages, broken links, unresolved contradictions, and data gaps.
 
 ### Maintenance
@@ -15,7 +15,15 @@ The wiki ships with a set of Claude Code slash commands that cover the full work
 
 ### Install or update skills
 
-`/brain-ingest`, `/brain-search`, and `/brain-refresh` install globally to `~/.claude/skills/` during setup so they work in any Claude Code session. `/brain-rebuild` and `/lint` live inside the vault at `.claude/skills/`.
+The skills follow the [Agent Skills](https://agentskills.io/specification) format, so they work in Claude Code, Codex, Cursor, GitHub Copilot, Gemini CLI, OpenCode, Windsurf, Goose and more. `/brain-ingest`, `/brain-search`, and `/brain-refresh` install globally during setup — once to `~/.agents/skills/`, with symlinks from agent-specific folders like `~/.claude/skills/`. `/brain-rebuild` and `/lint` live inside the vault at `.claude/skills/` and are copied to `.agents/skills/` and other agents' folders for the agents you pick.
+
+To install for more agents later, or after upgrading the CLI:
+
+```bash
+npx claude-second-brain skills --agent codex,cursor,github-copilot
+```
+
+See [Install skills for any agent](/cli#install-skills-for-any-agent) for the full layout.
 
 To pull in improvements from the latest template:
 
