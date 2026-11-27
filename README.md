@@ -67,9 +67,11 @@ csb
 
 The CLI will ask:
 - **Brain name** — what to call this brain (default: `my-brain`)
-- **GitHub repo** — optionally create a private repo and push automatically (requires `gh` CLI)
+- **Git remote** — GitHub (private repo via `gh`), Cloudflare Artifacts (via wrangler), or skip
+- **Register qmd collections after install?**
+- **Install skills for which agents?** — Claude Code plus any detected agent is preselected
 
-Creates the brain at `~/.claude-second-brain/my-brain/`, registers it in `~/.claude-second-brain/config.toml`, installs `mise` + `node` + `pnpm`, runs `pnpm install`, and `git init`.
+Creates the brain at `~/.claude-second-brain/my-brain/`, registers it in `~/.claude-second-brain/config.toml`, runs `pnpm install` (using your system pnpm 10+, or mise to fetch node + pnpm if it's missing), registers the qmd collections, installs the skills for the agents you picked, and runs `git init`.
 
 **Step 2 — Generate vector embeddings**
 
@@ -272,7 +274,9 @@ csb path qmd                       # print the default brain's qmd index path
 csb path config                    # print ~/.claude-second-brain/config.toml
 csb qmd query -c wiki "<terms>"    # run qmd against the default brain
 csb exec -- pnpm qmd:reindex       # run any command inside the default brain
-csb doctor                         # verify tools, config, and each brain
+csb skills --agent codex,cursor    # install/update skills for more agents
+csb git-token                      # renew a Cloudflare Artifacts git token (90 days)
+csb doctor                         # verify tools, config, skills, and each brain
 ```
 
 Every subcommand accepts `--help` for details (`csb rm --help`, `csb path --help`, …).

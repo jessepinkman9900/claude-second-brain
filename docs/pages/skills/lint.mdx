@@ -13,4 +13,4 @@ Reports on:
 
 Applies fixes where safe and flags everything else for your review. Appends a summary to `wiki/log.md`.
 
-Scope: vault-local, installed at `.claude/skills/lint/SKILL.md`. Source: [template/.claude/skills/lint/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/lint/SKILL.md).
+Scope: vault-local, installed at `.claude/skills/lint/SKILL.md` and copied into each other selected agent's project skills dir (e.g. `.agents/skills/lint`). Source: [template/.claude/skills/lint/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/lint/SKILL.md).
