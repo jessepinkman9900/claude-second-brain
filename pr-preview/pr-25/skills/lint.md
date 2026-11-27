@@ -1,0 +1,16 @@
+## /lint
+
+Health-check the wiki.
+
+Reports on:
+
+* **Orphan pages** — wiki pages with no inbound `[[links]]`.
+* **Unresolved contradictions** — pages with `[!WARNING] Contradiction` callouts that haven't been resolved.
+* **Stale claims** — claims superseded by newer sources.
+* **Missing pages** — concepts/entities referenced by `[[links]]` that lack their own page.
+* **Broken links** — wikilinks pointing to files that don't exist.
+* **Data gaps** — important topics that lack source coverage; suggests specific sources to investigate.
+
+Applies fixes where safe and flags everything else for your review. Appends a summary to `wiki/log.md`.
+
+Scope: vault-local, installed at `.claude/skills/lint/SKILL.md`. Source: [template/.claude/skills/lint/SKILL.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/template/.claude/skills/lint/SKILL.md).
