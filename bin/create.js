@@ -157,7 +157,7 @@ function fitLine(msg) {
   return plain.length > max ? plain.slice(0, max - 1) + "…" : oneLine
 }
 function makeSpinner() {
-  const spin = makeSpinner()
+  const spin = p.spinner()
   return {
     start: msg => spin.start(fitLine(msg)),
     message: msg => spin.message(fitLine(msg)),
