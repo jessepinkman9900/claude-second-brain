@@ -286,6 +286,13 @@ See the [CLI Reference](/cli) for `ls`, `use`, `rm`, `path`, `qmd`, `exec`, `ski
 
 A running record of every released version of `claude-second-brain` on npm. Newest releases first. For auto-generated notes and tags, see the [GitHub releases](https://github.com/jessepinkman9900/claude-second-brain/releases) page.
 
+### v1.2.2 — 2026-11-27
+
+npm package metadata only. No CLI or template changes.
+
+* Added npm `keywords` matching the GitHub repo topics (`ai`, `amp`, `claude-code`, `codex`, `cursor`, `github`, `knowledge-base`, `knowledge-graph`, `knowledge-management`, `llm`, `obsidian`, `obsidian-vault`, `qmd`, `second-brain`) so the package is searchable on npmjs.com.
+* npm `homepage` now points to the [docs site](https://jessepinkman9900.github.io/claude-second-brain) instead of the GitHub README, and `bugs` links to GitHub issues.
+
 ### v1.2.1 — 2026-11-27
 
 Maintenance release: security updates and a tokenless release pipeline. No CLI or template changes.
