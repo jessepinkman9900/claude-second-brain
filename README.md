@@ -19,7 +19,7 @@ One command gives you a fully wired knowledge system:
 - The scaffolded folder **is your Obsidian vault** — open it directly in [Obsidian](https://obsidian.md), with [obsidian-git](https://github.com/Vinzent03/obsidian-git) pre-configured for seamless sync
 - A git ([GitHub](https://github.com), [Cloudflare Artifacts](https://developers.cloudflare.com/artifacts/), or any remote) is the source of truth — version history, anywhere access, and a backup you control
 
-You've been reading papers, articles, and books for years. Drop a source in, run `/brain-ingest`, and Claude reads it — extracts what matters, cross-links it to everything you already know, and files it. Ask a question six months later and get cited answers, not a list of files to re-read.
+You've been reading papers, articles, and books for years. Drop a source in, run `/brain-ingest`, and your agent reads it — extracts what matters, cross-links it to everything you already know, and files it. Ask a question six months later and get cited answers, not a list of files to re-read.
 
 > **Inspired by [Andrej Karpathy's approach to LLM-powered knowledge management](https://x.com/karpathy/status/2040470801506541998?s=20)** — share an "idea file" with an LLM agent and let it build and maintain your knowledge base.
 
@@ -33,7 +33,7 @@ You've been reading papers, articles, and books for years. Drop a source in, run
 This is not a RAG system. It's not a chatbot over your notes. It's an actively maintained, cross-linked wiki — five structured page types, YAML frontmatter, and a set of agent skills that run the whole thing — in Claude Code, Codex, Cursor, Copilot, or any agent that supports [Agent Skills](https://agentskills.io).
 
 
-The schema (`CLAUDE.md`) is that idea file. Claude reads it every session.
+The schema (`CLAUDE.md`) is that idea file. Your agent reads it every session (other agents reach it through `AGENTS.md`).
 
 ---
 
@@ -103,9 +103,9 @@ The wiki ships with a set of slash commands that cover the full workflow. No man
 
 ### Daily workflow
 
-**`/brain-ingest`** — Drop a file into `raw-sources/articles/`, `raw-sources/pdfs/`, or `raw-sources/personal/`. Run `/brain-ingest`. Claude summarizes the source, asks what matters most to you, creates a `wiki/sources/` page, updates or creates related topic pages, flags any contradictions with existing knowledge, and logs everything.
+**`/brain-ingest`** — Drop a file into `raw-sources/articles/`, `raw-sources/pdfs/`, or `raw-sources/personal/`. Run `/brain-ingest`. Your agent summarizes the source, asks what matters most to you, creates a `wiki/sources/` page, updates or creates related topic pages, flags any contradictions with existing knowledge, and logs everything.
 
-**`/brain-search`** — Ask anything about what you know. Claude runs hybrid semantic search across the wiki, reads the most relevant pages, and writes an answer with inline `[[wiki/page]]` citations. If the answer synthesizes multiple pages in a novel way, it offers to file it as a permanent `wiki/qa/` entry.
+**`/brain-search`** — Ask anything about what you know. Your agent runs hybrid semantic search across the wiki, reads the most relevant pages, and writes an answer with inline `[[wiki/page]]` citations. If the answer synthesizes multiple pages in a novel way, it offers to file it as a permanent `wiki/qa/` entry.
 
 **`/lint`** — Health-check the wiki. Surfaces orphan pages, broken links, unresolved contradictions, and data gaps. Reports findings and applies fixes where possible.
 
@@ -135,20 +135,20 @@ The vault's operating instructions live in `CLAUDE.md`, with an `AGENTS.md` that
 
 ## Access from anywhere
 
-**Edit anywhere — Claude Code on desktop or mobile**
-Claude Code's GitHub integration lets you open the repo and work from anywhere — ingest a source, run a query, or update a page from your phone.
+**Edit anywhere — your agent on desktop, web or mobile**
+The vault is a plain git repo, so any agent that can clone it can work on it: run it locally, or use a cloud agent with GitHub access (Claude Code on the web and mobile, Codex cloud, Copilot coding agent, Cursor background agents, …) to ingest a source, run a query, or update a page from your phone.
 
 **Read anywhere — Obsidian desktop and mobile**
 Open the repo as an Obsidian vault. The bundled `.obsidian` folder pre-configures the [obsidian-git](https://github.com/Vinzent03/obsidian-git) community plugin — no setup required, just enable it. Your wiki syncs automatically on every commit. For iOS: put the repo folder inside iCloud Drive — Obsidian Mobile picks it up natively with no extra setup. Graph view, backlinks, offline reading — all working.
 
-**Browse anywhere — GitHub**
-It's a plain GitHub repo. View and edit files directly in the browser at any time.
+**Browse anywhere — your git host**
+It's a plain git repo. On GitHub (or any host with a web UI), view and edit files directly in the browser at any time.
 
 ---
 
 ## How it works
 
-Sources flow in on the left, Claude synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and git makes the whole vault editable from Obsidian and your agent on any device.
+Sources flow in on the left, your agent synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and git makes the whole vault editable from Obsidian and your agent on any device.
 
 ```mermaid
 flowchart TB
@@ -183,7 +183,7 @@ flowchart TB
   subgraph Read["Read / edit anywhere"]
     direction LR
     OB["Obsidian<br/>graph · backlinks · mobile"]
-    CC["Claude Code<br/>desktop + mobile"]
+    CC["Your agent<br/>desktop, web + mobile"]
   end
 
   User((you))
@@ -244,12 +244,12 @@ All brains live under `~/.claude-second-brain/`. A central `config.toml` tracks 
 ~/.claude-second-brain/
 ├── config.toml            ← Brain registry (default brain, paths, git remotes)
 └── my-brain/
-    ├── CLAUDE.md          ← The schema. Claude reads this every session.
-    ├── raw-sources/       ← Your raw inputs. Claude never modifies these.
+    ├── CLAUDE.md          ← The schema. Your agent reads this every session.
+    ├── raw-sources/       ← Your raw inputs. The agent never modifies these.
     │   ├── articles/
     │   ├── pdfs/
     │   └── personal/
-    ├── wiki/              ← Claude owns this entirely.
+    ├── wiki/              ← The agent owns this entirely.
     │   ├── index.md
     │   ├── log.md
     │   ├── overview.md

@@ -2,7 +2,7 @@
 
 Ingest a new source into the wiki.
 
-Drop a file into `raw-sources/articles/`, `raw-sources/pdfs/`, or `raw-sources/personal/`, then run `/brain-ingest`. Claude will:
+Drop a file into `raw-sources/articles/`, `raw-sources/pdfs/`, or `raw-sources/personal/`, then run `/brain-ingest`. Your agent will:
 
 1. **Read** the source in full.
 2. **Summarize** it in 3–5 bullets and ask you what matters most.

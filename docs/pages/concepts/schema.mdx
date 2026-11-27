@@ -1,6 +1,6 @@
 # Wiki schema
 
-The authoritative schema lives in [CLAUDE.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/CLAUDE.md) — Claude reads it at the start of every session. This page is a readable summary.
+The authoritative schema lives in [CLAUDE.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/CLAUDE.md) — your agent reads it at the start of every session (agents that look for `AGENTS.md` are pointed to it). This page is a readable summary.
 
 ## Page types
 
@@ -45,7 +45,7 @@ my-brain/
 │   ├── articles/
 │   ├── pdfs/
 │   └── personal/
-└── wiki/                  ← Claude-owned knowledge base
+└── wiki/                  ← Agent-owned knowledge base
     ├── index.md
     ├── log.md
     ├── overview.md
@@ -56,7 +56,7 @@ my-brain/
 ## Hard rules
 
 1. Nothing in `raw-sources/` is ever modified — they are immutable raw inputs.
-2. Only `wiki/` is owned by Claude; the rest of the vault is untouched.
+2. Only `wiki/` is owned by the agent; the rest of the vault is untouched.
 3. `wiki/log.md` is append-only, never overwritten.
 4. One source summary per ingested source in `wiki/sources/` — never merged.
 5. Every wiki page has frontmatter with at least `type` and `updated`.
