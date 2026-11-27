@@ -1,7 +1,23 @@
 {
   "name": "claude-second-brain",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "The fastest way to start your personal knowledge base powered by Obsidian, any AI coding agent (Claude Code, Codex, Cursor, Copilot, …), qmd, and git.",
+  "keywords": [
+    "ai",
+    "amp",
+    "claude-code",
+    "codex",
+    "cursor",
+    "github",
+    "knowledge-base",
+    "knowledge-graph",
+    "knowledge-management",
+    "llm",
+    "obsidian",
+    "obsidian-vault",
+    "qmd",
+    "second-brain"
+  ],
   "type": "module",
   "bin": {
     "claude-second-brain": "./bin/create.js",
