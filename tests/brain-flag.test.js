@@ -19,7 +19,7 @@ test("missing --brain values never silently use the default", () => {
     const marker = join(home, "npx-ran")
     writeFileSync(join(bin, "npx"), '#!/bin/sh\ntouch "$MARKER"\n', { mode: 0o755 })
     const env = { ...process.env, HOME: home, PATH: `${bin}:/usr/bin:/bin`, MARKER: marker }
-    for (const args of [["path", "--brain"], ["path", "--brain", "--qmd"], ["qmd", "--brain"], ["exec", "--brain", "--", "true"]]) {
+    for (const args of [["path", "--brain"], ["path", "--brain", "--qmd"], ["qmd", "--brain"], ["exec", "--brain", "--", "true"], ["git-token", "--brain"], ["git-token", "--brain", "--print"], ["skills", "--brain"], ["skills", "--brain", "--copy"]]) {
       const run = spawnSync(process.execPath, [cli, ...args], { env, encoding: "utf8" })
       assert.notEqual(run.status, 0, args.join(" "))
       assert.match(run.stdout + run.stderr, /--brain requires a brain name/)
