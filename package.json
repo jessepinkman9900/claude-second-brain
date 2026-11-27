@@ -22,7 +22,7 @@
   },
   "packageManager": "pnpm@10.8.0",
   "dependencies": {
-    "@clack/prompts": "^1.2.0",
+    "@clack/prompts": "^1.9.0",
     "picocolors": "^1.1.1"
   },
   "license": "MIT",
@@ -31,10 +31,17 @@
     "url": "https://github.com/jessepinkman9900/claude-second-brain"
   },
   "devDependencies": {
-    "@types/react": "^19.2.14",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
-    "typescript": "^6.0.2",
+    "@types/react": "^19.3.3",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "typescript": "^6.0.3",
     "vocs": "1.4.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "toml": "^5.0.1",
+      "katex": "^0.18.2",
+      "@hono/node-server": "^2.1.3"
+    }
   }
 }
