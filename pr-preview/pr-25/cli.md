@@ -6,19 +6,20 @@ All examples below use `csb`; substitute `npx claude-second-brain` if you haven'
 
 ### Commands
 
-| Command                        | Description                                                                               |
-| ------------------------------ | ----------------------------------------------------------------------------------------- |
-| `csb`                          | Create a new brain (interactive).                                                         |
-| `csb <name>`                   | Create a new brain named `<name>`, skipping the name prompt.                              |
-| `csb ls`                       | List all registered brains. The default brain is marked with `*`.                         |
-| `csb use <name>`               | Set the default brain.                                                                    |
-| `csb rm [<name>…]`             | Delete one or more brains. Interactive multi-select if no name is given.                  |
-| `csb path [qmd\|config\|root]` | Print a path for the default (or named) brain.                                            |
-| `csb qmd [flags] <qmd args…>`  | Run `qmd` against the default (or named) brain.                                           |
-| `csb exec [flags] -- <cmd…>`   | Run a command inside the default (or named) brain's directory.                            |
-| `csb skills [--agent <ids>]`   | Install or update the wiki skills for any agent (Claude Code, Codex, Cursor, Copilot, …). |
-| `csb doctor`                   | Verify your setup and suggest fixes.                                                      |
-| `csb help [<command>]`         | Show usage for a command.                                                                 |
+| Command                        | Description                                                                                      |
+| ------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `csb`                          | Create a new brain (interactive).                                                                |
+| `csb <name>`                   | Create a new brain named `<name>`, skipping the name prompt.                                     |
+| `csb ls`                       | List all registered brains. The default brain is marked with `*`.                                |
+| `csb use <name>`               | Set the default brain.                                                                           |
+| `csb rm [<name>…]`             | Delete one or more brains. Interactive multi-select if no name is given.                         |
+| `csb path [qmd\|config\|root]` | Print a path for the default (or named) brain.                                                   |
+| `csb qmd [flags] <qmd args…>`  | Run `qmd` against the default (or named) brain.                                                  |
+| `csb exec [flags] -- <cmd…>`   | Run a command inside the default (or named) brain's directory.                                   |
+| `csb skills [--agent <ids>]`   | Install or update the wiki skills for any agent (Claude Code, Codex, Cursor, Copilot, …).        |
+| `csb git-token [<name>]`       | Renew the git push/pull token for a [Cloudflare Artifacts](/remotes/cloudflare-artifacts) brain. |
+| `csb doctor`                   | Verify your setup and suggest fixes.                                                             |
+| `csb help [<command>]`         | Show usage for a command.                                                                        |
 
 `ls` is also available as `list`; `rm` as `remove`; `use` as `default` or `switch`.
 
@@ -177,6 +178,14 @@ The skills follow the [Agent Skills](https://agentskills.io/specification) forma
 * **Vault-local skills** (`brain-rebuild`, `lint`) stay in the vault's `.claude/skills/` and are copied — never symlinked, since the vault is a git repo — into each other selected agent's project folder (`.agents/skills/`, `.windsurf/skills/`, …) of the default brain, or the one named with `--brain`. Commit them to sync.
 
 Agents are detected by their config folder (e.g. `~/.codex`, `~/.cursor`, `~/.copilot`). Upgrading from a release that installed only to `~/.claude/skills`: run `csb skills` once — existing copies there are replaced with symlinks to `~/.agents/skills`.
+
+### Renew a Cloudflare Artifacts git token
+
+```bash
+csb git-token [<name>] [--ttl <seconds>] [--read] [--print]
+```
+
+Mints a new repo-scoped Artifacts token (24h by default) and saves it as `http.<remote>.extraHeader` in the brain's `.git/config`, so `git push` / `git pull` work again. `--print` prints the token instead. See [Cloudflare Artifacts](/remotes/cloudflare-artifacts#renewing-the-git-token).
 
 ### Verify your setup
 

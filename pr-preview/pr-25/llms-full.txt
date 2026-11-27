@@ -10,19 +10,20 @@ All examples below use `csb`; substitute `npx claude-second-brain` if you haven'
 
 ### Commands
 
-| Command                        | Description                                                                               |
-| ------------------------------ | ----------------------------------------------------------------------------------------- |
-| `csb`                          | Create a new brain (interactive).                                                         |
-| `csb <name>`                   | Create a new brain named `<name>`, skipping the name prompt.                              |
-| `csb ls`                       | List all registered brains. The default brain is marked with `*`.                         |
-| `csb use <name>`               | Set the default brain.                                                                    |
-| `csb rm [<name>…]`             | Delete one or more brains. Interactive multi-select if no name is given.                  |
-| `csb path [qmd\|config\|root]` | Print a path for the default (or named) brain.                                            |
-| `csb qmd [flags] <qmd args…>`  | Run `qmd` against the default (or named) brain.                                           |
-| `csb exec [flags] -- <cmd…>`   | Run a command inside the default (or named) brain's directory.                            |
-| `csb skills [--agent <ids>]`   | Install or update the wiki skills for any agent (Claude Code, Codex, Cursor, Copilot, …). |
-| `csb doctor`                   | Verify your setup and suggest fixes.                                                      |
-| `csb help [<command>]`         | Show usage for a command.                                                                 |
+| Command                        | Description                                                                                      |
+| ------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `csb`                          | Create a new brain (interactive).                                                                |
+| `csb <name>`                   | Create a new brain named `<name>`, skipping the name prompt.                                     |
+| `csb ls`                       | List all registered brains. The default brain is marked with `*`.                                |
+| `csb use <name>`               | Set the default brain.                                                                           |
+| `csb rm [<name>…]`             | Delete one or more brains. Interactive multi-select if no name is given.                         |
+| `csb path [qmd\|config\|root]` | Print a path for the default (or named) brain.                                                   |
+| `csb qmd [flags] <qmd args…>`  | Run `qmd` against the default (or named) brain.                                                  |
+| `csb exec [flags] -- <cmd…>`   | Run a command inside the default (or named) brain's directory.                                   |
+| `csb skills [--agent <ids>]`   | Install or update the wiki skills for any agent (Claude Code, Codex, Cursor, Copilot, …).        |
+| `csb git-token [<name>]`       | Renew the git push/pull token for a [Cloudflare Artifacts](/remotes/cloudflare-artifacts) brain. |
+| `csb doctor`                   | Verify your setup and suggest fixes.                                                             |
+| `csb help [<command>]`         | Show usage for a command.                                                                        |
 
 `ls` is also available as `list`; `rm` as `remove`; `use` as `default` or `switch`.
 
@@ -181,6 +182,14 @@ The skills follow the [Agent Skills](https://agentskills.io/specification) forma
 * **Vault-local skills** (`brain-rebuild`, `lint`) stay in the vault's `.claude/skills/` and are copied — never symlinked, since the vault is a git repo — into each other selected agent's project folder (`.agents/skills/`, `.windsurf/skills/`, …) of the default brain, or the one named with `--brain`. Commit them to sync.
 
 Agents are detected by their config folder (e.g. `~/.codex`, `~/.cursor`, `~/.copilot`). Upgrading from a release that installed only to `~/.claude/skills`: run `csb skills` once — existing copies there are replaced with symlinks to `~/.agents/skills`.
+
+### Renew a Cloudflare Artifacts git token
+
+```bash
+csb git-token [<name>] [--ttl <seconds>] [--read] [--print]
+```
+
+Mints a new repo-scoped Artifacts token (24h by default) and saves it as `http.<remote>.extraHeader` in the brain's `.git/config`, so `git push` / `git pull` work again. `--print` prints the token instead. See [Cloudflare Artifacts](/remotes/cloudflare-artifacts#renewing-the-git-token).
 
 ### Verify your setup
 
@@ -568,41 +577,20 @@ When you run `npx claude-second-brain` and select **Cloudflare Artifacts** as yo
 2. Resolves your account ID and creates a new Artifacts repo via the [Artifacts REST API](https://developers.cloudflare.com/artifacts/api/rest-api/) (`api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/artifacts/…`)
 3. Runs `git remote add origin <remote-url>`
 4. Pushes the initial commit
-5. Prints a short-lived repo token — **save it**
+5. Saves the short-lived git token (24h) in the vault's `.git/config`, so `git push` / `git pull` just work
 
-### Saving your repo token
+### Renewing the git token
 
-After setup, the CLI prints a repo token:
-
-```
-Save your Artifacts repo token — it expires and you'll need to mint a new one:
-  <token>
-```
-
-This token is used as the git credential for push and pull. It expires (default TTL: 24 hours). Save it somewhere — you'll need to mint a replacement when it expires.
-
-### Pushing and pulling after setup
-
-Repo tokens expire, so mint a fresh one before each push/pull session:
+Artifacts git tokens expire (24 hours by default). When `git push` or `git pull` starts failing with an auth error, renew it:
 
 ```bash
-# 1. Get your wrangler OAuth token
-TOKEN=$(wrangler auth token)
-
-# 2. Mint a new repo token (replace 'my-brain' and 'default' with your repo and namespace)
-# (your account ID is the subdomain of the remote: git remote get-url origin)
-curl -X POST https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/artifacts/namespaces/default/tokens \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"repo":"my-brain","scope":"write","ttl":86400}'
+csb git-token            # default brain
+csb git-token my-brain   # a specific brain
 ```
 
-The response contains the token in `result.plaintext`. Use it as a git credential:
+This mints a new repo-scoped token with your wrangler login (or `CLOUDFLARE_API_TOKEN`) and stores it for the brain's remote as `http.<remote>.extraHeader` in the vault's `.git/config` — local only, never committed. Plain `git push` / `git pull` (and obsidian-git) work again until it expires.
 
-```bash
-git -c http.extraHeader="Authorization: Bearer <token>" push origin main
-git -c http.extraHeader="Authorization: Bearer <token>" pull origin main
-```
+Options: `--ttl <seconds>` for a different lifetime, `--read` for a read-only token, `--print` to print the token instead of saving it (e.g. for another machine: `git -c http.extraHeader="Authorization: Bearer $(csb git-token --print)" pull`).
 
 ### Namespace
 
