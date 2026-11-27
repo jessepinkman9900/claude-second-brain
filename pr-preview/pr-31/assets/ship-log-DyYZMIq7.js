@@ -1,5 +1,21 @@
-import{u as d,j as e}from"./index-CE3fvi1r.js";const l={title:"Ship log",description:"undefined"};function i(s){const n={a:"a",code:"code",div:"div",h1:"h1",h2:"h2",header:"header",li:"li",p:"p",strong:"strong",ul:"ul",...d(),...s.components};return e.jsxs(e.Fragment,{children:[e.jsx(n.header,{children:e.jsxs(n.h1,{id:"ship-log",children:["Ship log",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#ship-log",children:e.jsx(n.div,{"data-autolink-icon":!0})})]})}),`
+import{u as d,j as e}from"./index-DTjFcPcZ.js";const l={title:"Ship log",description:"undefined"};function i(s){const n={a:"a",code:"code",div:"div",h1:"h1",h2:"h2",header:"header",li:"li",p:"p",strong:"strong",ul:"ul",...d(),...s.components};return e.jsxs(e.Fragment,{children:[e.jsx(n.header,{children:e.jsxs(n.h1,{id:"ship-log",children:["Ship log",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#ship-log",children:e.jsx(n.div,{"data-autolink-icon":!0})})]})}),`
 `,e.jsxs(n.p,{children:["A running record of every released version of ",e.jsx(n.code,{children:"claude-second-brain"})," on npm. Newest releases first. For auto-generated notes and tags, see the ",e.jsx(n.a,{href:"https://github.com/jessepinkman9900/claude-second-brain/releases",children:"GitHub releases"})," page."]}),`
+`,e.jsxs(n.h2,{id:"v123--2026-11-27",children:["v1.2.3 — 2026-11-27",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#v123--2026-11-27",children:e.jsx(n.div,{"data-autolink-icon":!0})})]}),`
+`,e.jsx(n.p,{children:"Bug fixes for CLI argument handling, plus a test suite."}),`
+`,e.jsx(n.strong,{children:"Fixes:"}),`
+`,e.jsxs(n.ul,{children:[`
+`,e.jsxs(n.li,{children:["Brain names are validated before scaffolding. Names that are empty, ",e.jsx(n.code,{children:"."})," / ",e.jsx(n.code,{children:".."}),", or contain path separators, quotes or control characters are rejected, so a name can no longer escape ",e.jsx(n.code,{children:"~/.claude-second-brain/"})," or corrupt ",e.jsx(n.code,{children:"config.toml"}),"."]}),`
+`,e.jsxs(n.li,{children:[e.jsx(n.code,{children:"--brain"})," now requires a value in ",e.jsx(n.code,{children:"path"}),", ",e.jsx(n.code,{children:"qmd"}),", ",e.jsx(n.code,{children:"exec"}),", ",e.jsx(n.code,{children:"skills"})," and ",e.jsx(n.code,{children:"git-token"}),". Previously a bare ",e.jsx(n.code,{children:"--brain"})," silently fell back to the default brain (so ",e.jsx(n.code,{children:"csb git-token --brain"})," renewed the wrong brain's token)."]}),`
+`,e.jsxs(n.li,{children:[e.jsx(n.code,{children:"csb exec … -- <cmd> --help"})," and ",e.jsx(n.code,{children:"csb qmd … -- … --help"})," now pass ",e.jsx(n.code,{children:"--help"})," through to the command after ",e.jsx(n.code,{children:"--"})," instead of printing csb's own help."]}),`
+`]}),`
+`,e.jsx(n.strong,{children:"Tests and CI:"}),`
+`,e.jsxs(n.ul,{children:[`
+`,e.jsxs(n.li,{children:["New ",e.jsx(n.code,{children:"pnpm test"})," (",e.jsx(n.code,{children:"node --test tests/*.test.js"}),") covering brain-name validation, ",e.jsx(n.code,{children:"--brain"})," parsing and help pass-through; a Test workflow runs it on pull requests and ",e.jsx(n.code,{children:"main"}),"."]}),`
+`]}),`
+`,e.jsx(n.strong,{children:"Docs:"}),`
+`,e.jsxs(n.ul,{children:[`
+`,e.jsxs(n.li,{children:["README and docs home link ",e.jsx(n.code,{children:"/brain-ingest"}),", ",e.jsx(n.code,{children:"/brain-search"}),", ",e.jsx(n.code,{children:"/brain-refresh"}),", ",e.jsx(n.code,{children:"/brain-rebuild"})," and ",e.jsx(n.code,{children:"/lint"})," to their docs pages."]}),`
+`]}),`
 `,e.jsxs(n.h2,{id:"v122--2026-11-27",children:["v1.2.2 — 2026-11-27",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#v122--2026-11-27",children:e.jsx(n.div,{"data-autolink-icon":!0})})]}),`
 `,e.jsx(n.p,{children:"npm package metadata only. No CLI or template changes."}),`
 `,e.jsxs(n.ul,{children:[`
