@@ -183,10 +183,10 @@ Agents are detected by their config folder (e.g. `~/.codex`, `~/.cursor`, `~/.co
 ### Renew a Cloudflare Artifacts git token
 
 ```bash
-csb git-token [<name>] [--ttl <seconds>] [--read] [--print]
+csb git-token [<name>] [--ttl <duration>] [--read] [--print]
 ```
 
-Mints a new repo-scoped Artifacts token (24h by default) and saves it as `http.<remote>.extraHeader` in the brain's `.git/config`, so `git push` / `git pull` work again. `--print` prints the token instead. See [Cloudflare Artifacts](/remotes/cloudflare-artifacts#renewing-the-git-token).
+Mints a new repo-scoped Artifacts token (90 days by default; `--ttl 12h|30d|1y`, max 1 year) and saves it as `http.<remote>.extraHeader` in the brain's `.git/config`, so `git push` / `git pull` work again. `--print` prints the token instead. See [Cloudflare Artifacts](/remotes/cloudflare-artifacts#renewing-the-git-token).
 
 ### Verify your setup
 
