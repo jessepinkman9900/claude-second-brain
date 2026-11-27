@@ -277,8 +277,14 @@ export async function writeCanonicalSkill(name, files) {
 export async function linkGlobalSkill(id, name, { copy = false } = {}) {
   const canonical = join(CANONICAL_GLOBAL_DIR, name)
   const dest = globalSkillDirFor(id, name)
-  if (!dest || (await samePath(dest, canonical))) {
-    return { agent: id, path: canonical, mode: "canonical" }
+  if (!dest) return { agent: id, path: canonical, mode: "canonical" }
+  if (await samePath(dest, canonical)) {
+    // Already linked (or the agent's whole skills dir points at ~/.agents/skills).
+    let isLink = false
+    try { isLink = (await lstat(dest)).isSymbolicLink() } catch { /* missing */ }
+    return isLink
+      ? { agent: id, path: dest, mode: "symlink" }
+      : { agent: id, path: canonical, mode: "canonical" }
   }
   if (!copy && (await createSymlink(canonical, dest))) {
     return { agent: id, path: dest, mode: "symlink" }

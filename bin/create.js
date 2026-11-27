@@ -147,6 +147,24 @@ function extractBearerToken(stdout) {
   return candidates[0] || null
 }
 
+// Spinner wrapper: clack redraws the spinner line in place, which breaks into
+// one new line per frame if the message wraps past the terminal width. Clamp
+// every start/message to a single line that fits.
+function fitLine(msg) {
+  const max = Math.max(20, (process.stdout.columns || 80) - 6)
+  const oneLine = String(msg).replace(/\s*\n\s*/g, " ")
+  const plain = stripAnsi(oneLine)
+  return plain.length > max ? plain.slice(0, max - 1) + "…" : oneLine
+}
+function makeSpinner() {
+  const spin = makeSpinner()
+  return {
+    start: msg => spin.start(fitLine(msg)),
+    message: msg => spin.message(fitLine(msg)),
+    stop: (msg, code) => spin.stop(msg, code),
+  }
+}
+
 function truncate(s, n = 80) {
   if (!s) return ""
   return s.length > n ? s.slice(0, n) + "…" : s
@@ -284,7 +302,8 @@ async function setupCloudflareRemote({ targetDir, repoName, namespace, spin }) {
     return null
   }
   const baseUrl = artifactsBase(account.id, namespace)
-  spin.start(`Creating Cloudflare Artifact ${pc.dim(repoName)} at ${pc.dim(baseUrl)}`)
+  p.log.info(`Artifacts API: ${pc.dim(baseUrl)}`)
+  spin.start(`Creating Cloudflare Artifact ${pc.dim(repoName)}`)
 
   let res
   let rawBody = ""
@@ -606,7 +625,7 @@ async function cmdSkills(args) {
   const agents = await resolveAgents({ explicit, isInteractive, prompts: p })
   if (!agents) { p.cancel("Cancelled."); process.exit(0) }
 
-  const spin = p.spinner()
+  const spin = makeSpinner()
   spin.start("Installing global skills")
   const result = await installGlobalSkills({ isInteractive, agents, copy })
   spin.stop(`Global skills ${globalSkillSummary(result)}`)
@@ -1186,7 +1205,7 @@ async function removeBrain(names, { yes = false, remoteMode = "ask" } = {}) {
     }
   }
 
-  const spin = p.spinner()
+  const spin = makeSpinner()
 
   for (const target of targets) {
     spin.start(`Deleting ${toDisplayPath(target.path)}`)
