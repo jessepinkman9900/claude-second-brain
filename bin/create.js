@@ -748,7 +748,7 @@ async function cmdGitToken(args) {
   let printOnly = false
   for (let i = 0; i < args.length; i++) {
     const a = args[i]
-    if (a === "--brain") brainName = args[++i]
+    if (a === "--brain") { brainName = brainFlagValue(args, i); i++ }
     else if (a === "--ttl") ttl = parseTtl(args[++i])
     else if (a.startsWith("--ttl=")) ttl = parseTtl(a.slice(6))
     else if (a === "--read") scope = "read"
@@ -806,7 +806,7 @@ async function cmdSkills(args) {
 
   let brainName = null
   for (let i = 0; i < rest.length; i++) {
-    if (rest[i] === "--brain") brainName = rest[++i]
+    if (rest[i] === "--brain") { brainName = brainFlagValue(rest, i); i++ }
   }
 
   const isInteractive = Boolean(process.stdin.isTTY)
