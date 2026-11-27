@@ -182,6 +182,44 @@ function artifactsBase(accountId, namespace) {
   return `${CF_API}/accounts/${accountId}/artifacts/namespaces/${namespace}`
 }
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
+function cfErrorCodes(rawBody) {
+  try { return (JSON.parse(rawBody)?.errors || []).map((e) => e?.code) } catch { return [] }
+}
+
+function isNamespaceInactive(res, rawBody) {
+  return res.status === 404 && (cfErrorCodes(rawBody).includes(10200) || /namespace is not active/i.test(rawBody))
+}
+
+// Make sure an Artifacts namespace exists and is usable. Creates it when
+// missing; tolerates "already exists" and 409 (activation / deletion in
+// progress) by polling until it settles. Returns { ok, error? }.
+async function ensureArtifactsNamespace({ accountId, namespace, token }) {
+  const url = `${CF_API}/accounts/${accountId}/artifacts/namespaces`
+  const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
+  let lastError = "unknown error"
+  for (let attempt = 0; attempt < 8; attempt++) {
+    let res, body = ""
+    try {
+      res = await fetch(url, { method: "POST", headers, body: JSON.stringify({ namespace }) })
+      body = await res.text()
+    } catch (err) {
+      return { ok: false, error: `network error: ${err.message}` }
+    }
+    if (res.ok) return { ok: true }
+    let msg = "unknown error"
+    try { msg = JSON.parse(body)?.errors?.[0]?.message || msg } catch {}
+    lastError = `HTTP ${res.status}: ${msg}`
+    if (res.status === 401 || res.status === 403) return { ok: false, error: lastError }
+    // Already exists → fine, the repo-create retry loop handles activation lag.
+    if (/already exists/i.test(msg)) return { ok: true }
+    // 409 = activation or deletion in progress; anything else, back off and retry.
+    await sleep(Math.min(1000 * 2 ** attempt, 8000))
+  }
+  return { ok: false, error: lastError }
+}
+
 // Account ID from a repo remote like https://<ACCOUNT_ID>.artifacts.cloudflare.net/git/<ns>/<repo>.git
 function accountIdFromRemote(url) {
   const m = (url || "").match(/^https?:\/\/([0-9a-f]{32})\.artifacts\.cloudflare\.net\//i)
@@ -305,10 +343,8 @@ async function setupCloudflareRemote({ targetDir, repoName, namespace, spin }) {
   p.log.info(`Artifacts API: ${pc.dim(baseUrl)}`)
   spin.start(`Creating Cloudflare Artifact ${pc.dim(repoName)}`)
 
-  let res
-  let rawBody = ""
-  try {
-    res = await fetch(`${baseUrl}/repos`, {
+  const createRepo = async () => {
+    const r = await fetch(`${baseUrl}/repos`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${cfApiToken}`,
@@ -316,7 +352,36 @@ async function setupCloudflareRemote({ targetDir, repoName, namespace, spin }) {
       },
       body: JSON.stringify({ name: repoName, default_branch: "main" }),
     })
-    rawBody = await res.text()
+    return { res: r, rawBody: await r.text() }
+  }
+
+  let res
+  let rawBody = ""
+  try {
+    ;({ res, rawBody } = await createRepo())
+    // A namespace that was deleted (or is still being deleted) answers
+    // 404 / code 10200 "Namespace is not active". Recreate it, wait for it
+    // to become active, and retry the repo create.
+    if (isNamespaceInactive(res, rawBody)) {
+      spin.message(`Namespace ${pc.dim(namespace)} is not active — creating it`)
+      const ns = await ensureArtifactsNamespace({ accountId: account.id, namespace, token: cfApiToken })
+      if (!ns.ok) {
+        spin.stop(`Could not activate Artifacts namespace "${namespace}": ${ns.error}`, 1)
+        p.log.warn([
+          "To fix:",
+          `  • wait a minute and run ${pc.cyan("csb")} again (a just-deleted namespace can take a moment to clear), or`,
+          `  • pick a different namespace when prompted, or`,
+          `  • create it in the Cloudflare dashboard (Artifacts → Namespaces → Create "${namespace}")`,
+        ].join("\n"))
+        return null
+      }
+      for (let attempt = 0; attempt < 8; attempt++) {
+        spin.message(`Creating Cloudflare Artifact ${pc.dim(repoName)}`)
+        ;({ res, rawBody } = await createRepo())
+        if (!isNamespaceInactive(res, rawBody)) break
+        await sleep(Math.min(1000 * 2 ** attempt, 8000))
+      }
+    }
   } catch (err) {
     spin.stop(`Network error calling Artifacts API: ${err.message}`, 1)
     return null
