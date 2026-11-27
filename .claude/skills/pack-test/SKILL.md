@@ -227,7 +227,7 @@ $CSB skills --agent goose --copy > /dev/null
 | `~/.claude/skills/brain-{ingest,search,refresh}` | Symlinks to `~/.agents/skills/…` | |
 | `csb skills --agent windsurf,codex` | Windsurf symlinks + vault `.agents/skills/{lint,brain-rebuild}` | |
 | `scripts/qmd/{setup,reindex}.ts` | Present in both brains, DB hardcoded to `.qmd/index.sqlite` relative | |
-| `CLAUDE.md`, `mise.toml`, `package.json` | Present in both brains | |
+| `CLAUDE.md`, `AGENTS.md`, `mise.toml`, `package.json` | Present in both brains | |
 | `CLAUDE.md` INDEX_PATH | Relative `INDEX_PATH=.qmd/index.sqlite` (no absolute substitution) | |
 | No unpatched tokens | No `__QMD_PATH__`, `__CSB_CONFIG__`, `__BRAIN_NAME__` anywhere in vault | |
 | `~/.claude-second-brain/config.toml` | Present with `default = "test-brain-a"` and 2 `[[brains]]` entries | |
