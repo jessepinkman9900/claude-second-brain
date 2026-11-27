@@ -26,7 +26,8 @@
   "scripts": {
     "docs:dev": "vocs dev",
     "docs:build": "vocs build",
-    "docs:preview": "vocs preview"
+    "docs:preview": "vocs preview",
+    "test": "node --test tests/*.test.js"
   },
   "files": [
     "bin/",
