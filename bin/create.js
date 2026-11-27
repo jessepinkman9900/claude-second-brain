@@ -588,6 +588,82 @@ function agentLaunchSteps(agents) {
   return lines.length ? lines : [`${pc.cyan("claude".padEnd(16))}  open Claude Code and start ingesting sources`]
 }
 
+// Mint a repo-scoped Artifacts git token and store it as an http.extraHeader
+// for that remote in the brain's .git/config (local only, never committed),
+// so plain `git push` / `git pull` work until it expires.
+async function mintArtifactsGitToken({ remote, cwd, ttl = 86400, scope = "write", interactive = false }) {
+  const parsed = parseCloudflareArtifact(remote)
+  if (!parsed) return { ok: false, error: `not a Cloudflare Artifacts remote: ${remote || "(none)"}` }
+  const auth = await resolveCloudflareToken()
+  if (!auth) return { ok: false, error: "no Cloudflare credentials — run `wrangler login` or set CLOUDFLARE_API_TOKEN" }
+  let accountId = parsed.accountId
+  if (!accountId) {
+    const account = await resolveCloudflareAccountId(auth.token, { interactive })
+    if (!account.id) return { ok: false, error: account.error }
+    accountId = account.id
+  }
+  let data
+  try {
+    const res = await fetch(`${artifactsBase(accountId, parsed.namespace)}/tokens`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${auth.token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ repo: parsed.repo, scope, ttl }),
+    })
+    data = await res.json().catch(() => ({}))
+    if (!res.ok || !data?.success) {
+      return { ok: false, error: `Artifacts API (HTTP ${res.status}): ${data?.errors?.[0]?.message || "unknown error"}` }
+    }
+  } catch (err) {
+    return { ok: false, error: err.message }
+  }
+  const token = data.result?.plaintext || data.result?.token
+  if (!token) return { ok: false, error: "Artifacts API response had no token" }
+  const expiresAt = data.result?.expires_at || null
+  if (cwd) setGitAuthHeader(cwd, remote, token)
+  return { ok: true, token, expiresAt, ...parsed, accountId }
+}
+
+function setGitAuthHeader(cwd, remote, token) {
+  const key = `http.${remote}.extraHeader`
+  spawnSync("git", ["config", "--local", "--unset-all", key], { cwd, stdio: "pipe" })
+  const r = spawnSync("git", ["config", "--local", "--add", key, `Authorization: Bearer ${token}`], { cwd, stdio: "pipe" })
+  return r.status === 0
+}
+
+// `csb git-token [--brain <name>] [--ttl <seconds>] [--read] [--print]`
+async function cmdGitToken(args) {
+  let brainName = null
+  let ttl = 86400
+  let scope = "write"
+  let printOnly = false
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i]
+    if (a === "--brain") brainName = args[++i]
+    else if (a === "--ttl") ttl = parseInt(args[++i], 10)
+    else if (a === "--read") scope = "read"
+    else if (a === "--print") printOnly = true
+    else if (!a.startsWith("-") && !brainName) brainName = a
+    else throw new Error(`Unknown option: ${a}. Run \`csb git-token --help\`.`)
+  }
+  if (!Number.isFinite(ttl) || ttl <= 0) throw new Error("--ttl must be a positive number of seconds")
+  const brain = await resolveBrain(brainName)
+  let remote = brain.git_remote
+  if (!remote) {
+    const r = spawnSync("git", ["remote", "get-url", "origin"], { cwd: brain.path, stdio: "pipe", encoding: "utf8" })
+    remote = r.status === 0 ? r.stdout.trim() : ""
+  }
+  const result = await mintArtifactsGitToken({
+    remote, cwd: printOnly ? null : brain.path, ttl, scope, interactive: Boolean(process.stdin.isTTY),
+  })
+  if (!result.ok) throw new Error(`Could not mint a git token for "${brain.name}": ${result.error}`)
+  if (printOnly) {
+    process.stdout.write(result.token + "\n")
+    return
+  }
+  const until = result.expiresAt ? new Date(result.expiresAt).toLocaleString() : `${Math.round(ttl / 3600)}h from now`
+  console.log(`${pc.green("✓")} ${scope} token for ${pc.cyan(`${result.namespace}/${result.repo}`)} saved to ${pc.dim(`${brain.path}/.git/config`)} — git push/pull work until ${until}.`)
+}
+
 function globalSkillSummary({ installed, skipped }) {
   return [
     installed.length > 0 ? `installed ${installed.length}` : null,
@@ -704,6 +780,7 @@ function printHelp(topic = "top") {
         `  ${c("csb qmd [--brain N] <qmd args…>")}  run qmd against the resolved brain`,
         `  ${c("csb exec [--brain N] -- <cmd…>")}   run a command inside the resolved brain`,
         `  ${c("csb skills [--agent <ids>]")}       install/update skills for more agents`,
+        `  ${c("csb git-token [<name>]")}           renew a Cloudflare Artifacts git token`,
         `  ${c("csb doctor")}                       verify your setup and suggest fixes`,
         `  ${c("csb help [<command>]")}             show help for a command`,
         "",
@@ -811,6 +888,22 @@ function printHelp(topic = "top") {
       `  ${c("--brain <name>")}     brain whose vault-local skills to update (default brain otherwise)`,
       "",
       `Agents: ${pc.dim(AGENT_IDS.join(", "))}`,
+    ].join("\n")),
+    "git-token": () => console.log([
+      `${pc.bold("csb git-token")} — renew the git token for a Cloudflare Artifacts brain`,
+      "",
+      "Usage:",
+      `  ${c("csb git-token [<name>] [--ttl <seconds>] [--read] [--print]")}`,
+      "",
+      "Artifacts git tokens are short-lived (24h by default). This mints a new one with",
+      "your wrangler login (or CLOUDFLARE_API_TOKEN) and stores it as an http.extraHeader",
+      "for the brain's remote in its .git/config, so plain `git push` / `git pull` work.",
+      "",
+      "Options:",
+      `  ${c("--brain <name>")}   brain to renew (default: the default brain; also positional)`,
+      `  ${c("--ttl <seconds>")}  token lifetime (default 86400)`,
+      `  ${c("--read")}           read-only token instead of write`,
+      `  ${c("--print")}          print the token instead of saving it to .git/config`,
     ].join("\n")),
     doctor: () => console.log([
       `${pc.bold("csb doctor")} — verify your setup and suggest fixes`,
@@ -1536,10 +1629,11 @@ async function createBrain(initialName, { agents: explicitAgents = null, copy = 
   if (remoteProvider === "cloudflare") {
     const result = await setupCloudflareRemote({ targetDir, repoName, namespace: cfNamespace, spin })
     if (result?.repoToken) {
-      p.log.warn(`Save your Artifacts repo token — it expires and you'll need to mint a new one:\n  ${result.repoToken}`)
+      p.log.info(`Git token saved to the vault's .git/config — push/pull work for 24h; renew with ${pc.cyan("csb git-token")}`)
     }
     gitRemote = result?.remote || ""
     cfAccountId = result?.accountId || null
+    if (result?.remote && result?.repoToken) setGitAuthHeader(targetDir, result.remote, result.repoToken)
     if (!result) remoteProblem = "Cloudflare Artifact not created (see the error above)"
     else if (!result.pushed) remoteProblem = "Cloudflare Artifact created, but the initial push failed (see the error above)"
   }
@@ -1564,12 +1658,7 @@ async function createBrain(initialName, { agents: explicitAgents = null, copy = 
       ]
     : remoteProvider === "cloudflare"
     ? [
-        `${pc.dim("# Mint a fresh git push/pull token when the current one expires:")}`,
-        `${pc.cyan(`TOKEN=$(wrangler auth token)`)}`,
-        `${pc.cyan(`curl -X POST https://api.cloudflare.com/client/v4/accounts/${cfAccountId}/artifacts/namespaces/${cfNamespace}/tokens \\`)}`,
-        `${pc.cyan(`  -H "Authorization: Bearer $TOKEN" \\`)}`,
-        `${pc.cyan(`  -H "Content-Type: application/json" \\`)}`,
-        `${pc.cyan(`  -d '{"repo":"${repoName}","scope":"write","ttl":86400}'`)}  ${pc.dim("# token is in .result.plaintext")}`,
+        `${pc.cyan(`csb git-token${targetName ? ` ${targetName}` : ""}`)}  ${pc.dim("# renew the git push/pull token (expires every 24h)")}`,
       ]
     : remoteProvider === "none"
       ? [
@@ -1604,6 +1693,7 @@ const SUBCOMMANDS = new Set([
   "use", "default", "switch",
   "doctor",
   "skills",
+  "git-token",
 ])
 
 async function main() {
@@ -1653,6 +1743,10 @@ async function main() {
   }
   if (cmd === "use" || cmd === "default" || cmd === "switch") {
     await cmdUse(rest)
+    return
+  }
+  if (cmd === "git-token") {
+    await cmdGitToken(rest)
     return
   }
   if (cmd === "doctor") {
