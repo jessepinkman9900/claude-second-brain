@@ -236,7 +236,7 @@ Do NOT re-index after every single file edit.
 
 This section applies only when working on the `claude-second-brain` repo itself — it is not part of the template copied into user vaults.
 
-Whenever you **add, remove, or rename a supported agent** in `bin/agents.js`, update the agent lists in both READMEs, `docs/pages/cli.mdx` ("Install skills for any agent"), and `docs/pages/skills.mdx`.
+Whenever you **add, remove, or rename a supported agent** in `bin/agents.js`, update the agent lists in both READMEs, `docs/pages/cli/skills.mdx` ("Install skills for any agent" and "Supported agents"), and `docs/pages/skills.mdx`.
 
 Whenever you **add, remove, or rename a skill** under `template/.claude/skills/`, you MUST update the following in the same change:
 
