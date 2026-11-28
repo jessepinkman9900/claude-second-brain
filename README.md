@@ -22,7 +22,7 @@ Needs Node 22+ and an agent that supports [Agent Skills](https://agentskills.io)
 
 - **A wiki your agent maintains.** Summaries, topic pages, cross-links and contradiction flags, written for you.
 - **Local search** across everything, powered by [qmd](https://github.com/tobi/qmd).
-- **An Obsidian vault** with graph view, backlinks and git sync already set up.
+- **An [Obsidian](https://jessepinkman9900.github.io/claude-second-brain/integrations/obsidian) vault** with graph view, backlinks and [git sync](https://jessepinkman9900.github.io/claude-second-brain/integrations/obsidian-git) already set up. Read it on your phone through [iCloud](https://jessepinkman9900.github.io/claude-second-brain/integrations/icloud).
 - **Plain git** as the source of truth: GitHub, Cloudflare Artifacts, or any remote.
 
 ## Quickstart
@@ -48,9 +48,9 @@ Works with Claude Code, Codex, Cursor, GitHub Copilot and [11 more agents](https
 
 ## How it works
 
-Sources go into `raw-sources/`, your agent writes and cross-links pages in `wiki/`, and qmd indexes them for search. The vault is a git repo, so Obsidian and any agent on any device read the same files.
+Your sources go in on the left. Your brain in the middle is a wiki your agent writes and cross-links, with qmd indexing it for search. Any agent on the right can read and grow it, and because the vault is a git repo, Obsidian and every device see the same files.
 
-![Sources flow through /brain-ingest into the wiki, qmd indexes it for /brain-search, and git syncs it to Obsidian and your agent](.github/assets/how-it-works.png)
+![Articles, PDFs, notes, Obsidian and Git feed your brain (wiki + qmd), which Claude Code, Codex, Cursor, Copilot and Gemini all work with](.github/assets/how-it-works.png)
 
 More in [How it works](https://jessepinkman9900.github.io/claude-second-brain/concepts/how-it-works) and the [wiki schema](https://jessepinkman9900.github.io/claude-second-brain/concepts/schema).
 
