@@ -23,7 +23,7 @@ To install for more agents later, or after upgrading the CLI:
 npx claude-second-brain skills --agent codex,cursor,github-copilot
 ```
 
-See [Install skills for any agent](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/cli#install-skills-for-any-agent) for the full layout.
+See [Install skills for any agent](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/cli/skills#install-skills-for-any-agent) for the full layout.
 
 To pull in improvements from the latest template:
 

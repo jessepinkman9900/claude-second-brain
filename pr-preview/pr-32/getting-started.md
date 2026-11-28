@@ -24,7 +24,7 @@ The CLI will ask:
 * **Brain name** — what to call this brain (default: `my-brain`)
 * **Git remote** — optionally host your vault on **[GitHub](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/remotes/github)** (requires `gh` CLI) or **[Cloudflare Artifacts](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/remotes/cloudflare-artifacts)** (requires a Cloudflare account + wrangler)
 * **Register qmd collections after install?** — runs `pnpm qmd:setup` once dependencies are installed
-* **Install skills for which agents?** — Claude Code plus any detected agent is preselected; see [Install skills for any agent](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/cli#install-skills-for-any-agent)
+* **Install skills for which agents?** — Claude Code plus any detected agent is preselected; see [Install skills for any agent](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/cli/skills#install-skills-for-any-agent)
 
 Every question is asked up front, so the rest of setup runs unattended.
 
