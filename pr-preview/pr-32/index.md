@@ -8,6 +8,26 @@ npx claude-second-brain
 
 [Get started](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/getting-started) · Want the details first? [How it works](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/concepts/how-it-works) · [CLI reference](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/cli) · [GitHub](https://github.com/jessepinkman9900/claude-second-brain)
 
+Articles, PDFs and notes go in, alongside your Obsidian vault and git remote; your brain (the wiki plus its qmd index) sits in the middle; Claude Code, Codex, Cursor, GitHub Copilot and Gemini all read and maintain it. Set it up once. Every agent you use reads the same wiki, ingests new sources with /brain-ingest and answers with /brain-search.
+
+**Your sources:**
+
+* Articles
+* PDFs
+* Notes
+* Obsidian
+* Git
+
+**In the middle:** Your brain (wiki + qmd)
+
+**Your agents:**
+
+* Claude Code
+* Codex
+* Cursor
+* Copilot
+* Gemini
+
 One command gives you a fully wired knowledge system:
 
 * **Your AI agent** (Claude Code, Codex, Cursor, …) ingests your sources and maintains a cross-linked wiki

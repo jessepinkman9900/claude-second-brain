@@ -2,24 +2,25 @@
 
 Sources go in on the left, your agent synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and git makes the whole vault editable from Obsidian and your agent on any device.
 
-Articles, PDFs, notes and your questions go in through your agent; the wiki and its qmd index sit in the middle; Claude Code, Codex, Cursor, Obsidian and git all read and edit the same vault. Your agent runs /brain-ingest on new sources and /brain-search on questions; qmd indexes every page; git keeps every device in sync.
+Articles, PDFs and notes go in, alongside your Obsidian vault and git remote; your brain (the wiki plus its qmd index) sits in the middle; Claude Code, Codex, Cursor, GitHub Copilot and Gemini all read and maintain it. Set it up once. Every agent you use reads the same wiki, ingests new sources with /brain-ingest and answers with /brain-search.
 
-**You bring:**
+**Your sources:**
 
 * Articles
 * PDFs
-* Personal notes
-* Questions
+* Notes
+* Obsidian
+* Git
 
-**In the middle:** Your wiki (wiki/ + qmd index)
+**In the middle:** Your brain (wiki + qmd)
 
-**Works with:**
+**Your agents:**
 
 * Claude Code
 * Codex
 * Cursor
-* Obsidian
-* Git remote
+* Copilot
+* Gemini
 
 ## The ingest loop, zoomed in
 
