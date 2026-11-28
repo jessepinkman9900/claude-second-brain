@@ -7,6 +7,8 @@ on:
     paths:
       - 'docs/**'
       - 'vocs.config.ts'
+      - 'public/**'
+      - 'scripts/docs/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - '.github/workflows/docs-preview.yml'
@@ -22,7 +24,7 @@ concurrency:
 jobs:
   preview:
     name: Build and deploy PR preview
-    runs-on: ubuntu-24.04  # Playwright 1.59 (locked, used by Vocs mermaid) has no chromium for ubuntu 26.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,20 +46,22 @@ jobs:
         if: github.event.action != 'closed'
         run: pnpm install --frozen-lockfile
 
-      - name: Install Playwright chromium (for Vocs mermaid rendering)
-        if: github.event.action != 'closed'
-        run: pnpm dlx playwright@1.65.1 install --with-deps chromium  # keep in sync with playwright in pnpm-lock.yaml
-
       - name: Build docs
         if: github.event.action != 'closed'
         run: pnpm run docs:build
         env:
           BASE_PATH: /claude-second-brain/pr-preview/pr-${{ github.event.pull_request.number }}
 
+      - name: Verify llms.txt, Markdown pages, metadata and 404
+        if: github.event.action != 'closed'
+        run: pnpm run docs:verify
+        env:
+          BASE_PATH: /claude-second-brain/pr-preview/pr-${{ github.event.pull_request.number }}
+
       - name: Deploy preview
         uses: rossjrw/pr-preview-action@v1
         with:
-          source-dir: docs/dist
+          source-dir: docs/dist/public
           preview-branch: gh-pages
           umbrella-dir: pr-preview
           action: auto
