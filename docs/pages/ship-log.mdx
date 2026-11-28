@@ -6,6 +6,20 @@ description: "Release history for the claude-second-brain npm package and its ag
 
 A running record of every released version of `claude-second-brain` on npm. Newest releases first. For auto-generated notes and tags, see the [GitHub releases](https://github.com/jessepinkman9900/claude-second-brain/releases) page.
 
+## v1.3.0 — 2026-11-27
+
+A rebuilt docs site that agents and search engines can read, and a template fix so the search index is never committed.
+
+**Fixes:**
+- New vaults' `.gitignore` now ignores `.qmd/`, where the qmd search index lives. Before, only `qmd.sqlite*` was ignored, so obsidian-git could commit and push the index. It also ignores `.obsidian/workspace.json` and `workspace-mobile.json`, which differ on every device and caused sync conflicts. Existing vaults: add those lines to your `.gitignore` and run `git rm -r --cached .qmd` if the index was already committed.
+
+**Docs site:**
+- Upgraded to Vocs 2.12 and made [agent-ready](https://jessepinkman9900.github.io/claude-second-brain/llms.txt): `llms.txt` and `llms-full.txt` follow the llms.txt format with absolute links, every page has a `.md` version linked from its `<head>`, plus canonical URLs, keywords, SoftwareApplication JSON-LD on the homepage, a sitemap without the 404, and a 404 page that points to `llms.txt`. `pnpm docs:verify` checks all of it in CI.
+- New landing page hero with a copyable `npx claude-second-brain` command, and an animated diagram of sources, your brain and your agents.
+- The [CLI reference](/cli) is now one page per command, each with usage, arguments, options and examples.
+- New [Integrations](/integrations/obsidian) section: Obsidian, obsidian-git (its sync settings and mobile limits), and [iCloud sync](/integrations/icloud) for iPhone and iPad using a second clone that keeps `.git` out of iCloud.
+- New manual setup steps for [Cloudflare Artifacts](/remotes/cloudflare-artifacts#manual-setup).
+
 ## v1.2.3 — 2026-11-27
 
 Bug fixes for CLI argument handling, plus a test suite.
