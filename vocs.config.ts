@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { defineConfig } from 'vocs/config'
+import { heroMarkdown } from './docs/components/hero-content'
 import {
   absolutizeLinks,
   formatLlmsIndex,
@@ -39,6 +40,8 @@ export default defineConfig({
     output: {
       // llms.txt, llms-full.txt and the .md exports: absolute links that keep
       // the base path, and an llms.txt laid out per https://llmstxt.org.
+      // The landing-page hero is a React component; give it a Markdown form.
+      components: [{ module: './docs/components/Hero', export: 'Hero', render: () => heroMarkdown() }],
       transform: ({ index, pages }) => ({
         index: formatLlmsIndex(index, site),
         pages: Object.fromEntries(

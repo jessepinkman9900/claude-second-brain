@@ -166,7 +166,10 @@ describe('docs pages', () => {
   })
 
   it('every meta keyword appears on the homepage', () => {
-    const home = readFileSync(join(pagesDir, 'index.mdx'), 'utf-8').toLowerCase()
+    const home = ['pages/index.mdx', 'components/Hero.tsx']
+      .map((f) => readFileSync(join(root, 'docs', f), 'utf-8'))
+      .join('\n')
+      .toLowerCase()
     for (const k of KEYWORDS) assert.ok(home.includes(k.toLowerCase()), `"${k}" is not on the homepage`)
   })
 
