@@ -14,7 +14,8 @@ The vault ships with a `.obsidian/` folder, so a fresh brain opens ready to use:
 
 * **Core plugins on**: file explorer, search, quick switcher, graph view, backlinks, outgoing links, tags, properties, page preview, outline, daily notes, templates, bookmarks, canvas and file recovery.
 * **Community plugin**: [obsidian-git](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/integrations/obsidian-git), set to commit, pull and push on its own.
-* **Obsidian Sync and Publish off**: the brain syncs through git (and optionally [iCloud](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/integrations/icloud)).
+* **Obsidian Sync and Publish off**: the brain syncs through git, and optionally [iCloud](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/integrations/icloud) for your phone. Don't turn on Obsidian Sync as well: two sync systems on one vault fight over the same files.
+* **Per-device state ignored**: `.obsidian/workspace.json` (open tabs and panes) is in `.gitignore`, so each device keeps its own layout without sync conflicts.
 
 ## How the wiki looks in Obsidian
 
