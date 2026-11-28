@@ -77,7 +77,11 @@ async function runStep(spin, label, cmd, cwd) {
   let last = ""
   const render = () => {
     const secs = Math.round((Date.now() - started) / 1000)
-    const detail = last ? `  ${pc.dim(truncate(last, 60))}` : ""
+    // Keep the spinner on one line: a message that wraps makes the spinner
+    // redraw onto a new line every tick in narrower terminals.
+    const head = `${label} (${secs}s)`
+    const room = Math.min(60, (process.stdout.columns || 80) - head.length - 8)
+    const detail = last && room >= 12 ? `  ${pc.dim(truncate(last, room - 1))}` : ""
     spin.message(`${label} ${pc.dim(`(${secs}s)`)}${detail}`)
   }
   spin.start(label)
