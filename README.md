@@ -16,7 +16,7 @@ npx claude-second-brain
 
 Needs Node 22+ and an agent that supports [Agent Skills](https://agentskills.io). [Obsidian](https://obsidian.md) is optional.
 
-![Obsidian graph view of a running wiki](image.png)
+![Running npx claude-second-brain: answer four prompts, and it installs dependencies, registers search, installs skills and initializes git](.github/assets/demo.gif)
 
 ## What you get
 
@@ -24,6 +24,8 @@ Needs Node 22+ and an agent that supports [Agent Skills](https://agentskills.io)
 - **Local search** across everything, powered by [qmd](https://github.com/tobi/qmd).
 - **An [Obsidian](https://jessepinkman9900.github.io/claude-second-brain/integrations/obsidian) vault** with graph view, backlinks and [git sync](https://jessepinkman9900.github.io/claude-second-brain/integrations/obsidian-git) already set up. Read it on your phone through [iCloud](https://jessepinkman9900.github.io/claude-second-brain/integrations/icloud).
 - **Plain git** as the source of truth: GitHub, Cloudflare Artifacts, or any remote.
+
+![Obsidian graph view of a running wiki](image.png)
 
 ## Quickstart
 

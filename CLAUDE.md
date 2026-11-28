@@ -248,6 +248,8 @@ Whenever you **add, remove, or rename a skill** under `template/.claude/skills/`
 
 Whenever you **change the docs hub diagram** (`docs/components/FlowDiagram.tsx` or `flow-content.ts`), re-export `.github/assets/how-it-works.png` (render the component with the pulse hidden and screenshot the SVG at 2x), since the root README shows that image.
 
+Whenever you **change the setup prompts or output** of `bin/create.js`, re-record `.github/assets/demo.gif` with `vhs .github/assets/demo.tape` from the repo root (it packs the checkout into a throwaway HOME), since the root README shows that GIF.
+
 Whenever you **change a qmd collection name, context path, or CLI invocation** in `scripts/qmd/setup.ts` or in skill workflows, you MUST also update every `-c <collection>` reference in `template/CLAUDE.md`, all `SKILL.md` files under `template/.claude/skills/`, and both READMEs.
 
 Whenever you **add, remove, or rename a skill, or change the wiki schema, page types, or frontmatter format**, you MUST also update the corresponding page under `docs/pages/` — skill pages at `docs/pages/skills/`, schema summary at `docs/pages/concepts/schema.mdx`, and the sidebar in `vocs.config.ts` if page paths change. The docs site is built from `docs/` and deployed to GitHub Pages on merge to `main`. Every page in `docs/pages/` needs a frontmatter `description` of 50+ characters (it feeds `<meta name="description">` and `llms.txt`; `tests/docs-agent-ready.test.js` enforces it). After a docs change, run `pnpm docs:build && pnpm docs:verify` to check llms.txt, the `.md` pages, head metadata, JSON-LD, the sitemap and the 404 page.
