@@ -1,0 +1,1 @@
+import{c as e,d as t,m as n}from"./index-DBMPQhTY.js";var r=e(),i=n(t(),1),a=i.createContext({frontmatter:void 0});function o(e){let{children:t,frontmatter:n}=e;return(0,r.jsx)(a.Provider,{value:{frontmatter:n},children:t})}function s(){return i.useContext(a)}export{s as n,o as t};
