@@ -111,7 +111,10 @@ export function verifyDocs(publicDir, site) {
       fail(`homepage title should name the product and say it is a CLI: "${title}"`)
     const keywords = decode(attr(html, /<meta name="keywords" content="([^"]+)"/) ?? '')
     if (!keywords) fail('homepage has no meta keywords')
-    const text = decode(html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, ' ').replace(/<[^>]+>/g, ' ')).toLowerCase()
+    // Only used to compare keywords against visible text in our own build output.
+    const text = decode(
+      html.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1[^>]*>/gi, ' ').replace(/<[^>]+>/g, ' '),
+    ).toLowerCase()
     for (const k of KEYWORDS)
       if (!text.includes(k.toLowerCase())) fail(`keyword "${k}" does not appear in the homepage text`)
     let blocks = []

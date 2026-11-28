@@ -81,7 +81,7 @@ describe('formatLlmsIndex', () => {
   })
 
   it('uses absolute links and drops the 404 page', () => {
-    assert.match(out, new RegExp(`\\[Getting Started\\]\\(${SITE}/getting-started\\.md\\)`))
+    assert.ok(out.includes(`[Getting Started](${SITE}/getting-started.md)`))
     assert.doesNotMatch(out, /\]\(\/(?!\/)/)
     assert.doesNotMatch(out, /404/)
   })
