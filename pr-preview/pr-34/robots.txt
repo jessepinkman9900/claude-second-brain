@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-34/sitemap.xml
