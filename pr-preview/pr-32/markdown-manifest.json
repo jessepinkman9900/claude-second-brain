@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "files": {
+    "/404.md": "bf7c4c452fbb7f87cf150c7e043e72d227d2e27841ff38af0bc3f3df1d145673",
+    "/cli.md": "bbc8311a28e25ec770c264d9ca2dbc07d962d4664b60fa26569209efb0bee47e",
+    "/concepts/how-it-works.md": "d4d6ca802bf046497c0be87fadcd28866f5c8472ad3ce0b23694936c7150c71b",
+    "/concepts/schema.md": "92cb1735dbcef44c7e889ccbd3bd254863232655ba010cf2ea32af70ef0c6c44",
+    "/getting-started.md": "f5123f0e132c7db90562118367141de24166b33f43800679b2dfa18246199992",
+    "/index.md": "e560cb9867f8e61eac8d123b71f00c306a48a36014d833d3099fe77caa5e98cd",
+    "/llms-full.txt": "de951647210246ec93c52fab1473cee93a8e723bb50470fa70a4bea87bcc519d",
+    "/llms.txt": "99fb49cb9ef880d25e052088e2fc2eddf640fa0be3f0aa461b34dada04e2ca39",
+    "/remotes/cloudflare-artifacts.md": "1a7025fd270858c54cde6cf94778f961dd9a9843578ed8e813e53c64bc13c272",
+    "/remotes/github.md": "8c10394fe6be979b19ce0833b7d5d983f809ea6305cef1265f7304daea463751",
+    "/ship-log.md": "cccf3349e3f8c4e2441a0c6e02f6888bf9da85b23488e93e274309ab64055840",
+    "/skills.md": "51e080ab8f59c94f28987ba46fb4c42068ea6fe4efb1d8e05a4df2e5ced017af",
+    "/skills/brain-ingest.md": "8adaac6453fd6e943bea8157949fa05e2695cd650764e5e92b92f91845289180",
+    "/skills/brain-rebuild.md": "db52dfc98e57fc9254f14c7e9a407cfcb2b2f8de5b52ed438862523b46afb12f",
+    "/skills/brain-refresh.md": "fd794fece13c7be499fefa5641869d4f9a4fdce4a56418d1372102391049d0e2",
+    "/skills/brain-search.md": "c9809229f0905893afcdd7d94c548c8ef76e011459144a85a085140898b4181c",
+    "/skills/lint.md": "cfcf2adc16cb0d190c41d803d982777d34b4fec7b07d13601310e27e2f3d0d54"
+  }
+}
