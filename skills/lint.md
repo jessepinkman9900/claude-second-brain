@@ -1,4 +1,4 @@
-## /lint
+# /lint
 
 Health-check the wiki.
 

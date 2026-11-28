@@ -1,0 +1,1 @@
+var e=async()=>JSON.stringify(await(await fetch(`/claude-second-brain/assets/search-index-2eddb6a4c55c.json`)).json());export{e as getSearchIndex};

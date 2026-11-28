@@ -1,20 +1,20 @@
-## Wiki schema
+# Wiki schema
 
 The authoritative schema lives in [CLAUDE.md](https://github.com/jessepinkman9900/claude-second-brain/blob/main/CLAUDE.md) — your agent reads it at the start of every session (agents that look for `AGENTS.md` are pointed to it). This page is a readable summary.
 
-### Page types
+## Page types
 
-| Type             | File                     | Purpose                             |
-| ---------------- | ------------------------ | ----------------------------------- |
-| `overview`       | `wiki/overview.md`       | Evolving high-level synthesis       |
-| `topic`          | `wiki/[concept].md`      | A concept, domain, or idea          |
-| `entity`         | `wiki/[name].md`         | A person, tool, company, or project |
-| `source-summary` | `wiki/sources/[slug].md` | One page per ingested source        |
-| `qa`             | `wiki/qa/[slug].md`      | Filed answers to notable queries    |
+| Type | File | Purpose |
+| --- | --- | --- |
+| `overview` | `wiki/overview.md` | Evolving high-level synthesis |
+| `topic` | `wiki/[concept].md` | A concept, domain, or idea |
+| `entity` | `wiki/[name].md` | A person, tool, company, or project |
+| `source-summary` | `wiki/sources/[slug].md` | One page per ingested source |
+| `qa` | `wiki/qa/[slug].md` | Filed answers to notable queries |
 
 Plus two admin pages: `wiki/index.md` (master index) and `wiki/log.md` (running activity log).
 
-### Frontmatter
+## Frontmatter
 
 Every wiki page has YAML frontmatter:
 
@@ -28,7 +28,7 @@ updated: YYYY-MM-DD
 ---
 ```
 
-### Naming conventions
+## Naming conventions
 
 * **File names** — kebab-case, all lowercase. `machine-learning-ops.md`, not `MachineLearningOps.md`.
 * **Links** — always Obsidian `[[wikilinks]]` for internal cross-references. Full paths from vault root: `[[wiki/distributed-systems]]`.
@@ -36,7 +36,7 @@ updated: YYYY-MM-DD
 * **Contradictions** — flagged with a `> [!WARNING] Contradiction` callout. Both claims and their sources are stated.
 * **Uncertainty** — claims the model isn't sure about are marked with `[?]` inline.
 
-### Directory layout
+## Directory layout
 
 ```
 my-brain/
@@ -53,7 +53,7 @@ my-brain/
     └── qa/
 ```
 
-### Hard rules
+## Hard rules
 
 1. Nothing in `raw-sources/` is ever modified — they are immutable raw inputs.
 2. Only `wiki/` is owned by the agent; the rest of the vault is untouched.

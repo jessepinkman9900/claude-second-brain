@@ -1,13 +1,13 @@
-## GitHub remote
+# GitHub remote
 
 GitHub is the default Git backend for claude-second-brain. Your vault is stored as a private GitHub repository — you get version history, access from any device, and Obsidian mobile sync via the bundled Git plugin.
 
-### Prerequisites
+## Prerequisites
 
 * A [GitHub account](https://github.com/join)
 * [`gh` CLI](https://cli.github.com/) — used for authentication and repo creation during setup
 
-### Setup (automatic)
+## Setup (automatic)
 
 When you run `npx claude-second-brain` and select **GitHub** as your remote, the CLI handles everything:
 
@@ -15,7 +15,7 @@ When you run `npx claude-second-brain` and select **GitHub** as your remote, the
 2. Creates a private repo: `gh repo create <name> --private --source=. --remote=origin --push`
 3. Pushes the initial commit
 
-### Manual setup
+## Manual setup
 
 If you skipped GitHub during setup, or `gh` wasn't installed, connect it manually:
 
@@ -28,8 +28,8 @@ git remote add origin https://github.com/you/my-brain.git
 git push -u origin main
 ```
 
-### Syncing from Obsidian
+## Syncing from Obsidian
 
-The vault includes a pre-configured `.obsidian/` folder with [obsidian-git](https://github.com/Vinzent03/obsidian-git) settings. Enable the plugin in Obsidian → Community plugins and it will auto-commit and push on a schedule.
+The vault ships with [obsidian-git](https://jessepinkman9900.github.io/claude-second-brain/integrations/obsidian-git) enabled, so Obsidian commits, pulls and pushes on a schedule.
 
-For iOS: place the repo folder inside iCloud Drive — Obsidian Mobile picks it up natively and obsidian-git handles sync.
+For iPhone and iPad, see [iCloud sync](https://jessepinkman9900.github.io/claude-second-brain/integrations/icloud).

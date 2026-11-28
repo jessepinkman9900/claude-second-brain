@@ -1,74 +1,43 @@
-## How it works
+# How it works
 
-Sources flow in on the left, your agent synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and git makes the whole vault editable from Obsidian and your agent on any device.
+Sources go in on the left, your agent synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and git makes the whole vault editable from Obsidian and your agent on any device.
 
-```mermaid
-flowchart TB
-  subgraph Sources["raw-sources/ — raw, immutable"]
-    direction LR
-    S1[articles/]
-    S2[pdfs/]
-    S3[personal/]
-  end
+Articles, PDFs and notes go in, alongside your Obsidian vault and git remote; your brain (the wiki plus its qmd index) sits in the middle; Claude Code, Codex, Cursor, GitHub Copilot and Gemini all read and maintain it. Set it up once. Every agent you use reads the same wiki, ingests new sources with /brain-ingest and answers with /brain-search.
 
-  subgraph Skills["Agent skills"]
-    direction LR
-    I["/brain-ingest"]
-    Q["/brain-search"]
-    R["/brain-refresh"]
-  end
+**Your sources:**
 
-  subgraph Wiki["wiki/ — cross-linked synthesis"]
-    direction LR
-    W1[overview.md]
-    W2[topic / entity pages]
-    W3[sources/]
-    W4[qa/]
-  end
+* Articles
+* PDFs
+* Notes
+* Obsidian
+* Git
 
-  QMD[("qmd.sqlite<br/>vector + BM25<br/>hybrid index")]
+**In the middle:** Your brain (wiki + qmd)
 
-  subgraph Remote["Git remote — source of truth"]
-    GH[private repo]
-  end
+**Your agents:**
 
-  subgraph Read["Read / edit anywhere"]
-    direction LR
-    OB["Obsidian<br/>graph · backlinks · mobile"]
-    CC["Your agent<br/>desktop, web + mobile"]
-  end
+* Claude Code
+* Codex
+* Cursor
+* Copilot
+* Gemini
 
-  User((you))
-
-  Sources -->|read| I
-  I -->|write pages, cross-link,<br/>flag contradictions| Wiki
-  R -.->|chunk + embed<br/>changed files| QMD
-  Wiki -.->|indexed by| QMD
-  User -->|ask a question| Q
-  Q -->|hybrid search| QMD
-  QMD -->|top-k pages| Q
-  Q -->|cited answer| User
-  Wiki <-->|"obsidian-git<br/>auto commit / pull"| GH
-  GH --> OB
-  GH --> CC
-```
-
-### The ingest loop, zoomed in
+## The ingest loop, zoomed in
 
 ```
-┌─────────────────────┐        ┌─────────────────────┐        ┌─────────────────────┐
-│   Drop in a source  │        │ /brain-ingest       │        │     Wiki grows      │
-│                     │        │                     │        │                     │
-│  · article          │──────▶ │  reads + extracts   │──────▶ │  · cross-linked     │
-│  · PDF              │        │  key knowledge      │        │  · contradictions   │
-│  · personal note    │        │                     │        │    flagged          │
-│                     │        │                     │        │  · syntheses        │
-└─────────────────────┘        └─────────────────────┘        └─────────────────────┘
+┌──────────────────┐    ┌──────────────────┐    ┌──────────────────┐
+│ Drop in a source │    │ /brain-ingest    │    │ Wiki grows       │
+│                  │    │                  │    │                  │
+│ · article        │───▶│ reads + extracts │───▶│ · cross-linked   │
+│ · PDF            │    │ key knowledge    │    │ · contradictions │
+│ · personal note  │    │                  │    │   flagged        │
+│                  │    │                  │    │ · syntheses      │
+└──────────────────┘    └──────────────────┘    └──────────────────┘
 ```
 
 Query it anytime with `/brain-search`. Get answers with inline `[[wiki/page]]` citations, not a list of files.
 
-### Directory layout
+## Directory layout
 
 ```
 my-brain/

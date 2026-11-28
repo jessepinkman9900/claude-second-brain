@@ -1,4 +1,4 @@
-## /brain-rebuild
+# /brain-rebuild
 
 **Destructive.** Redesign the qmd schema from scratch.
 

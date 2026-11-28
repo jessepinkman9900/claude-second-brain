@@ -1,0 +1,76 @@
+# csb
+
+Create a new brain.
+
+## Usage
+
+```bash
+csb [<name>] [--agent <ids>] [--copy]
+```
+
+Creates the brain at `~/.claude-second-brain/<name>/`, runs `pnpm install`, `pnpm qmd:setup` and `git init`, and registers it in `~/.claude-second-brain/config.toml`. The first brain you create becomes the default.
+
+## Arguments
+
+### name
+
+`string`
+
+Name of the brain. Skips the name prompt. Defaults to `my-brain` when you accept the prompt's suggestion.
+
+```bash
+csb my-brain
+```
+
+## Options
+
+### -a, --agent \<ids>
+
+`string`
+
+Agents to install skills for, comma-separated, or `all`. Also read from `CSB_AGENTS`. Without it, the CLI prompts (interactive) or uses Claude Code plus every detected agent (non-interactive). See [`csb skills`](https://jessepinkman9900.github.io/claude-second-brain/cli/skills) for the agent IDs.
+
+```bash
+csb my-brain --agent claude-code,codex
+```
+
+### --copy
+
+`boolean`
+
+Copy skills into each agent's folder instead of symlinking them to `~/.agents/skills`.
+
+```bash
+csb my-brain --copy
+```
+
+### -h, --help
+
+Displays help message.
+
+```bash
+csb --help
+```
+
+## Prompts
+
+All questions are asked up front, so the rest of setup runs unattended:
+
+| Prompt | Default | Shown when |
+|---|---|---|
+| Brain name | `my-brain` | No `name` argument |
+| Git remote | none | Always: `GitHub`, `Cloudflare Artifacts` or `Skip` |
+| Repo name | the brain name | A remote is selected |
+| Artifacts namespace | `default` | Cloudflare Artifacts is selected |
+| Register qmd collections after install? | yes | Always |
+| Install skills for which agents? | Claude Code plus detected agents | No `--agent` and no `CSB_AGENTS` |
+
+See [GitHub](https://jessepinkman9900.github.io/claude-second-brain/remotes/github) and [Cloudflare Artifacts](https://jessepinkman9900.github.io/claude-second-brain/remotes/cloudflare-artifacts) for what each remote needs.
+
+## Behavior
+
+* Long steps show a spinner with elapsed time and the latest output line.
+* If `pnpm` 10+ is already on your `PATH`, it is used directly. Otherwise the CLI installs mise (if needed) and runs `mise install` to fetch node and pnpm first. Set `CSB_USE_MISE=1` to always use mise.
+* `CSB_ICONS=nerd|emoji|none` picks the icons in the git-remote picker. Real GitHub and Cloudflare logos (Nerd Font glyphs) are on by default in Ghostty, WezTerm and kitty. Set `CSB_ICONS=nerd` in other terminals if you use a Nerd Font.
+* The closing **Next steps** box shows how to open each agent you picked (`claude`, `codex`, `cursor .`, …).
+* If the GitHub or Cloudflare remote can't be created or pushed, the brain is still created locally, **Next steps** lists the fix, and the CLI exits 1.

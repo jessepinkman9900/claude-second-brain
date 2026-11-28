@@ -1,8 +1,8 @@
-## Ship log
+# Ship log
 
 A running record of every released version of `claude-second-brain` on npm. Newest releases first. For auto-generated notes and tags, see the [GitHub releases](https://github.com/jessepinkman9900/claude-second-brain/releases) page.
 
-### v1.2.3 — 2026-11-27
+## v1.2.3 — 2026-11-27
 
 Bug fixes for CLI argument handling, plus a test suite.
 
@@ -20,14 +20,14 @@ Bug fixes for CLI argument handling, plus a test suite.
 
 * README and docs home link `/brain-ingest`, `/brain-search`, `/brain-refresh`, `/brain-rebuild` and `/lint` to their docs pages.
 
-### v1.2.2 — 2026-11-27
+## v1.2.2 — 2026-11-27
 
 npm package metadata only. No CLI or template changes.
 
 * Added npm `keywords` matching the GitHub repo topics (`ai`, `amp`, `claude-code`, `codex`, `cursor`, `github`, `knowledge-base`, `knowledge-graph`, `knowledge-management`, `llm`, `obsidian`, `obsidian-vault`, `qmd`, `second-brain`) so the package is searchable on npmjs.com.
 * npm `homepage` now points to the [docs site](https://jessepinkman9900.github.io/claude-second-brain) instead of the GitHub README, and `bugs` links to GitHub issues.
 
-### v1.2.1 — 2026-11-27
+## v1.2.1 — 2026-11-27
 
 Maintenance release: security updates and a tokenless release pipeline. No CLI or template changes.
 
@@ -44,7 +44,7 @@ Maintenance release: security updates and a tokenless release pipeline. No CLI o
 
 * Docs workflows install Playwright browsers from the locked version (1.65.1).
 
-### v1.2.0 — 2026-11-27
+## v1.2.0 — 2026-11-27
 
 Works with any agent, not just Claude Code, plus a faster, unattended setup and first-class Cloudflare Artifacts git tokens. Existing installs: run `csb skills` once to move global skills from `~/.claude/skills` to `~/.agents/skills` (the old copies become symlinks).
 
@@ -78,7 +78,7 @@ Works with any agent, not just Claude Code, plus a faster, unattended setup and 
 * README, docs and package description say "any agent" and "git" (GitHub, Cloudflare Artifacts, or any remote) instead of Claude Code and GitHub only.
 * "Claude reads it" and similar wording is now agent-neutral, and "Access from anywhere" covers any local or cloud agent and any git host.
 
-### v1.1.0 — 2026-04-19
+## v1.1.0 — 2026-04-19
 
 CLI UX pass. Every addition is non-breaking — the `--` in `csb qmd -- …` and the `path --qmd` / `--config` / `--root` flag form continue to work, with a stderr deprecation notice on the flag form.
 
@@ -92,7 +92,7 @@ CLI UX pass. Every addition is non-breaking — the `--` in `csb qmd -- …` and
 * `csb rm` gained `--delete-remote` and `--keep-remote` for scripting. Under `-y` with neither flag, remotes are preserved (safe default).
 * `resolveBrain()` error now points to `csb use <name>` as the fix.
 
-### v1.0.0 — 2026-04-19
+## v1.0.0 — 2026-04-19
 
 First major release. Brains now live at `~/.claude-second-brain/<name>/` (not the repo root), and global skills resolve paths at call time via new CLI subcommands instead of baked-in paths. Existing single-brain installs: re-run `npx claude-second-brain <name>` to migrate. Legacy `active = …` in `config.toml` is auto-rewritten to `default = …`.
 
@@ -119,7 +119,7 @@ First major release. Brains now live at `~/.claude-second-brain/<name>/` (not th
 **Fixes:**
 
 * `writeConfig()` now writes `default = …` when upserting into a pre-existing empty or default-less `config.toml`. Previously a zero-byte `config.toml` blocked the field from being written and left CLI subcommands unable to resolve a default brain.
-* `pnpm qmd:setup` failures during scaffolding now surface captured stderr (last \~10 lines) instead of a generic "failed" message.
+* `pnpm qmd:setup` failures during scaffolding now surface captured stderr (last ~10 lines) instead of a generic "failed" message.
 * `template/scripts/qmd/{setup,reindex}.ts` wrap their bodies in `try/catch` that prints a tagged error with vault + db paths and exits 1, replacing silent unhandled rejections.
 * `resolveBrain()` errors now list available brain names and include a fix hint.
 
@@ -129,7 +129,7 @@ First major release. Brains now live at `~/.claude-second-brain/<name>/` (not th
 * Documented `rm` multi-select and remote-deletion prompts.
 * `/setup` skill reference removed from quick-start in favor of `pnpm qmd:reindex`.
 
-### v0.6.0 — 2026-04-17
+## v0.6.0 — 2026-04-17
 
 **Features:**
 
@@ -147,18 +147,18 @@ First major release. Brains now live at `~/.claude-second-brain/<name>/` (not th
 * Added `llms.txt` for LLM/AI crawler discoverability.
 * Docs site now generates `.md` files alongside HTML pages.
 
-### v0.5.1 — 2026-04-14
+## v0.5.1 — 2026-04-14
 
 * Maintenance release (version bump only).
 
-### v0.5.0 — 2026-04-14
+## v0.5.0 — 2026-04-14
 
 **Docs:**
 
 * Added a vocs-powered documentation site, deployed to GitHub Pages.
 * Aligned the `package.json` description with the README tagline.
 
-### v0.4.2 — 2026-04-14
+## v0.4.2 — 2026-04-14
 
 **Features:**
 
@@ -180,13 +180,13 @@ First major release. Brains now live at `~/.claude-second-brain/<name>/` (not th
 * Added a unified mermaid architecture diagram to both READMEs.
 * Removed generic skills-marketplace boilerplate.
 
-### v0.4.1 — 2026-04-14
+## v0.4.1 — 2026-04-14
 
 **Refactor:**
 
 * Renamed the `sources/` directory to `raw-sources/` to eliminate the naming collision with `wiki/sources/`.
 
-### v0.4.0 — 2026-04-14
+## v0.4.0 — 2026-04-14
 
 **Features:**
 
@@ -204,11 +204,11 @@ First major release. Brains now live at `~/.claude-second-brain/<name>/` (not th
 * Removed template skills from `.claude/skills`.
 * Changed the license badge color.
 
-### v0.3.0 — 2026-04-12
+## v0.3.0 — 2026-04-12
 
 * Squashed release PR ([#7](https://github.com/jessepinkman9900/claude-second-brain/pull/7)) bundling CLI refinements and template adjustments that followed the `feat/npx` series.
 
-### v0.2.3 — 2026-04-11
+## v0.2.3 — 2026-04-11
 
 **Features:**
 
@@ -218,21 +218,21 @@ First major release. Brains now live at `~/.claude-second-brain/<name>/` (not th
 
 * Added the MIT License file.
 
-### v0.2.2 — 2026-04-11
+## v0.2.2 — 2026-04-11
 
 **Docs:**
 
 * Added a GitHub URL to the package metadata.
 * Added the project image to the package so the npm card renders correctly.
 
-### v0.2.1 — 2026-04-11
+## v0.2.1 — 2026-04-11
 
 **Chore:**
 
 * Merged the release and publish steps into a single `release-publish.yml` workflow.
 * Hardened the CI pipeline.
 
-### v0.2.0 — 2026-04-11
+## v0.2.0 — 2026-04-11
 
 * First public release to npm.
 * Introduced the template scaffold and the `npx claude-second-brain` flow.

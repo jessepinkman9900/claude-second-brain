@@ -1,4 +1,4 @@
-## /brain-ingest
+# /brain-ingest
 
 Ingest a new source into the wiki.
 

@@ -1,38 +1,44 @@
 # claude-second-brain
 
-> An npm CLI (`npx claude-second-brain`) that scaffolds a personal knowledge wiki maintained by Claude Code. Drop in articles, PDFs, and notes; Claude reads them, extracts what matters, and files it into a cross-linked, YAML-structured, Obsidian-compatible wiki with local hybrid semantic search.
+> claude-second-brain is an open-source CLI (`npx claude-second-brain`) that scaffolds a personal knowledge base: a git repository that is also an Obsidian vault, where your AI coding agent (Claude Code, Codex, Cursor, GitHub Copilot, and others) reads your sources and maintains a cross-linked wiki, searchable locally with qmd.
 
-claude-second-brain is **not a RAG system** and **not a chatbot over your notes**. It is an actively-maintained wiki where Claude Code acts as the librarian — summarizing sources, writing and updating topic and entity pages, flagging contradictions between sources, and filing cited answers to notable queries. The scaffolded folder is simultaneously a git repository, an Obsidian vault, and a qmd search index.
-
-Operating model: a `CLAUDE.md` schema at the vault root is the single source of truth. Claude reads it at the start of every session and follows it deterministically. Six Claude Code slash-command skills cover the full loop — `/brain-ingest`, `/brain-search`, `/brain-refresh`, `/brain-rebuild`, `/lint`, and `/setup`. The wiki uses five structured page types (`overview`, `topic`, `entity`, `source-summary`, `qa`), YAML frontmatter on every page, Obsidian `[[wikilinks]]` for cross-references, and `> [!WARNING] Contradiction` callouts when sources disagree.
-
-Inspired by [Andrej Karpathy's approach to LLM-powered knowledge management](https://x.com/karpathy/status/2040470801506541998) — share an "idea file" with an LLM agent and let it build and maintain the knowledge base.
-
-Stack: **Claude Code** (agent + slash commands), **qmd** (local vector + BM25 hybrid search, SQLite-backed), **Obsidian** (reader with graph view, backlinks, and `obsidian-git` auto-sync pre-configured), **GitHub** (source of truth, mobile access, version history).
+It is not a RAG system or a chatbot over your notes. The agent follows a schema file (`CLAUDE.md`, also reached through `AGENTS.md`) and a set of Agent Skills (`/brain-ingest`, `/brain-search`, `/brain-refresh`, `/brain-rebuild`, `/lint`) to summarize sources, update topic and entity pages, flag contradictions, and answer questions with citations. Every page below is also available as Markdown at the linked `.md` URL, and the whole site is in one file at `llms-full.txt`.
 
 ## Docs
 
-- [Introduction](https://jessepinkman9900.github.io/claude-second-brain/): What the project is, how it differs from RAG and chatbot approaches, and the high-level stack
-- [Getting started](https://jessepinkman9900.github.io/claude-second-brain/getting-started): Three-step setup — `npx claude-second-brain` to scaffold, `/setup` inside Claude Code to register qmd collections and download embedding models, then open the folder as an Obsidian vault
-- [How it works](https://jessepinkman9900.github.io/claude-second-brain/concepts/how-it-works): Data-flow diagram from raw sources (articles, PDFs, personal notes) through Claude's ingest skills into the cross-linked wiki, plus how qmd indexes every page and how GitHub exposes the vault to Obsidian and Claude Code on desktop and mobile
-- [Wiki schema](https://jessepinkman9900.github.io/claude-second-brain/concepts/schema): The five page types, required YAML frontmatter fields (`type`, `tags`, `sources`, `related`, `updated`), kebab-case naming, linking rules, and the seven hard rules Claude follows
-
-## Skills (Claude Code slash commands)
-
-- [Skills overview](https://jessepinkman9900.github.io/claude-second-brain/skills): All slash commands grouped by role — daily workflow, maintenance, and setup — plus how to install and update them via `npx skills`
-- [/brain-ingest](https://jessepinkman9900.github.io/claude-second-brain/skills/brain-ingest): Ingest a source dropped into `raw-sources/` — summarize it, ask the user what matters, write a `wiki/sources/` page, update affected topic and entity pages, flag contradictions, and append to `wiki/log.md`
-- [/brain-search](https://jessepinkman9900.github.io/claude-second-brain/skills/brain-search): Query the wiki — runs hybrid semantic search, reads the top pages in full, returns an answer with inline `[[wiki/page]]` citations, and offers to file novel multi-page syntheses as `wiki/qa/` entries
-- [/brain-refresh](https://jessepinkman9900.github.io/claude-second-brain/skills/brain-refresh): Rescan the vault and regenerate vector embeddings for new or changed files; pass `force` to re-embed everything (e.g. after changing the embedding model)
-- [/brain-rebuild](https://jessepinkman9900.github.io/claude-second-brain/skills/brain-rebuild): **Destructive.** Analyzes the current wiki, proposes a new qmd collection and context schema, waits for approval, then patches `scripts/qmd/setup.ts`, drops the old index, and rebuilds embeddings from scratch
-- [/lint](https://jessepinkman9900.github.io/claude-second-brain/skills/lint): Health-check the wiki — surfaces orphan pages, broken wikilinks, unresolved contradictions, stale claims, missing pages referenced by others, and data-coverage gaps; applies fixes where safe and reports the rest
-- [/setup](https://jessepinkman9900.github.io/claude-second-brain/skills/setup): One-time initialization after scaffolding — registers qmd collections against the vault and downloads the GGUF embedding models (~2GB, once per machine)
+- [claude-second-brain: CLI for an AI-maintained Obsidian knowledge base](https://jessepinkman9900.github.io/claude-second-brain/index.md): claude-second-brain is an open-source CLI (npx claude-second-brain) that scaffolds a personal knowledge base: an Obsidian vault and git repo where your AI coding agent (Claude Code, Codex, Cursor, Copilot) maintains a cross-linked wiki with local qmd search.
+- [Getting Started](https://jessepinkman9900.github.io/claude-second-brain/getting-started.md): Install and set up claude-second-brain in three steps: scaffold a brain with npx claude-second-brain, generate qmd vector embeddings, and open the folder as an Obsidian vault synced with git.
+- [Commands](https://jessepinkman9900.github.io/claude-second-brain/cli.md): Reference for the claude-second-brain CLI (alias csb): every command to create, list, switch and remove brains, install agent skills, run qmd, print paths, renew Cloudflare Artifacts git tokens, and run csb doctor.
+- [csb](https://jessepinkman9900.github.io/claude-second-brain/cli/create.md): csb creates a new claude-second-brain: scaffolds the vault, installs dependencies, registers qmd collections, sets up a GitHub or Cloudflare Artifacts remote, and installs agent skills.
+- [csb ls](https://jessepinkman9900.github.io/claude-second-brain/cli/ls.md): csb ls lists every claude-second-brain brain registered in config.toml with its path, creation date and git remote, and marks the default brain.
+- [csb use](https://jessepinkman9900.github.io/claude-second-brain/cli/use.md): csb use sets the default claude-second-brain brain, which path, qmd, exec and the global agent skills resolve when no brain is named.
+- [csb rm](https://jessepinkman9900.github.io/claude-second-brain/cli/rm.md): csb rm deletes one or more claude-second-brain brains and their config entries, and can also delete their GitHub or Cloudflare Artifacts remotes.
+- [csb path](https://jessepinkman9900.github.io/claude-second-brain/cli/path.md): csb path prints the root directory, qmd index or config.toml path for the default or a named claude-second-brain brain, so scripts and skills work from anywhere.
+- [csb qmd](https://jessepinkman9900.github.io/claude-second-brain/cli/qmd.md): csb qmd runs the qmd search CLI against the default or a named claude-second-brain brain, with INDEX_PATH and the working directory already set.
+- [csb exec](https://jessepinkman9900.github.io/claude-second-brain/cli/exec.md): csb exec runs any command inside the default or a named claude-second-brain brain's directory with INDEX_PATH set, for vault-local scripts like pnpm qmd:reindex.
+- [csb skills](https://jessepinkman9900.github.io/claude-second-brain/cli/skills.md): csb skills installs or updates the claude-second-brain Agent Skills for Claude Code, Codex, Cursor, GitHub Copilot and 11 more agents, using the same layout as npx skills.
+- [csb git-token](https://jessepinkman9900.github.io/claude-second-brain/cli/git-token.md): csb git-token mints a new Cloudflare Artifacts git token for a claude-second-brain brain and saves it in the vault's .git/config so git push and pull work again.
+- [csb doctor](https://jessepinkman9900.github.io/claude-second-brain/cli/doctor.md): csb doctor checks the tools, config.toml, registered brains, qmd indexes and installed agent skills that claude-second-brain needs, and prints a fix for each problem.
+- [How it works](https://jessepinkman9900.github.io/claude-second-brain/concepts/how-it-works.md): How claude-second-brain works: raw sources flow through your AI agent into a cross-linked wiki, qmd indexes every page for hybrid search, and git syncs the vault to Obsidian and every device.
+- [Wiki schema](https://jessepinkman9900.github.io/claude-second-brain/concepts/schema.md): The wiki schema your agent follows: directory layout, page types, YAML frontmatter fields, naming and wikilink rules, contradiction callouts, and the hard rules from CLAUDE.md.
+- [GitHub remote](https://jessepinkman9900.github.io/claude-second-brain/remotes/github.md): Use a private GitHub repository as the git backend for your claude-second-brain vault, with version history, access from any device, and Obsidian mobile sync.
+- [Cloudflare Artifacts remote](https://jessepinkman9900.github.io/claude-second-brain/remotes/cloudflare-artifacts.md): Use Cloudflare Artifacts as a git-compatible remote for your claude-second-brain vault, so your notes never touch GitHub. Covers setup, tokens, and csb git-token.
+- [Obsidian](https://jessepinkman9900.github.io/claude-second-brain/integrations/obsidian.md): Open a claude-second-brain vault in Obsidian: what the bundled .obsidian config turns on, how the wiki's frontmatter and wikilinks show up in graph view and backlinks, and what to leave alone.
+- [obsidian-git](https://jessepinkman9900.github.io/claude-second-brain/integrations/obsidian-git.md): How the obsidian-git plugin bundled with every claude-second-brain vault auto-commits, pulls and pushes your notes, which settings it ships with, and how to change them.
+- [iCloud sync](https://jessepinkman9900.github.io/claude-second-brain/integrations/icloud.md): Read your claude-second-brain wiki on iPhone and iPad through iCloud Drive: keep a second clone in Obsidian's iCloud folder that obsidian-git on your Mac keeps in sync, with git kept out of iCloud.
+- [Skills](https://jessepinkman9900.github.io/claude-second-brain/skills.md): The Agent Skills that run the claude-second-brain wiki in Claude Code, Codex, Cursor, Copilot and other agents: ingest, search, refresh, rebuild and lint, plus how to install and update them.
+- [/brain-ingest](https://jessepinkman9900.github.io/claude-second-brain/skills/brain-ingest.md): The /brain-ingest skill: read a new source, write a source summary page, update affected topic and entity pages, flag contradictions, and log the change.
+- [/brain-search](https://jessepinkman9900.github.io/claude-second-brain/skills/brain-search.md): The /brain-search skill: query the wiki with qmd hybrid search, read the top pages, answer with [[wikilink]] citations, and optionally file the answer as a Q&A page.
+- [/brain-refresh](https://jessepinkman9900.github.io/claude-second-brain/skills/brain-refresh.md): The /brain-refresh skill: rescan the vault and regenerate qmd embeddings for new or changed files, or re-embed everything with force.
+- [/brain-rebuild](https://jessepinkman9900.github.io/claude-second-brain/skills/brain-rebuild.md): The /brain-rebuild skill (destructive): propose a new qmd collection and context schema, then drop and rebuild the search index from scratch after approval.
+- [/lint](https://jessepinkman9900.github.io/claude-second-brain/skills/lint.md): The /lint skill: health-check the wiki for orphan pages, broken wikilinks, unresolved contradictions, stale claims, missing pages and data gaps, and fix what is safe.
 
 ## Project
 
-- [GitHub repository](https://github.com/jessepinkman9900/claude-second-brain): Source code, `CLAUDE.md` schema, template vault copied on scaffold, skill definitions under `template/.claude/skills/`, CI workflows, and issue tracker
-- [npm package](https://www.npmjs.com/package/claude-second-brain): Published CLI — run `npx claude-second-brain` to scaffold a new vault with no global install
-- [CLAUDE.md — the authoritative schema](https://github.com/jessepinkman9900/claude-second-brain/blob/main/CLAUDE.md): The operating instructions Claude reads at the start of every session — directory layout, page types, frontmatter format, ingest workflow, query workflow, lint workflow, and hard rules
+- [GitHub repository](https://github.com/jessepinkman9900/claude-second-brain): Source code, issues, the `CLAUDE.md` schema, and the template vault copied on scaffold
+- [npm package](https://www.npmjs.com/package/claude-second-brain): The published CLI. Run `npx claude-second-brain` with no global install
+- [Full docs in one file](https://jessepinkman9900.github.io/claude-second-brain/llms-full.txt): Every docs page concatenated as Markdown
 
 ## Optional
 
-- [Ship log](https://jessepinkman9900.github.io/claude-second-brain/ship-log): Release history and changelog entries for the CLI and skills
+- [Ship log](https://jessepinkman9900.github.io/claude-second-brain/ship-log.md): Release history for the claude-second-brain npm package and its agent skills, newest first.

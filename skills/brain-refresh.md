@@ -1,4 +1,4 @@
-## /brain-refresh
+# /brain-refresh
 
 Refresh the qmd index.
 

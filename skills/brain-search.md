@@ -1,4 +1,4 @@
-## /brain-search
+# /brain-search
 
 Query the wiki to answer a question.
 
