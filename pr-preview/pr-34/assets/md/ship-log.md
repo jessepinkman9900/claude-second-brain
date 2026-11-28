@@ -18,6 +18,10 @@ A rebuilt docs site that agents and search engines can read, and a template fix 
 * New [Integrations](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-34/integrations/obsidian) section: Obsidian, obsidian-git (its sync settings and mobile limits), and [iCloud sync](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-34/integrations/icloud) for iPhone and iPad using a second clone that keeps `.git` out of iCloud.
 * New manual setup steps for [Cloudflare Artifacts](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-34/remotes/cloudflare-artifacts#manual-setup).
 
+**README:**
+
+* The GitHub and npm README is now a short landing page (pitch, one install command, quickstart, skills table), with details linked to the docs site. The Mermaid chart, which npm can't render, is replaced by an image of the docs diagram.
+
 ## v1.2.3 — 2026-11-27
 
 Bug fixes for CLI argument handling, plus a test suite.
