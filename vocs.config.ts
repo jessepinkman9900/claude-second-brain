@@ -112,6 +112,14 @@ export default defineConfig({
       ],
     },
     {
+      text: 'Integrations',
+      items: [
+        { text: 'Obsidian', link: '/integrations/obsidian' },
+        { text: 'obsidian-git', link: '/integrations/obsidian-git' },
+        { text: 'iCloud sync', link: '/integrations/icloud' },
+      ],
+    },
+    {
       text: 'Skills',
       items: [
         { text: 'Overview', link: '/skills' },
