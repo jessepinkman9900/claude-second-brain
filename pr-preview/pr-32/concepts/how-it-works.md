@@ -1,57 +1,25 @@
 # How it works
 
-Sources flow in on the left, your agent synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and git makes the whole vault editable from Obsidian and your agent on any device.
+Sources go in on the left, your agent synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and git makes the whole vault editable from Obsidian and your agent on any device.
 
-```mermaid
-flowchart TB
-  subgraph Sources["raw-sources/ — raw, immutable"]
-    direction LR
-    S1[articles/]
-    S2[pdfs/]
-    S3[personal/]
-  end
+Articles, PDFs, notes and your questions go in through your agent; the wiki and its qmd index sit in the middle; Claude Code, Codex, Cursor, Obsidian and git all read and edit the same vault. Your agent runs /brain-ingest on new sources and /brain-search on questions; qmd indexes every page; git keeps every device in sync.
 
-  subgraph Skills["Agent skills"]
-    direction LR
-    I["/brain-ingest"]
-    Q["/brain-search"]
-    R["/brain-refresh"]
-  end
+**You bring:**
 
-  subgraph Wiki["wiki/ — cross-linked synthesis"]
-    direction LR
-    W1[overview.md]
-    W2[topic / entity pages]
-    W3[sources/]
-    W4[qa/]
-  end
+* Articles
+* PDFs
+* Personal notes
+* Questions
 
-  QMD[("qmd.sqlite<br/>vector + BM25<br/>hybrid index")]
+**In the middle:** Your wiki (wiki/ + qmd index)
 
-  subgraph Remote["Git remote — source of truth"]
-    GH[private repo]
-  end
+**Works with:**
 
-  subgraph Read["Read / edit anywhere"]
-    direction LR
-    OB["Obsidian<br/>graph · backlinks · mobile"]
-    CC["Your agent<br/>desktop, web + mobile"]
-  end
-
-  User((you))
-
-  Sources -->|read| I
-  I -->|write pages, cross-link,<br/>flag contradictions| Wiki
-  R -.->|chunk + embed<br/>changed files| QMD
-  Wiki -.->|indexed by| QMD
-  User -->|ask a question| Q
-  Q -->|hybrid search| QMD
-  QMD -->|top-k pages| Q
-  Q -->|cited answer| User
-  Wiki <-->|"obsidian-git<br/>auto commit / pull"| GH
-  GH --> OB
-  GH --> CC
-```
+* Claude Code
+* Codex
+* Cursor
+* Obsidian
+* Git remote
 
 ## The ingest loop, zoomed in
 
