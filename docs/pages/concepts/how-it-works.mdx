@@ -13,14 +13,14 @@ import { FlowDiagram } from '../../components/FlowDiagram'
 ## The ingest loop, zoomed in
 
 ```
-┌─────────────────────┐        ┌─────────────────────┐        ┌─────────────────────┐
-│   Drop in a source  │        │ /brain-ingest       │        │     Wiki grows      │
-│                     │        │                     │        │                     │
-│  · article          │──────▶ │  reads + extracts   │──────▶ │  · cross-linked     │
-│  · PDF              │        │  key knowledge      │        │  · contradictions   │
-│  · personal note    │        │                     │        │    flagged          │
-│                     │        │                     │        │  · syntheses        │
-└─────────────────────┘        └─────────────────────┘        └─────────────────────┘
+┌──────────────────┐    ┌──────────────────┐    ┌──────────────────┐
+│ Drop in a source │    │ /brain-ingest    │    │ Wiki grows       │
+│                  │    │                  │    │                  │
+│ · article        │───▶│ reads + extracts │───▶│ · cross-linked   │
+│ · PDF            │    │ key knowledge    │    │ · contradictions │
+│ · personal note  │    │                  │    │   flagged        │
+│                  │    │                  │    │ · syntheses      │
+└──────────────────┘    └──────────────────┘    └──────────────────┘
 ```
 
 Query it anytime with `/brain-search`. Get answers with inline `[[wiki/page]]` citations, not a list of files.
