@@ -1,0 +1,39 @@
+---
+description: "csb use sets the default claude-second-brain brain, which path, qmd, exec and the global agent skills resolve when no brain is named."
+---
+
+# csb use
+
+Set the default brain.
+
+## Usage
+
+```bash
+csb use <name>
+```
+
+Aliases: `csb default`, `csb switch`.
+
+Rewrites the `default = "…"` line in `~/.claude-second-brain/config.toml`. Every later command that resolves the default brain uses the new one: [`csb path`](/cli/path), [`csb qmd`](/cli/qmd), [`csb exec`](/cli/exec), and the global skills (`/brain-ingest`, `/brain-search`, `/brain-refresh`).
+
+## Arguments
+
+### name
+
+`string` (required)
+
+A registered brain. Errors if the name isn't registered; run [`csb ls`](/cli/ls) to see the available names.
+
+```bash
+csb use work
+```
+
+## Options
+
+### -h, --help
+
+Displays help message.
+
+```bash
+csb use --help
+```

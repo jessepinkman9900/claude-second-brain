@@ -80,7 +80,23 @@ export default defineConfig({
   sidebar: [
     { text: 'Introduction', link: '/' },
     { text: 'Getting Started', link: '/getting-started' },
-    { text: 'CLI Reference', link: '/cli' },
+    {
+      text: 'CLI Reference',
+      collapsed: false,
+      items: [
+        { text: 'Commands', link: '/cli' },
+        { text: 'csb', link: '/cli/create' },
+        { text: 'ls', link: '/cli/ls' },
+        { text: 'use', link: '/cli/use' },
+        { text: 'rm', link: '/cli/rm' },
+        { text: 'path', link: '/cli/path' },
+        { text: 'qmd', link: '/cli/qmd' },
+        { text: 'exec', link: '/cli/exec' },
+        { text: 'skills', link: '/cli/skills' },
+        { text: 'git-token', link: '/cli/git-token' },
+        { text: 'doctor', link: '/cli/doctor' },
+      ],
+    },
     {
       text: 'Concepts',
       items: [

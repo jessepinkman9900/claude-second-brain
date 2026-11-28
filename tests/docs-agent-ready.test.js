@@ -178,6 +178,23 @@ describe('docs pages', () => {
     assert.match(home, /^title: "claude-second-brain: CLI .+"$/m)
   })
 
+  it('the csb skills page lists every supported agent', async () => {
+    const { AGENTS } = await import('../bin/agents.js')
+    const page = readFileSync(join(pagesDir, 'cli', 'skills.mdx'), 'utf-8')
+    const ids = [...page.matchAll(/^\| `([a-z-]+)` \| /gm)].map((m) => m[1])
+    assert.deepEqual(ids, Object.keys(AGENTS))
+  })
+
+  it('every CLI command page is in the sidebar and linked from the Commands page', () => {
+    const config = readFileSync(join(root, 'vocs.config.ts'), 'utf-8')
+    const commands = readFileSync(join(pagesDir, 'cli.mdx'), 'utf-8')
+    for (const f of readdirSync(join(pagesDir, 'cli'))) {
+      const route = `/cli/${f.replace(/\.mdx$/, '')}`
+      assert.ok(config.includes(`link: '${route}'`), `${route} is not in the sidebar`)
+      assert.ok(commands.includes(`](${route})`), `${route} is not linked from cli.mdx`)
+    }
+  })
+
   it('the 404 page is kept out of the sitemap', () => {
     assert.equal(includeInSitemap('/404'), false)
     assert.equal(includeInSitemap('/cli'), true)
