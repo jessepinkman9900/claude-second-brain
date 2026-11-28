@@ -1,5 +1,10 @@
-# qmd local index (repo-scoped, machine-local)
+# qmd local index (machine-local, rebuilt by `pnpm qmd:setup` / `pnpm qmd:reindex`)
+.qmd/
 qmd.sqlite*
+
+# Obsidian per-device UI state (open tabs, panes); differs on every device
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
 
 # Finder (MacOS) folder config
 .DS_Store

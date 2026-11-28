@@ -24,14 +24,18 @@ Change any of these in **Settings → Community plugins → Git**.
 
 ## Authentication
 
-obsidian-git uses the vault's own git config, so it works wherever `git push` works in a terminal:
+On desktop, obsidian-git uses the vault's own git config, so it works wherever `git push` works in a terminal:
 
 - **GitHub**: your usual git credentials (`gh auth login` sets these up).
 - **Cloudflare Artifacts**: the token setup saves in `.git/config`. It lasts 90 days. When pushes start failing, run [`csb git-token`](/cli/git-token).
 
+## On iPhone and iPad
+
+obsidian-git does run on mobile, but its author describes mobile support as very unstable, and it can't use the `rebase` sync method the vault ships with (switch to **Merge** under **Settings → Git** if you try it). For phones and tablets, use [iCloud sync](/integrations/icloud) instead, and turn on **Disable on this device** under **Settings → Git → Advanced** on the phone. That setting is stored per device.
+
 ## Working alongside your agent
 
-Your agent and obsidian-git commit to the same repository. That's fine as long as both pull before they push, which obsidian-git does by default.
+Your agent and obsidian-git commit to the same repository. That's fine as long as both pull before they push, which obsidian-git does by default. The wiki skills don't commit on their own, so obsidian-git's automatic commits also pick up your agent's edits.
 
 - After an ingest, commit and push from the agent's session, or wait for obsidian-git's next sync.
 - If a rebase stops on a conflict, obsidian-git shows an error notice. Fix it in a terminal (`git status`, resolve, `git rebase --continue`), or ask your agent to do it.
