@@ -1,0 +1,8 @@
+flowchart LR
+  S["raw-sources/<br/>articles · PDFs · notes"] -->|/brain-ingest| W["wiki/<br/>cross-linked pages"]
+  W -->|indexed by| Q[("qmd<br/>local hybrid search")]
+  U((you)) -->|/brain-search| Q
+  Q -->|cited answer| U
+  W <-->|git| G["Git remote"]
+  G --> O["Obsidian<br/>desktop + mobile"]
+  G --> A["Your agent<br/>anywhere"]
