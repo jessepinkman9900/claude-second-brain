@@ -23,6 +23,9 @@ It is not a RAG system or a chatbot over your notes. The agent follows a schema 
 - [Wiki schema](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/concepts/schema.md): The wiki schema your agent follows: directory layout, page types, YAML frontmatter fields, naming and wikilink rules, contradiction callouts, and the hard rules from CLAUDE.md.
 - [GitHub remote](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/remotes/github.md): Use a private GitHub repository as the git backend for your claude-second-brain vault, with version history, access from any device, and Obsidian mobile sync.
 - [Cloudflare Artifacts remote](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/remotes/cloudflare-artifacts.md): Use Cloudflare Artifacts as a git-compatible remote for your claude-second-brain vault, so your notes never touch GitHub. Covers setup, tokens, and csb git-token.
+- [Obsidian](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/integrations/obsidian.md): Open a claude-second-brain vault in Obsidian: what the bundled .obsidian config turns on, how the wiki's frontmatter and wikilinks show up in graph view and backlinks, and what to leave alone.
+- [obsidian-git](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/integrations/obsidian-git.md): How the obsidian-git plugin bundled with every claude-second-brain vault auto-commits, pulls and pushes your notes, which settings it ships with, and how to change them.
+- [iCloud sync](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/integrations/icloud.md): Read and edit your claude-second-brain wiki on iPhone and iPad by putting the vault in iCloud Drive, while git on your Mac keeps the history and pushes to your remote.
 - [Skills](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/skills.md): The Agent Skills that run the claude-second-brain wiki in Claude Code, Codex, Cursor, Copilot and other agents: ingest, search, refresh, rebuild and lint, plus how to install and update them.
 - [/brain-ingest](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/skills/brain-ingest.md): The /brain-ingest skill: read a new source, write a source summary page, update affected topic and entity pages, flag contradictions, and log the change.
 - [/brain-search](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/skills/brain-search.md): The /brain-search skill: query the wiki with qmd hybrid search, read the top pages, answer with [[wikilink]] citations, and optionally file the answer as a Q&A page.
@@ -148,7 +151,7 @@ See the [CLI Reference](https://jessepinkman9900.github.io/claude-second-brain/p
 
 **Edit anywhere — your agent on desktop, web or mobile.** The vault is a plain git repo, so any agent that can clone it can work on it: run it locally, or use a cloud agent with GitHub access (Claude Code on the web and mobile, Codex cloud, Copilot coding agent, Cursor background agents, …) to ingest a source, run a query, or update a page from your phone.
 
-**Read anywhere — Obsidian desktop and mobile.** Open the repo as an Obsidian vault. The bundled `.obsidian` folder pre-configures [obsidian-git](https://github.com/Vinzent03/obsidian-git) — no setup required. Your wiki syncs automatically on every commit. For iOS: put the repo folder inside iCloud Drive — Obsidian Mobile picks it up natively.
+**Read anywhere — Obsidian desktop and mobile.** Open the repo as an Obsidian vault. The bundled `.obsidian` folder pre-configures [obsidian-git](https://github.com/Vinzent03/obsidian-git) — no setup required. Your wiki syncs automatically on every commit. For iPhone and iPad, see [iCloud sync](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/integrations/icloud).
 
 **Browse anywhere — your git host.** It's a plain git repo. On GitHub (or any host with a web UI), view and edit files directly in the browser at any time.
 
@@ -987,9 +990,9 @@ git push -u origin main
 
 ## Syncing from Obsidian
 
-The vault includes a pre-configured `.obsidian/` folder with [obsidian-git](https://github.com/Vinzent03/obsidian-git) settings. Enable the plugin in Obsidian → Community plugins and it will auto-commit and push on a schedule.
+The vault ships with [obsidian-git](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/integrations/obsidian-git) enabled, so Obsidian commits, pulls and pushes on a schedule.
 
-For iOS: place the repo folder inside iCloud Drive — Obsidian Mobile picks it up natively and obsidian-git handles sync.
+For iPhone and iPad, see [iCloud sync](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/integrations/icloud).
 
 <!-- Source: /remotes/cloudflare-artifacts -->
 
@@ -1064,6 +1067,129 @@ During setup, the CLI asks for an **Artifacts namespace** (default: `default`). 
 ## If setup fails
 
 If the repo can't be created or the first push fails, the CLI still creates the brain locally but says so in a warning, lists the fix in **Next steps**, and exits non-zero. A `403` / `Authentication error` usually means Artifacts isn't enabled on the account (Workers Paid plan), the token is missing the Artifacts permission, or `CLOUDFLARE_ACCOUNT_ID` points at another account. A `404` / `Namespace is not active` means the namespace was deleted; the CLI recreates it and retries automatically, and if that still fails, wait a minute (deletion can take a moment to finish) or pick another namespace. Fix it, then `csb rm <name>` and re-run, or add any other git remote by hand.
+
+<!-- Source: /integrations/obsidian -->
+
+# Obsidian
+
+Every brain is an [Obsidian](https://obsidian.md) vault. There's nothing to import: open the folder and the wiki your agent maintains is there, with working links, backlinks and graph view.
+
+## Open your brain
+
+1. Find the brain's folder: `csb path` (for example `~/.claude-second-brain/my-brain`).
+2. In Obsidian, choose **Open folder as vault** and pick that folder.
+3. Trust the vault's plugins when Obsidian asks, so the bundled [obsidian-git](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/integrations/obsidian-git) plugin can run.
+
+## What's preconfigured
+
+The vault ships with a `.obsidian/` folder, so a fresh brain opens ready to use:
+
+* **Core plugins on**: file explorer, search, quick switcher, graph view, backlinks, outgoing links, tags, properties, page preview, outline, daily notes, templates, bookmarks, canvas and file recovery.
+* **Community plugin**: [obsidian-git](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/integrations/obsidian-git), set to commit, pull and push on its own.
+* **Obsidian Sync and Publish off**: the brain syncs through git (and optionally [iCloud](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/integrations/icloud)).
+
+## How the wiki looks in Obsidian
+
+The schema in `CLAUDE.md` is written for Obsidian:
+
+* Agents link pages with `[[wiki/page]]` wikilinks, so **backlinks** and **graph view** show how topics, entities and sources connect.
+* Every wiki page has YAML frontmatter (`type`, `tags`, `sources`, `related`, `updated`), which shows up in the **properties** panel and the **tag pane**.
+* Contradictions are `> [!WARNING] Contradiction` callouts, which Obsidian renders as warning boxes.
+
+See [Wiki Folder Structure](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/concepts/schema) for the page types and frontmatter.
+
+## Who edits what
+
+* `wiki/` belongs to your agent. Read it in Obsidian, but let the agent write it, so the index, log and cross-links stay consistent.
+* `raw-sources/` is where you drop articles, PDFs and notes for the agent to ingest. Agents never change it.
+* Anything else you keep in the vault (daily notes, ideas, …) is yours. Agents never touch it.
+
+<!-- Source: /integrations/obsidian-git -->
+
+# obsidian-git
+
+Every vault ships with the [obsidian-git](https://github.com/Vinzent03/obsidian-git) community plugin installed and enabled. While Obsidian is open, it commits your changes and syncs them with the brain's git remote ([GitHub](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/remotes/github) or [Cloudflare Artifacts](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/remotes/cloudflare-artifacts)). Changes your agent pushes from another machine show up in Obsidian without a manual `git pull`.
+
+## Default settings
+
+The plugin's settings live in `.obsidian/plugins/obsidian-git/data.json`:
+
+| Setting | Value | What it does |
+|---|---|---|
+| Auto commit-and-sync interval | 5 minutes | Commits every change, then pulls and pushes |
+| Auto commit after file change | on | The 5-minute timer starts after you stop editing |
+| Auto pull interval | 5 minutes | Pulls from the remote |
+| Pull on startup | on | Pulls when Obsidian opens the vault |
+| Pull before push | on | Avoids rejected pushes |
+| Sync method | rebase | Keeps history linear |
+| Commit message | `vault backup: {{date}}` | Used for automatic commits |
+
+Change any of these in **Settings → Community plugins → Git**.
+
+## Authentication
+
+obsidian-git uses the vault's own git config, so it works wherever `git push` works in a terminal:
+
+* **GitHub**: your usual git credentials (`gh auth login` sets these up).
+* **Cloudflare Artifacts**: the token setup saves in `.git/config`. It lasts 90 days. When pushes start failing, run [`csb git-token`](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/cli/git-token).
+
+## Working alongside your agent
+
+Your agent and obsidian-git commit to the same repository. That's fine as long as both pull before they push, which obsidian-git does by default.
+
+* After an ingest, commit and push from the agent's session, or wait for obsidian-git's next sync.
+* If a rebase stops on a conflict, obsidian-git shows an error notice. Fix it in a terminal (`git status`, resolve, `git rebase --continue`), or ask your agent to do it.
+
+## Turn it off
+
+To sync by hand instead, disable **Git** in **Settings → Community plugins**. Or keep it on and set the intervals to `0`, then use the command palette (**Git: Commit-and-sync**) when you want.
+
+<!-- Source: /integrations/icloud -->
+
+# iCloud sync
+
+Obsidian on iPhone and iPad opens vaults stored in **iCloud Drive → Obsidian**. Put your brain there and the whole wiki is on your phone: graph view, backlinks and search, offline. Your Mac keeps doing the git work.
+
+## How it fits together
+
+* **iCloud** copies files between your Mac and your iPhone or iPad.
+* **git on your Mac** (your agent, plus [obsidian-git](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/integrations/obsidian-git)) commits what changed, including edits you made on your phone, and pushes it to your remote.
+* **Other computers** sync through the git remote, not iCloud.
+
+Let one Mac do the git work for the iCloud copy. Don't commit to the same iCloud folder from two machines.
+
+## Move your brain into iCloud
+
+Brains live in `~/.claude-second-brain/<name>` by default. Move the folder into Obsidian's iCloud folder, then leave a symlink at the old path so `csb`, the skills and `config.toml` keep working:
+
+```bash
+ICLOUD=~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents
+mv ~/.claude-second-brain/my-brain "$ICLOUD/my-brain"
+ln -s "$ICLOUD/my-brain" ~/.claude-second-brain/my-brain
+csb doctor
+```
+
+The `iCloud~md~obsidian/Documents` folder appears once Obsidian is installed on a device signed in to the same iCloud account. On your phone, open Obsidian and pick the vault from the iCloud list.
+
+## Keep heavy and git folders off iCloud
+
+iCloud would also sync `node_modules`, the qmd index in `.qmd` and the `.git` folder. That's hundreds of megabytes your phone doesn't need, and iCloud can make conflicted copies of files inside `.git`. iCloud skips anything whose name ends in `.nosync`, so rename those folders and link them back:
+
+```bash
+cd "$ICLOUD/my-brain"
+for d in node_modules .qmd .git; do
+  mv "$d" "$d.nosync" && ln -s "$d.nosync" "$d"
+done
+git status   # still works through the symlink
+```
+
+The phone then gets only your notes and the `.obsidian` config.
+
+## Tips
+
+* On your Mac, right-click the brain folder in Finder and choose **Keep Downloaded**, so "Optimize Mac Storage" doesn't offload notes your agent needs to read.
+* Edits on your phone reach git the next time your Mac is awake, synced, and either obsidian-git or your agent commits.
+* Not on Apple devices? Clone the brain's git remote on each device instead, for example with obsidian-git's mobile support or [Working Copy](https://workingcopy.app) on iOS.
 
 <!-- Source: /skills -->
 

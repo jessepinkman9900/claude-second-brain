@@ -1,0 +1,44 @@
+# iCloud sync
+
+Obsidian on iPhone and iPad opens vaults stored in **iCloud Drive → Obsidian**. Put your brain there and the whole wiki is on your phone: graph view, backlinks and search, offline. Your Mac keeps doing the git work.
+
+## How it fits together
+
+* **iCloud** copies files between your Mac and your iPhone or iPad.
+* **git on your Mac** (your agent, plus [obsidian-git](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/integrations/obsidian-git)) commits what changed, including edits you made on your phone, and pushes it to your remote.
+* **Other computers** sync through the git remote, not iCloud.
+
+Let one Mac do the git work for the iCloud copy. Don't commit to the same iCloud folder from two machines.
+
+## Move your brain into iCloud
+
+Brains live in `~/.claude-second-brain/<name>` by default. Move the folder into Obsidian's iCloud folder, then leave a symlink at the old path so `csb`, the skills and `config.toml` keep working:
+
+```bash
+ICLOUD=~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents
+mv ~/.claude-second-brain/my-brain "$ICLOUD/my-brain"
+ln -s "$ICLOUD/my-brain" ~/.claude-second-brain/my-brain
+csb doctor
+```
+
+The `iCloud~md~obsidian/Documents` folder appears once Obsidian is installed on a device signed in to the same iCloud account. On your phone, open Obsidian and pick the vault from the iCloud list.
+
+## Keep heavy and git folders off iCloud
+
+iCloud would also sync `node_modules`, the qmd index in `.qmd` and the `.git` folder. That's hundreds of megabytes your phone doesn't need, and iCloud can make conflicted copies of files inside `.git`. iCloud skips anything whose name ends in `.nosync`, so rename those folders and link them back:
+
+```bash
+cd "$ICLOUD/my-brain"
+for d in node_modules .qmd .git; do
+  mv "$d" "$d.nosync" && ln -s "$d.nosync" "$d"
+done
+git status   # still works through the symlink
+```
+
+The phone then gets only your notes and the `.obsidian` config.
+
+## Tips
+
+* On your Mac, right-click the brain folder in Finder and choose **Keep Downloaded**, so "Optimize Mac Storage" doesn't offload notes your agent needs to read.
+* Edits on your phone reach git the next time your Mac is awake, synced, and either obsidian-git or your agent commits.
+* Not on Apple devices? Clone the brain's git remote on each device instead, for example with obsidian-git's mobile support or [Working Copy](https://workingcopy.app) on iOS.

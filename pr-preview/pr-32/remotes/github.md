@@ -30,6 +30,6 @@ git push -u origin main
 
 ## Syncing from Obsidian
 
-The vault includes a pre-configured `.obsidian/` folder with [obsidian-git](https://github.com/Vinzent03/obsidian-git) settings. Enable the plugin in Obsidian → Community plugins and it will auto-commit and push on a schedule.
+The vault ships with [obsidian-git](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/integrations/obsidian-git) enabled, so Obsidian commits, pulls and pushes on a schedule.
 
-For iOS: place the repo folder inside iCloud Drive — Obsidian Mobile picks it up natively and obsidian-git handles sync.
+For iPhone and iPad, see [iCloud sync](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/integrations/icloud).
