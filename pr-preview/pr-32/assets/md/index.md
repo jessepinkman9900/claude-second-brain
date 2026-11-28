@@ -1,12 +1,12 @@
-# claude-second-brain
+# Your notes don't compound. claude-second-brain turns them into a wiki that does.
 
-**Your notes don't compound. This wiki does.**
-
-The fastest way to start your personal knowledge base powered by [Obsidian](https://obsidian.md), your AI coding agent ([Claude Code](https://claude.ai/code), Codex, Cursor, GitHub Copilot, and more), [qmd](https://github.com/tobi/qmd), and git.
+Scaffold a personal knowledge base: an Obsidian vault and git repo where your AI coding agent (Claude Code, Codex, Cursor, Copilot, and more) reads your sources and maintains a cross-linked wiki with local qmd search.
 
 ```bash
 npx claude-second-brain
 ```
+
+[Get started](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/getting-started) · Want the details first? [How it works](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/concepts/how-it-works) · [CLI reference](https://jessepinkman9900.github.io/claude-second-brain/pr-preview/pr-32/cli) · [GitHub](https://github.com/jessepinkman9900/claude-second-brain)
 
 One command gives you a fully wired knowledge system:
 
