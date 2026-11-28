@@ -11,6 +11,8 @@ on:
     paths:
       - 'docs/**'
       - 'vocs.config.ts'
+      - 'public/**'
+      - 'scripts/docs/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - '.github/workflows/docs-deploy.yml'
@@ -26,7 +28,7 @@ concurrency:
 jobs:
   deploy:
     name: Build and publish to gh-pages
-    runs-on: ubuntu-24.04  # Playwright 1.59 (locked, used by Vocs mermaid) has no chromium for ubuntu 26.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,11 +47,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install Playwright chromium (for Vocs mermaid rendering)
-        run: pnpm dlx playwright@1.65.1 install --with-deps chromium  # keep in sync with playwright in pnpm-lock.yaml
-
       - name: Build docs
         run: pnpm run docs:build
+        env:
+          BASE_PATH: /claude-second-brain
+
+      - name: Verify llms.txt, Markdown pages, metadata and 404
+        run: pnpm run docs:verify
         env:
           BASE_PATH: /claude-second-brain
 
@@ -57,7 +61,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/dist
+          publish_dir: docs/dist/public
           publish_branch: gh-pages
           keep_files: true
           force_orphan: false
