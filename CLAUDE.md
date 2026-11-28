@@ -248,7 +248,7 @@ Whenever you **add, remove, or rename a skill** under `template/.claude/skills/`
 
 Whenever you **change the docs hub diagram** (`docs/components/FlowDiagram.tsx` or `flow-content.ts`), re-export `.github/assets/how-it-works.png` (render the component with the pulse hidden and screenshot the SVG at 2x), since the root README shows that image.
 
-Whenever you **change the setup prompts or output** of `bin/create.js`, re-record `.github/assets/demo.gif` with `vhs .github/assets/demo.tape` from the repo root (it packs the checkout into a throwaway HOME), since the root README shows that GIF.
+Whenever you **change the setup prompts or output** of `bin/create.js`, re-record `.github/assets/demo.gif` with the `/record-demo` skill (it runs `vhs .github/assets/demo.tape`, which packs the checkout into a throwaway HOME, and checks the frames), since the root README shows that GIF.
 
 Whenever you **change a qmd collection name, context path, or CLI invocation** in `scripts/qmd/setup.ts` or in skill workflows, you MUST also update every `-c <collection>` reference in `template/CLAUDE.md`, all `SKILL.md` files under `template/.claude/skills/`, and both READMEs.
 
