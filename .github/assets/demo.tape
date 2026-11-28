@@ -1,13 +1,16 @@
 # Records .github/assets/demo.gif, the terminal demo at the top of the README.
 #
 # Run from the repo root:  vhs .github/assets/demo.tape
-# Needs vhs (https://github.com/charmbracelet/vhs), plus ttyd and ffmpeg.
+# Needs vhs (https://github.com/charmbracelet/vhs), plus ttyd, ffmpeg and the
+# JetBrainsMono Nerd Font, so the git-remote picker shows its Nerd Font icons
+# the way Ghostty, WezTerm and kitty do (CSB_ICONS=nerd below).
 # It packs this checkout and installs it into a throwaway HOME, so it never
 # touches your real ~/.claude-second-brain or skills folders.
 
 Output .github/assets/demo.gif
 
 Set Shell "bash"
+Set FontFamily "JetBrainsMono Nerd Font"
 Set FontSize 15
 Set Width 1000
 Set Height 640
@@ -18,7 +21,7 @@ Set WindowBar Colorful
 Set CursorBlink false
 
 Hide
-Type `export DEMO=$(mktemp -d) && npm pack --silent --pack-destination "$DEMO" >/dev/null && export HOME="$DEMO" NPM_CONFIG_PREFIX="$DEMO/.npm-global" && export PATH="$NPM_CONFIG_PREFIX/bin:$PATH" && npm i -g --silent "$DEMO"/claude-second-brain-*.tgz >/dev/null 2>&1 && git config --global user.name demo && git config --global user.email demo@example.com && git config --global init.defaultBranch main && cd "$HOME" && export PS1='$ ' && clear`
+Type `export DEMO=$(mktemp -d) && npm pack --silent --pack-destination "$DEMO" >/dev/null && export CSB_ICONS=nerd HOME="$DEMO" NPM_CONFIG_PREFIX="$DEMO/.npm-global" && export PATH="$NPM_CONFIG_PREFIX/bin:$PATH" && npm i -g --silent "$DEMO"/claude-second-brain-*.tgz >/dev/null 2>&1 && git config --global user.name demo && git config --global user.email demo@example.com && git config --global init.defaultBranch main && cd "$HOME" && export PS1='$ ' && clear`
 Enter
 Sleep 25s
 Show

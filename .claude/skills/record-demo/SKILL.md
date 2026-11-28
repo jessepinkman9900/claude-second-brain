@@ -21,6 +21,8 @@ If any are missing:
 - **macOS:** `brew install vhs` (pulls in ttyd and ffmpeg).
 - **Linux:** download the vhs and ttyd release binaries from GitHub (`charmbracelet/vhs`, `tsl0922/ttyd`), install ffmpeg from the package manager, and put them on `PATH`. vhs drives a headless Chromium. If it can't find one, symlink an existing Chrome or Chromium binary as `chromium` on `PATH`.
 
+The tape also needs the **JetBrainsMono Nerd Font**. It sets `CSB_ICONS=nerd`, so the git-remote picker shows the GitHub, Cloudflare and folder glyphs that Ghostty, WezTerm and kitty users see. Without the font those glyphs render as blank boxes. Check with `fc-list | grep "JetBrainsMono Nerd Font"` (Linux) or Font Book (macOS). Install it with `brew install --cask font-jetbrains-mono-nerd-font`, or unzip `JetBrainsMono.zip` from the `ryanoasis/nerd-fonts` releases into `~/.local/share/fonts` and run `fc-cache -f`.
+
 The repo's own dependencies must be installed too (`pnpm install`), since the tape runs `npm pack`.
 
 ## Step 2: Update the tape if the CLI changed
@@ -60,6 +62,7 @@ Open both images and check:
 |---|---|
 | Length | 25 to 35 seconds |
 | Prompts | Each answer shows the expected value (my-brain, Skip, Yes, Claude Code) |
+| Icons | The remote picker shows the GitHub, cloud and folder glyphs, not emoji or empty boxes |
 | Spinner | One line that updates in place, never a column of repeated "Installing vault dependencies" lines |
 | Errors | No red ✗ steps, stack traces or "failed" messages |
 | Ending | The last frame shows the full **Next steps** box and "Happy knowledge building!" |
