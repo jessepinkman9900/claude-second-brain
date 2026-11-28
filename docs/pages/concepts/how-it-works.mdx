@@ -4,58 +4,11 @@ description: "How claude-second-brain works: raw sources flow through your AI ag
 
 # How it works
 
-Sources flow in on the left, your agent synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and git makes the whole vault editable from Obsidian and your agent on any device.
+Sources go in on the left, your agent synthesizes them into the wiki, qmd indexes every page into a local hybrid search index, and git makes the whole vault editable from Obsidian and your agent on any device.
 
-```mermaid
-flowchart TB
-  subgraph Sources["raw-sources/ — raw, immutable"]
-    direction LR
-    S1[articles/]
-    S2[pdfs/]
-    S3[personal/]
-  end
+import { FlowDiagram } from '../../components/FlowDiagram'
 
-  subgraph Skills["Agent skills"]
-    direction LR
-    I["/brain-ingest"]
-    Q["/brain-search"]
-    R["/brain-refresh"]
-  end
-
-  subgraph Wiki["wiki/ — cross-linked synthesis"]
-    direction LR
-    W1[overview.md]
-    W2[topic / entity pages]
-    W3[sources/]
-    W4[qa/]
-  end
-
-  QMD[("qmd.sqlite<br/>vector + BM25<br/>hybrid index")]
-
-  subgraph Remote["Git remote — source of truth"]
-    GH[private repo]
-  end
-
-  subgraph Read["Read / edit anywhere"]
-    direction LR
-    OB["Obsidian<br/>graph · backlinks · mobile"]
-    CC["Your agent<br/>desktop, web + mobile"]
-  end
-
-  User((you))
-
-  Sources -->|read| I
-  I -->|write pages, cross-link,<br/>flag contradictions| Wiki
-  R -.->|chunk + embed<br/>changed files| QMD
-  Wiki -.->|indexed by| QMD
-  User -->|ask a question| Q
-  Q -->|hybrid search| QMD
-  QMD -->|top-k pages| Q
-  Q -->|cited answer| User
-  Wiki <-->|"obsidian-git<br/>auto commit / pull"| GH
-  GH --> OB
-  GH --> CC
-```
+<FlowDiagram />
 
 ## The ingest loop, zoomed in
 
