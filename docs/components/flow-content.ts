@@ -3,25 +3,26 @@
 
 export const flow = {
   summary:
-    'Articles, PDFs, notes and your questions go in through your agent; the wiki and its qmd index sit in the middle; Claude Code, Codex, Cursor, Obsidian and git all read and edit the same vault.',
-  inputsHeading: 'You bring',
-  outputsHeading: 'Works with',
+    'Articles, PDFs and notes go in, alongside your Obsidian vault and git remote; your brain (the wiki plus its qmd index) sits in the middle; Claude Code, Codex, Cursor, GitHub Copilot and Gemini all read and maintain it.',
+  inputsHeading: 'Your sources',
+  outputsHeading: 'Your agents',
   inputs: [
     { icon: 'newspaper', label: 'Articles' },
     { icon: 'file-text', label: 'PDFs' },
-    { icon: 'notebook-pen', label: 'Personal notes' },
-    { icon: 'message-circle-question-mark', label: 'Questions' },
+    { icon: 'notebook-pen', label: 'Notes' },
+    { icon: 'obsidian', label: 'Obsidian', color: '#7C3AED' },
+    { icon: 'git', label: 'Git', color: '#F05032' },
   ],
-  hub: { label: 'Your wiki', sublabel: 'wiki/ + qmd index' },
+  hub: { label: 'Your brain', sublabel: 'wiki + qmd' },
   outputs: [
     { icon: 'claude', label: 'Claude Code', color: '#D97757' },
     { icon: 'openai', label: 'Codex' },
     { icon: 'cursor', label: 'Cursor' },
-    { icon: 'obsidian', label: 'Obsidian', color: '#7C3AED' },
-    { icon: 'git', label: 'Git remote', color: '#F05032' },
+    { icon: 'githubcopilot', label: 'Copilot' },
+    { icon: 'googlegemini', label: 'Gemini', color: '#8E75B2' },
   ],
   caption:
-    'Your agent runs /brain-ingest on new sources and /brain-search on questions; qmd indexes every page; git keeps every device in sync.',
+    'Set it up once. Every agent you use reads the same wiki, ingests new sources with /brain-ingest and answers with /brain-search.',
 } as const
 
 /** The diagram as Markdown AST nodes: a short description plus two lists. */

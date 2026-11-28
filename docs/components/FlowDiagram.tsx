@@ -1,33 +1,37 @@
 import { icons } from './diagram-icons'
 import { flow } from './flow-content'
 
-// Hub-and-spoke diagram for "How it works": inputs on the left flow into the
-// wiki in the middle, which every reader/editor on the right works from.
+// Hub-and-spoke diagram: your sources on the left, your brain in the middle,
+// every agent on the right. Thin curved lines, with one bright pulse at a
+// time travelling from a source, through the brain, to an agent.
 // Pure SVG + CSS animation (no client JS); motion stops for prefers-reduced-motion.
 
-const W = 760
+const W = 900
 const H = 380
-const HUB = { x: 380, y: H / 2, w: 128, h: 104 }
-const ICON = 36
-const LEFT_X = 190 // left icon column (center)
-const RIGHT_X = W - 190 // right icon column (center)
+const HUB = { x: W / 2, y: H / 2, w: 112, h: 108 }
+const TILE = 40
+const LEFT_X = 160 // left tile column (center)
+const RIGHT_X = W - 160 // right tile column (center)
+const GAP = 64
+const MERGE = 60 // right-hand lines run together this far before fanning out
+const STEP = 1.3 // seconds for a pulse to cross one side
+const CYCLE = flow.inputs.length * STEP * 2 // one source -> agent trip at a time
 
 function rows(n: number) {
-  const gap = 66
-  const top = H / 2 - ((n - 1) * gap) / 2
-  return Array.from({ length: n }, (_, i) => top + i * gap)
+  const top = H / 2 - ((n - 1) * GAP) / 2
+  return Array.from({ length: n }, (_, i) => top + i * GAP)
 }
 
-function Icon(props: { name: string; x: number; y: number; color?: string | undefined }) {
+function Tile(props: { name: string; x: number; y: number; color?: string | undefined }) {
   const { name, x, y, color } = props
   return (
-    <g transform={`translate(${x - ICON / 2} ${y - ICON / 2})`}>
-      <rect className="csb-flow-tile" width={ICON} height={ICON} rx={9} />
+    <g transform={`translate(${x - TILE / 2} ${y - TILE / 2})`}>
+      <rect className="csb-flow-tile" width={TILE} height={TILE} rx={10} />
       <svg
-        x={9}
-        y={9}
-        width={18}
-        height={18}
+        x={10}
+        y={10}
+        width={20}
+        height={20}
         viewBox="0 0 24 24"
         style={color ? { color } : undefined}
         // biome-ignore lint/security/noDangerouslySetInnerHtml: static icon markup from @iconify-json
@@ -37,20 +41,25 @@ function Icon(props: { name: string; x: number; y: number; color?: string | unde
   )
 }
 
+const travel = (100 * STEP) / CYCLE
 const css = `
-.csb-flow { margin: 28px 0 8px; border: 1px solid rgba(127,127,127,.25); border-radius: 14px; padding: 8px; overflow: hidden; }
+.csb-flow { margin: 28px 0 8px; }
+.csb-flow-card { border: 1px solid rgba(127,127,127,.22); border-radius: 16px; background: rgba(127,127,127,.05); padding: 12px 8px; }
 .csb-flow svg.csb-flow-svg { display: block; width: 100%; height: auto; }
-.csb-flow text { fill: currentColor; font-size: 13px; }
-.csb-flow .csb-flow-label { opacity: .75; }
-.csb-flow .csb-flow-heading { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; opacity: .45; }
-.csb-flow .csb-flow-tile { fill: rgba(127,127,127,.12); stroke: rgba(127,127,127,.35); }
-.csb-flow .csb-flow-hub { fill: rgba(127,127,127,.10); stroke: rgba(127,127,127,.55); }
-.csb-flow .csb-flow-line { fill: none; stroke: currentColor; stroke-opacity: .18; stroke-width: 1.2; }
-.csb-flow .csb-flow-pulse { fill: none; stroke: currentColor; stroke-opacity: .7; stroke-width: 1.6; stroke-linecap: round;
-  stroke-dasharray: 18 292; stroke-dashoffset: 310; animation: csb-flow-run 3.2s linear infinite; }
-@keyframes csb-flow-run { to { stroke-dashoffset: 0; } }
-@media (prefers-reduced-motion: reduce) { .csb-flow .csb-flow-pulse { animation: none; stroke-dasharray: none; stroke-opacity: .3; } }
-.csb-flow figcaption { font-size: .9rem; opacity: .65; text-align: center; padding: 6px 12px 10px; }
+.csb-flow text { fill: currentColor; font-size: 15px; }
+.csb-flow .csb-flow-label { opacity: .72; }
+.csb-flow .csb-flow-tile { fill: var(--vocs-color-background, transparent); stroke: rgba(127,127,127,.35); }
+.csb-flow .csb-flow-hub { fill: var(--vocs-color-background, transparent); stroke: rgba(127,127,127,.5); }
+.csb-flow .csb-flow-line { fill: none; stroke: currentColor; stroke-opacity: .16; stroke-width: 1; }
+.csb-flow .csb-flow-pulse { fill: none; stroke: currentColor; stroke-opacity: .95; stroke-width: 1.6; stroke-linecap: round;
+  stroke-dasharray: 70 2000; stroke-dashoffset: 70; animation: csb-flow-run ${CYCLE}s linear infinite; }
+@keyframes csb-flow-run {
+  0% { stroke-dashoffset: 70; }
+  ${travel.toFixed(3)}% { stroke-dashoffset: -1000; }
+  100% { stroke-dashoffset: -1000; }
+}
+@media (prefers-reduced-motion: reduce) { .csb-flow .csb-flow-pulse { display: none; } }
+.csb-flow figcaption { font-size: .9rem; opacity: .65; text-align: center; padding: 10px 12px 0; }
 `
 
 export function FlowDiagram() {
@@ -58,79 +67,79 @@ export function FlowDiagram() {
   const rightY = rows(flow.outputs.length)
   const hubLeft = HUB.x - HUB.w / 2
   const hubRight = HUB.x + HUB.w / 2
+  const leftEdge = LEFT_X + TILE / 2
+  const rightEdge = RIGHT_X - TILE / 2
+  const mergeX = hubRight + MERGE
 
-  const leftPaths = leftY.map(
-    (y) => `M ${LEFT_X + ICON / 2} ${y} C ${LEFT_X + 90} ${y}, ${hubLeft - 70} ${HUB.y}, ${hubLeft} ${HUB.y}`,
-  )
+  // Sources curve into the hub's left edge, spread over its height.
+  const leftPaths = leftY.map((y) => {
+    const endY = HUB.y + (y - HUB.y) * 0.3
+    const k = (hubLeft - leftEdge) * 0.5
+    return `M ${leftEdge} ${y} C ${leftEdge + k} ${y}, ${hubLeft - k} ${endY}, ${hubLeft} ${endY}`
+  })
+  // Agents share one line out of the hub, then fan out.
+  const k = (rightEdge - mergeX) * 0.5
   const rightPaths = rightY.map(
-    (y) => `M ${hubRight} ${HUB.y} C ${hubRight + 70} ${HUB.y}, ${RIGHT_X - 90} ${y}, ${RIGHT_X - ICON / 2} ${y}`,
+    (y) => `M ${hubRight} ${HUB.y} L ${mergeX} ${HUB.y} C ${mergeX + k} ${HUB.y}, ${rightEdge - k} ${y}, ${rightEdge} ${y}`,
+  )
+  const pulse = (d: string, delay: number) => (
+    <path key={`pulse-${d}`} className="csb-flow-pulse" d={d} pathLength={1000} style={{ animationDelay: `${delay}s` }} />
   )
 
   return (
     <figure className="csb-flow">
       <style>{css}</style>
-      <svg className="csb-flow-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={flow.summary}>
-        <text className="csb-flow-heading" x={LEFT_X} y={22} textAnchor="middle">
-          {flow.inputsHeading}
-        </text>
-        <text className="csb-flow-heading" x={RIGHT_X} y={22} textAnchor="middle">
-          {flow.outputsHeading}
-        </text>
+      <div className="csb-flow-card">
+        <svg className="csb-flow-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={flow.summary}>
+          {[...leftPaths, ...rightPaths].map((d) => (
+            <path key={`line-${d}`} className="csb-flow-line" d={d} />
+          ))}
+          {leftPaths.map((d, i) => pulse(d, i * STEP * 2))}
+          {/* Each trip ends at a different agent: source i -> agent (2i mod n). */}
+          {rightPaths.map((d, j) => {
+            const i = flow.inputs.findIndex((_, k) => (k * 2) % rightPaths.length === j)
+            return pulse(d, (i < 0 ? j : i) * STEP * 2 + STEP)
+          })}
 
-        {[...leftPaths, ...rightPaths].map((d) => (
-          <path key={`line-${d}`} className="csb-flow-line" d={d} />
-        ))}
-        {leftPaths.map((d, i) => (
-          <path key={`pulse-${d}`} className="csb-flow-pulse" d={d} pathLength={310} style={{ animationDelay: `${i * 0.45}s` }} />
-        ))}
-        {rightPaths.map((d, i) => (
-          <path
-            key={`pulse-${d}`}
-            className="csb-flow-pulse"
-            d={d}
-            pathLength={310}
-            style={{ animationDelay: `${1.6 + i * 0.35}s` }}
-          />
-        ))}
+          {flow.inputs.map((item, i) => (
+            <g key={item.label}>
+              <Tile name={item.icon} x={LEFT_X} y={leftY[i]!} color={'color' in item ? item.color : undefined} />
+              <text className="csb-flow-label" x={LEFT_X - TILE / 2 - 12} y={leftY[i]! + 5} textAnchor="end">
+                {item.label}
+              </text>
+            </g>
+          ))}
 
-        {flow.inputs.map((item, i) => (
-          <g key={item.label}>
-            <Icon name={item.icon} x={LEFT_X} y={leftY[i]!} />
-            <text className="csb-flow-label" x={LEFT_X - ICON / 2 - 12} y={leftY[i]! + 4.5} textAnchor="end">
-              {item.label}
+          {flow.outputs.map((item, i) => (
+            <g key={item.label}>
+              <Tile name={item.icon} x={RIGHT_X} y={rightY[i]!} color={'color' in item ? item.color : undefined} />
+              <text className="csb-flow-label" x={RIGHT_X + TILE / 2 + 12} y={rightY[i]! + 5}>
+                {item.label}
+              </text>
+            </g>
+          ))}
+
+          <g>
+            <rect className="csb-flow-hub" x={hubLeft} y={HUB.y - HUB.h / 2} width={HUB.w} height={HUB.h} rx={14} />
+            <g
+              transform={`translate(${HUB.x - 14} ${HUB.y - 38}) scale(${28 / 64})`}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={4}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M8 52 L56 52 M10 48 L54 48 M32 12 L10 24 L54 24 Z M14 48 L14 26 M24 48 L24 26 M40 48 L40 26 M50 48 L50 26" />
+            </g>
+            <text x={HUB.x} y={HUB.y + 16} textAnchor="middle" style={{ fontWeight: 600, fontSize: 14 }}>
+              {flow.hub.label}
+            </text>
+            <text className="csb-flow-label" x={HUB.x} y={HUB.y + 34} textAnchor="middle" style={{ fontSize: 11 }}>
+              {flow.hub.sublabel}
             </text>
           </g>
-        ))}
-
-        {flow.outputs.map((item, i) => (
-          <g key={item.label}>
-            <Icon name={item.icon} x={RIGHT_X} y={rightY[i]!} color={item.color} />
-            <text className="csb-flow-label" x={RIGHT_X + ICON / 2 + 12} y={rightY[i]! + 4.5}>
-              {item.label}
-            </text>
-          </g>
-        ))}
-
-        <g>
-          <rect className="csb-flow-hub" x={hubLeft} y={HUB.y - HUB.h / 2} width={HUB.w} height={HUB.h} rx={14} />
-          <g
-            transform={`translate(${HUB.x - 13} ${HUB.y - 36}) scale(${26 / 64})`}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={4}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M8 52 L56 52 M10 48 L54 48 M32 12 L10 24 L54 24 Z M14 48 L14 26 M24 48 L24 26 M40 48 L40 26 M50 48 L50 26" />
-          </g>
-          <text x={HUB.x} y={HUB.y + 14} textAnchor="middle" style={{ fontWeight: 600, fontSize: 14 }}>
-            {flow.hub.label}
-          </text>
-          <text className="csb-flow-label" x={HUB.x} y={HUB.y + 32} textAnchor="middle" style={{ fontSize: 11 }}>
-            {flow.hub.sublabel}
-          </text>
-        </g>
-      </svg>
+        </svg>
+      </div>
       <figcaption>{flow.caption}</figcaption>
     </figure>
   )
